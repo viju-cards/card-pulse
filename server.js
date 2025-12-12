@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.PPT_API_KEY;
 
 // Supabase/PostgreSQL Konfiguration
-const FREE_LIMIT = 10;
+const FREE_LIMIT = 20;
 // Holt den geheimen Verbindungssstring aus den Render Umgebungsvariablen
 const CONNECTION_STRING = process.env.POSTGRES_CONNECTION_STRING; 
 
