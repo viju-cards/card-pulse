@@ -1,30 +1,34 @@
-// server.js - FINALE VERSION (Nur Premium-Zugriff per geheimem Extension-ID Header)
+// server.js - FINALE BEREINIGTE VERSION (Nur Premium-Header-Auth, KEIN PostgreSQL)
 
 const express = require("express");
 const fetch = require("node-fetch");
-require("dotenv").config();
+require("dotenv").config(); // Lädt Umgebungsvariablen
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.PPT_API_KEY; // Ihr PriceTracker API Key (MUSS vorhanden sein!)
-const EXTENSION_ID_SECRET = process.env.EXTENSION_ID_SECRET; // Geheimer Schlüssel aus Render ENV
+// Hält den PriceTracker API Key (aus Render ENV)
+const API_KEY = process.env.PPT_API_KEY; 
+// Hält den geheimen Schlüssel der Erweiterung (aus Render ENV)
+const EXTENSION_ID_SECRET = process.env.EXTENSION_ID_SECRET; 
 
 app.use(express.json());
 
 // =========================================================
-// HILFSFUNKTIONEN (vom letzten Stand übernommen)
+// HILFSFUNKTIONEN
 // =========================================================
 
 // HILFSFUNKTION: API-Abfrage (Kapselung für Wiederverwendung)
 async function fetchPriceTrackerApi(apiUrl) {
     if (!API_KEY) {
-        throw new Error("PPT_API_KEY fehlt in der .env Datei!");
+        // Dieser Fehler wird ausgelöst, wenn PPT_API_KEY auf Render fehlt.
+        throw new Error("SERVER_CONFIG_ERROR: PPT_API_KEY fehlt in der Umgebungsvariable!");
     }
     
     console.log(`[DEBUG API CALL] Abfrage URL: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
         headers: {
+            // Sendet den PriceTracker API Key
             Authorization: `Bearer ${API_KEY}`,
         },
     });
@@ -32,7 +36,8 @@ async function fetchPriceTrackerApi(apiUrl) {
     if (!response.ok) {
         const errorText = await response.text();
         console.error("[ERROR] API-Antwort nicht OK:", response.status, errorText);
-        throw new Error(`Fehler von PriceTracker API: ${response.status}. Details siehe Server-Konsole.`);
+        // Wirf einen Fehler, der im Haupt-Try/Catch gefangen wird
+        throw new Error(`PriceTracker API Fehler (${response.status}): Details siehe Server-Konsole.`);
     }
 
     return response.json();
@@ -43,7 +48,6 @@ function mapAndFilterPrices(data) {
     const prices = {};
     if (data && Array.isArray(data)) {
         data.forEach(p => {
-            // Speichert z.B. prices.lowNM = 12.34
             prices[p.conditionName] = p.price;
         });
     }
@@ -72,10 +76,10 @@ function aggregatePsaData(history) {
 // CORS & HEADERS
 // =========================================================
 app.use((req, res, next) => {
-    // Erlaubt Anfragen von allen Quellen und den neuen Header
+    // Erlaubt Anfragen von allen Quellen und den geheimen Header
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, X-Extension-ID'); // HIER den neuen Header erlauben
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-Extension-ID'); 
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
@@ -89,16 +93,16 @@ app.use((req, res, next) => {
 function authenticateExtension(req, res, next) {
     const extensionId = req.headers['x-extension-id']; // Liest den Header
     
-    // Server-Konfigurations-Check
+    // Server-Konfigurations-Check: Fehlt der geheime Schlüssel?
     if (!EXTENSION_ID_SECRET) {
         console.error("[AUTH ERROR] EXTENSION_ID_SECRET fehlt in der Umgebungsvariable!");
         return res.status(500).json({ error: "SERVER_CONFIG_ERROR" });
     }
 
-    // Authentifizierungs-Check
+    // Authentifizierungs-Check: Stimmt der gesendete Schlüssel überein?
     if (extensionId !== EXTENSION_ID_SECRET) {
         console.warn(`[AUTH] Unerlaubter Zugriff: ${extensionId}`);
-        // Code 401: Unautorisiert (Nicht bezahlter oder gehackter Zugriff)
+        // Code 401: Unautorisiert (Premium erforderlich)
         return res.status(401).json({ error: "REQUIRES_PREMIUM", message: "Premium-Zugriff erforderlich oder Erweiterungsschlüssel ungültig." });
     }
 
@@ -126,7 +130,7 @@ app.get("/prices", authenticateExtension, async (req, res) => {
         const mappedPrices = mapAndFilterPrices(tcgData.prices);
         const card = tcgData.card;
 
-        // 2. PSA/eBay Abfrage
+        // 2. PSA/eBay Abfrage (nur wenn TCGPlayer ID gefunden wurde)
         let avgPrices = {};
         if (card && card.tcgPlayerId) {
             const ebayData = await fetchPriceTrackerApi(
@@ -145,10 +149,18 @@ app.get("/prices", authenticateExtension, async (req, res) => {
         return res.json(finalResponse); 
 
     } catch (err) {
+        // Fängt Fehler von fetchPriceTrackerApi ab
+        if (err.message.includes('SERVER_CONFIG_ERROR')) {
+             // 500er für fehlerhafte Server-Konfiguration (API Key fehlt)
+             return res.status(500).json({ error: "SERVER_ERROR", message: "PriceTracker API Key fehlt." });
+        }
         if (err.message.includes('404')) {
+             // 404 für Karten, die in der PriceTracker API nicht gefunden werden
              return res.status(404).json({ error: "Karte nicht in der PriceTracker API gefunden." });
         }
+        
         console.error("[FATAL ERROR] Interner Serverfehler:", err);
+        // Standard 500er Fehler für alle anderen Probleme
         return res.status(500).json({ error: `SERVER_ERROR`, message: err.message });
     }
 });
