@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "PokéScout",
+  "version": "1.0",
+  "description": "Pokémon Card Price Overlay",
+
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "https://www.cardmarket.com/*",
+    "http://localhost:3000/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.cardmarket.com/*",
+        "https://www.cardmarket.com/de/*",
+        "https://www.cardmarket.com/en/*",
+        "https://www.cardmarket.com/en/Pokemon/*",
+        "https://www.cardmarket.com/de/Pokemon/*"
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}
