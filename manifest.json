@@ -5,6 +5,7 @@
   "description": "Pokémon Card Price Overlay",
 
   "permissions": [
+    "activeTab",
     "storage",
     "scripting"
   ],
