@@ -1,4 +1,4 @@
-// server.js - FINALE VERSION MIT NEON POSTGRESQL MAPPING UND KORRIGIERTER KARTENNUMMER-LOGIK
+// server.js - FINALE VERSION MIT NEON POSTGRESQL MAPPING, KORRIGIERTER KARTENNUMMER-LOGIK UND KORRIGIERTEM API-KEY-NAMEN
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -9,25 +9,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_BASE_URL_PPT = "https://api.pokeprice.io/v2";
 
-const API_KEY = process.env.PPT_API_KEY; // PriceTracker API Key
+// ⚠️ KORRIGIERT: Verwenden des neuen, korrekten Variablennamens
+const API_KEY = process.env.JUSTTCG_API_KEY; 
 const EXTENSION_ID_SECRET = process.env.EXTENSION_ID_SECRET; 
 const DATABASE_URL = process.env.DATABASE_URL; // Ihr Neon Connection String
 
-// ⚠️ DATENBANK CONNECTION POOL (Verwendet den Neon Connection String)
-if (!DATABASE_URL) {
-    console.error("FATAL ERROR: DATABASE_URL fehlt in den Umgebungsvariablen!");
-    process.exit(1); 
-}
-// ⚠️ PRÜFUNG DER KRITISCHEN ENVS (zusätzliche Prüfung)
-if (!API_KEY || !EXTENSION_ID_SECRET) {
-    console.error("FATAL ERROR: PPT_API_KEY oder EXTENSION_ID_SECRET fehlen.");
+// ⚠️ PRÜFUNG DER KRITISCHEN ENVS: Stellt sicher, dass alle Schlüssel vorhanden sind
+if (!DATABASE_URL || !API_KEY || !EXTENSION_ID_SECRET) {
+    // Die Meldung wird spezifischer
+    console.error("FATAL ERROR: Eine oder mehrere kritische Umgebungsvariablen (DATABASE_URL, JUSTTCG_API_KEY, EXTENSION_ID_SECRET) fehlen. Server wird beendet.");
     process.exit(1); 
 }
 
 
 const pool = new Pool({
     connectionString: DATABASE_URL,
-    // SSL ist notwendig, wenn Render zu Neon (oder anderen Cloud-DBs) verbindet
     ssl: {
         rejectUnauthorized: false 
     }
@@ -44,7 +40,8 @@ async function fetchPriceTrackerApi(endpoint) {
     const apiUrl = `${API_BASE_URL_PPT}${endpoint}`;
 
     if (!API_KEY) {
-        throw new Error("SERVER_CONFIG_ERROR: PPT_API_KEY fehlt in der Umgebungsvariable!");
+        // Die Fehlermeldung wird spezifischer
+        throw new Error("SERVER_CONFIG_ERROR: JUSTTCG_API_KEY fehlt in der Umgebungsvariable!");
     }
     
     console.log(`[DEBUG API CALL] Abfrage URL: ${apiUrl}`);
@@ -70,12 +67,10 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
          throw new Error("DATABASE_ERROR: Datenbank-Pool ist nicht initialisiert.");
     }
 
-    // ⚠️ KORREKTUR: Wir stellen sicher, dass die Kartennummer das DB-Format hat.
+    // KORREKTUR: Wir stellen sicher, dass die Kartennummer das DB-Format hat.
     let dbCardNumber = cardNumber;
     
     // Wenn die Extension z.B. '25' sendet, aber die DB '025' speichert:
-    // Wir fügen führende Nullen hinzu, um auf 3 Stellen aufzufüllen.
-    // Wir machen dies nur, wenn es numerisch ist und weniger als 3 Zeichen hat.
     if (cardNumber.length < 3 && /^\d+$/.test(cardNumber)) {
         dbCardNumber = cardNumber.padStart(3, '0');
         console.log(`[DB FORMAT] Nummer korrigiert von ${cardNumber} zu ${dbCardNumber}`);
@@ -93,15 +88,14 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
     try {
         const result = await client.query(query, values);
         if (result.rows.length > 0) {
-            // Gibt die ID zurück
             return result.rows[0].tcg_player_id; 
         }
-        return null; // Kein Eintrag gefunden
+        return null; 
     } catch (err) {
         console.error("Datenbankabfragefehler:", err.message);
         throw new Error("DATABASE_QUERY_FAILED"); 
     } finally {
-        client.release(); // Verbindung freigeben
+        client.release(); 
     }
 }
 
@@ -205,7 +199,7 @@ app.get("/prices", authenticateExtension, async (req, res) => {
 
     } catch (err) {
         if (err.message.includes('SERVER_CONFIG_ERROR')) {
-             return res.status(500).json({ error: "SERVER_ERROR", message: "PriceTracker API Key fehlt." });
+             return res.status(500).json({ error: "SERVER_ERROR", message: "JUSTTCG API Key fehlt." });
         }
         if (err.message.includes('404')) {
              return res.status(404).json({ error: "Karte nicht in der PriceTracker API gefunden." });
