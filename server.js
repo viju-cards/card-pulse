@@ -1,4 +1,4 @@
-// server.js - ENDGÜLTIGE VERSION MIT KORREKTER JUSTTCG API-KONFIGURATION
+// server.js - ENDGÜLTIGE VERSION MIT KORRIGIERTER REIHENFOLGE DER FUNKTIONEN
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -8,10 +8,8 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ⚠️ KORRIGIERT: Korrekte Basis-URL für die JustTCG API (ohne /v1 am Ende)
 const API_BASE_URL = "https://api.justtcg.com";
 
-// ⚠️ KORRIGIERT: Nutzung des korrekten Variablennamens
 const API_KEY = process.env.JUSTTCG_API_KEY; 
 const EXTENSION_ID_SECRET = process.env.EXTENSION_ID_SECRET; 
 const DATABASE_URL = process.env.DATABASE_URL; 
@@ -30,22 +28,44 @@ const pool = new Pool({
 app.use(express.json());
 
 // =========================================================
+// MIDDLEWARE UND AUTHENTIFIZIERUNG (JETZT GANZ OBEN DEFINIERT!)
+// =========================================================
+
+// MIDDLEWARE: CORS (Unverändert)
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*'); 
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-Extension-ID'); 
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+// AUTHENTIFIZIERUNGSFUNKTION (JETZT VOR DER ROUTE /prices DEFINIERT)
+function authenticateExtension(req, res, next) {
+    const extensionId = req.headers['x-extension-id']; 
+    if (!EXTENSION_ID_SECRET || extensionId !== EXTENSION_ID_SECRET) {
+        console.warn(`[AUTH] Unerlaubter Zugriff: ${extensionId}`);
+        return res.status(401).json({ error: "REQUIRES_PREMIUM", message: "Premium-Zugriff erforderlich oder Erweiterungsschlüssel ungültig." });
+    }
+    console.log(`[AUTH] Erfolgreich: Erweiterung ${extensionId.substring(0, 10)}... authentifiziert.`);
+    next(); 
+}
+
+
+// =========================================================
 // HILFSFUNKTIONEN
 // =========================================================
 
-// NEUE HILFSFUNKTION: API-Abfrage für JustTCG (mit API Key als Query-Parameter)
+// HILFSFUNKTION: API-Abfrage für JustTCG
 async function fetchJustTcgData(tcgPlayerId) {
-    // ⚠️ KORRIGIERT: Korrekter JustTCG Endpunkt /v1/cards
     const apiUrl = `${API_BASE_URL}/v1/cards?tcgplayerId=${tcgPlayerId}`;
 
     console.log(`[DEBUG API CALL] JustTCG URL: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
         headers: {
-            // Der API Key wird NICHT als Bearer, sondern oft als X-API-KEY gesendet,
-            // ODER er ist Teil der URL. Da Sie ihn als ENV haben, senden wir ihn
-            // als Standard-API-Key-Header. Wenn das fehlschlägt, müssen wir den 
-            // Query-Parameter-Ansatz nutzen.
              "X-API-KEY": API_KEY, 
         },
     });
@@ -59,7 +79,7 @@ async function fetchJustTcgData(tcgPlayerId) {
     return response.json();
 }
 
-// HILFSFUNKTION: TCGplayer ID aus der Datenbank abrufen (KORRIGIERT FÜR FÜHRENDE NULLEN)
+// HILFSFUNKTION: TCGplayer ID aus der Datenbank abrufen
 async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
     if (!pool) {
          throw new Error("DATABASE_ERROR: Datenbank-Pool ist nicht initialisiert.");
@@ -95,24 +115,17 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
     }
 }
 
-// HILFSFUNKTION: Preise Mappen und Filtern (Angepasst an JustTCG Antwortstruktur)
+// HILFSFUNKTION: Preise Mappen und Filtern
 function mapAndFilterPrices(data) {
-    // Wenn die API ein Array zurückgibt, nehmen wir das erste Element
     const cardData = Array.isArray(data) ? data[0] : data; 
 
     if (!cardData || !cardData.prices) return {};
 
     const prices = {};
     
-    // Wir nehmen nur die TCGplayer-Preise (wenn vorhanden)
     if (cardData.prices.tcgPlayer) {
         const tcgPrices = cardData.prices.tcgPlayer;
         
-        // Annahme: JustTCG gibt die Preise als Objekt zurück: { conditionName: price }
-        // Da die Struktur der alten API wahrscheinlich nicht 1:1 passt, 
-        // versuchen wir, die wichtigsten Preise zu extrahieren.
-        
-        // Dies ist eine SPEKULATION der JustTCG-Antwortstruktur.
         prices['Market'] = tcgPrices.market || null; 
         prices['Low'] = tcgPrices.low || null; 
         prices['Mid'] = tcgPrices.mid || null; 
@@ -122,16 +135,14 @@ function mapAndFilterPrices(data) {
     return prices;
 }
 
-// HILFSFUNKTION: PSA/eBay Daten (Da JustTCG die Datenstruktur geändert hat, lassen wir dies vorerst leer)
+// HILFSFUNKTION: PSA/eBay Daten (Platzhalter)
 function aggregatePsaData(history) {
     return { psa10: { avg: null, count: 0 }, psa9: { avg: null, count: 0 }, psa8: { avg: null, count: 0 } };
 }
 
 
-// ... (MIDDLEWARE und Authentifizierung sind unverändert)
-
 // =========================================================
-// ROUTE: Preise abrufen (MIT NEUER JUSTTCG LOGIK)
+// ROUTE: Preise abrufen (JETZT NACH ALLEN FUNKTIONEN DEFINIERT)
 // =========================================================
 app.get("/prices", authenticateExtension, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
@@ -155,11 +166,8 @@ app.get("/prices", authenticateExtension, async (req, res) => {
         const justTcgData = await fetchJustTcgData(tcgPlayerId);
 
         const mappedPrices = mapAndFilterPrices(justTcgData);
-        // Da die JustTCG API wahrscheinlich nicht die gleichen Felder liefert wie die alte PPT,
-        // müssen wir die Titel und PSA/Ebay-Logik anpassen.
         const cardTitle = justTcgData[0]?.name || "Unbekannter Titel";
         
-        // PSA/eBay Daten werden vorerst leer gelassen, da die Struktur unbekannt ist.
         const avgPrices = aggregatePsaData(null); 
 
         const finalResponse = { 
@@ -172,16 +180,14 @@ app.get("/prices", authenticateExtension, async (req, res) => {
         return res.json(finalResponse); 
 
     } catch (err) {
-        // Allgemeine Fehlerbehandlung
         console.error("[FATAL ERROR] Interner Serverfehler bei JustTCG Abfrage:", err);
-        // Wir senden den 500er, der zu "Server nicht erreichbar oder JSON-Fehler" führt.
         return res.status(500).json({ error: `SERVER_ERROR`, message: err.message });
     }
 });
 
 
 // =========================================================
-// SERVER START (Unverändert)
+// SERVER START
 // =========================================================
 app.get("/", (req, res) => {
     res.send("PokeCardScout API läuft.");
