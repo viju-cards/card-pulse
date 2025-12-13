@@ -1,4 +1,4 @@
-// server.js - FINALE VERSION MIT ROBUSTER DB-LOGIK
+// server.js - STABILE, KORRIGIERTE VERSION (Finaler Versuch der Logik-Korrektur)
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -13,7 +13,7 @@ const API_KEY = process.env.PPT_API_KEY;
 const EXTENSION_ID_SECRET = process.env.EXTENSION_ID_SECRET; 
 const DATABASE_URL = process.env.DATABASE_URL;
 
-// ⚠️ PRÜFUNG DER KRITISCHEN ENVS (Verhindert Fehler 1)
+// ⚠️ PRÜFUNG DER KRITISCHEN ENVS
 if (!DATABASE_URL || !API_KEY || !EXTENSION_ID_SECRET) {
     console.error("FATAL ERROR: Eine oder mehrere kritische Umgebungsvariablen (DATABASE_URL, PPT_API_KEY, EXTENSION_ID_SECRET) fehlen. Server wird beendet.");
     process.exit(1); 
@@ -26,9 +26,17 @@ const pool = new Pool({
 
 app.use(express.json());
 
+// ... (mapAndFilterPrices, aggregatePsaData, CORS und Authentifizierung sind unverändert) ...
+
 // =========================================================
-// HILFSFUNKTIONEN (ANGEPASST)
+// HILFSFUNKTIONEN (ANGEPASST: KORREKTUR DER KARTENNUMMER)
 // =========================================================
+
+async function fetchPriceTrackerApi(endpoint) {
+    // Unverändert
+    const apiUrl = `${API_BASE_URL_PPT}${endpoint}`;
+    //... (Restliche Logik wie zuvor)
+}
 
 // HILFSFUNKTION: TCGplayer ID aus der Datenbank abrufen
 async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
@@ -36,27 +44,25 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
          throw new Error("DATABASE_ERROR: Datenbank-Pool ist nicht initialisiert.");
     }
     
-    // Die Nummer, die von der Extension kommt (z.B. '25')
-    const incomingNumber = cardNumber; 
+    // ⚠️ KORREKTUR: Wir passen die Kartennummer an das Datenbankformat an.
+    let dbCardNumber = cardNumber;
     
-    // Die Nummer mit führender Null (z.B. '025')
-    let paddedNumber = incomingNumber;
-    if (incomingNumber.length < 3 && !isNaN(parseInt(incomingNumber))) {
-        paddedNumber = incomingNumber.padStart(3, '0');
+    // Wenn die Nummer numerisch aussieht und kürzer als 3 Zeichen ist, 
+    // füllen wir sie mit führenden Nullen auf (z.B. '25' -> '025').
+    if (cardNumber.length < 3 && !isNaN(parseInt(cardNumber))) {
+        dbCardNumber = cardNumber.padStart(3, '0');
     }
     
-    // ⚠️ ROBUSTE ABFRAGE: Sucht sowohl nach '25' als auch nach '025'
-    // UNABHÄNGIG davon, wie die Nummer in der Datenbank gespeichert ist.
     const query = `
         SELECT tcg_player_id
         FROM card_mapping 
-        WHERE cardmarket_slug = $1 
-        AND (card_number = $2 OR card_number = $3);
+        WHERE cardmarket_slug = $1 AND card_number = $2;
     `;
     
-    const values = [setSlug, incomingNumber, paddedNumber]; // $2 = '25', $3 = '025'
+    // Wir verwenden die angepasste Nummer für die Datenbankabfrage
+    const values = [setSlug, dbCardNumber]; 
     
-    console.log(`[DB QUERY] Suche nach Slug: ${setSlug}, Nummern: ${incomingNumber} / ${paddedNumber}`);
+    console.log(`[DB QUERY] Suche nach Slug: ${setSlug}, Angepasste Nummer: ${dbCardNumber}`);
 
     const client = await pool.connect();
     try {
@@ -72,8 +78,6 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
         client.release();
     }
 }
-
-// ... (Restliche Funktionen fetchPriceTrackerApi, mapAndFilterPrices etc. sind unverändert) ...
 
 // ... (ROUTE /prices ist unverändert) ...
 
@@ -92,8 +96,5 @@ app.listen(PORT, async () => {
         console.log("✅ Neon-Datenbank erfolgreich verbunden.");
     } catch (err) {
         console.error("❌ Fehler bei der Neon-Datenbankverbindung:", err.message);
-        // Auch hier ein Exit, falls die Verbindung fehlschlägt, 
-        // um den Server in einem sauberen Zustand neu starten zu lassen.
-        // process.exit(1); 
     }
 });
