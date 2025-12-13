@@ -1,4 +1,4 @@
-// server.js - ENDGÜLTIGE VERSION MIT KORRIGIERTER JUSTTCG API-KONFIGURATION UND FINALEM MAPPING
+// server.js - ENDGÜLTIGE VERSION MIT KORRIGIERTER JUSTTCG API-KONFIGURATION UND ULTIMATIV FLEXIBLEM MAPPING
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -115,7 +115,7 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
     }
 }
 
-// 🚀 FINAL: Preise Mappen und Filtern basierend auf der tatsächlichen JSON-Struktur
+// 🚀 FINAL: Preise Mappen und Filtern (ULTIMATE FLEXIBLE MAPPING)
 function mapAndFilterPrices(data) {
     // Zugriff auf data.data[0]
     const cardData = Array.isArray(data.data) ? data.data[0] : null; 
@@ -129,10 +129,10 @@ function mapAndFilterPrices(data) {
     let allPrices = []; 
     let conditionPrices = {}; 
 
-    // 1. Preise pro Zustand sammeln
+    // 1. Preise pro Zustand sammeln (Filterung der Sprache/des Drucks entfernt, nur gültiger Preis zählt)
     for (const variant of cardData.variants) {
-        // Wir berücksichtigen nur English und Price ist gesetzt (Filterung 'Holofoil' entfernt)
-        if (typeof variant.price === 'number' && variant.language === 'English') { 
+        // Wir berücksichtigen nur, dass der Price ein gültiger Number-Typ ist
+        if (typeof variant.price === 'number') { 
             const conditionKey = variant.condition.toUpperCase().trim();
             const price = variant.price;
             
@@ -159,7 +159,8 @@ function mapAndFilterPrices(data) {
     prices['LIGHTLY PLAYED'] = conditionPrices['LIGHTLY PLAYED'] || null;
     prices['MODERATELY PLAYED'] = conditionPrices['MODERATELY PLAYED'] || null;
     prices['HEAVILY PLAYED'] = conditionPrices['HEAVILY PLAYED'] || null;
-    prices['DAMAGED/POOR'] = conditionPrices['DAMAGED'] || null; 
+    // Deckt "DAMAGED" und als Fallback "POOR" ab
+    prices['DAMAGED/POOR'] = conditionPrices['DAMAGED'] || conditionPrices['POOR'] || null; 
 
     console.log("[MAPPING SUCCESS] Endgültige Preise:", prices);
     
@@ -198,7 +199,6 @@ app.get("/prices", authenticateExtension, async (req, res) => {
 
         const mappedPrices = mapAndFilterPrices(justTcgData);
         
-        // Holen des Titels aus der Struktur data.data[0].name
         const cardTitle = justTcgData.data && justTcgData.data[0]?.name || "Unbekannter Titel";
         
         const avgPrices = aggregatePsaData(null); 
