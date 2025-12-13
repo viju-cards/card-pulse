@@ -1,4 +1,4 @@
-// server.js - FINALE VERSION MIT NEON POSTGRESQL MAPPING
+// server.js - FINALE VERSION MIT NEON POSTGRESQL MAPPING UND KORRIGIERTER KARTENNUMMER-LOGIK
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -16,14 +16,18 @@ const DATABASE_URL = process.env.DATABASE_URL; // Ihr Neon Connection String
 // ⚠️ DATENBANK CONNECTION POOL (Verwendet den Neon Connection String)
 if (!DATABASE_URL) {
     console.error("FATAL ERROR: DATABASE_URL fehlt in den Umgebungsvariablen!");
-    // Stoppt den Serverstart, wenn die DB-URL fehlt
+    process.exit(1); 
+}
+// ⚠️ PRÜFUNG DER KRITISCHEN ENVS (zusätzliche Prüfung)
+if (!API_KEY || !EXTENSION_ID_SECRET) {
+    console.error("FATAL ERROR: PPT_API_KEY oder EXTENSION_ID_SECRET fehlen.");
     process.exit(1); 
 }
 
+
 const pool = new Pool({
     connectionString: DATABASE_URL,
-    // Nur für manche Hosting-Umgebungen notwendig (nicht unbedingt für Neon), 
-    // aber sicherheitshalber belassen wir es, falls Sie es auf Render hosten.
+    // SSL ist notwendig, wenn Render zu Neon (oder anderen Cloud-DBs) verbindet
     ssl: {
         rejectUnauthorized: false 
     }
@@ -60,20 +64,30 @@ async function fetchPriceTrackerApi(endpoint) {
     return response.json();
 }
 
-// HILFSFUNKTION: TCGplayer ID aus der Datenbank abrufen
+// HILFSFUNKTION: TCGplayer ID aus der Datenbank abrufen (KORRIGIERT FÜR FÜHRENDE NULLEN)
 async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
     if (!pool) {
          throw new Error("DATABASE_ERROR: Datenbank-Pool ist nicht initialisiert.");
     }
+
+    // ⚠️ KORREKTUR: Wir stellen sicher, dass die Kartennummer das DB-Format hat.
+    let dbCardNumber = cardNumber;
     
-    // Die Suchanfrage für die TCGplayer ID
+    // Wenn die Extension z.B. '25' sendet, aber die DB '025' speichert:
+    // Wir fügen führende Nullen hinzu, um auf 3 Stellen aufzufüllen.
+    // Wir machen dies nur, wenn es numerisch ist und weniger als 3 Zeichen hat.
+    if (cardNumber.length < 3 && /^\d+$/.test(cardNumber)) {
+        dbCardNumber = cardNumber.padStart(3, '0');
+        console.log(`[DB FORMAT] Nummer korrigiert von ${cardNumber} zu ${dbCardNumber}`);
+    }
+    
     const query = `
         SELECT tcg_player_id
         FROM card_mapping 
         WHERE cardmarket_slug = $1 AND card_number = $2;
     `;
     
-    const values = [setSlug, cardNumber];
+    const values = [setSlug, dbCardNumber];
     
     const client = await pool.connect();
     try {
@@ -85,14 +99,13 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
         return null; // Kein Eintrag gefunden
     } catch (err) {
         console.error("Datenbankabfragefehler:", err.message);
-        // Wirf einen allgemeinen Fehler bei DB-Problemen
         throw new Error("DATABASE_QUERY_FAILED"); 
     } finally {
         client.release(); // Verbindung freigeben
     }
 }
 
-// HILFSFUNKTION: Preise Mappen und Filtern (wie in Ihrer Version)
+// HILFSFUNKTION: Preise Mappen und Filtern (unverändert)
 function mapAndFilterPrices(data) {
     const prices = {};
     if (data && Array.isArray(data)) {
@@ -103,7 +116,7 @@ function mapAndFilterPrices(data) {
     return prices;
 }
 
-// HILFSFUNKTION: PSA-Durchschnittspreise aggregieren (wie in Ihrer Version)
+// HILFSFUNKTION: PSA-Durchschnittspreise aggregieren (unverändert)
 function aggregatePsaData(history) {
     const aggregated = { psa10: { avg: null, count: 0 }, psa9: { avg: null, count: 0 }, psa8: { avg: null, count: 0 } };
 
@@ -147,7 +160,6 @@ function authenticateExtension(req, res, next) {
 // ROUTE: Preise abrufen (MIT NEON DB-LOOKUP)
 // =========================================================
 app.get("/prices", authenticateExtension, async (req, res) => {
-    // set und cardNumber kommen von der Extension
     const { set: setSlug, cardNumber } = req.query;
 
     if (!setSlug || !cardNumber) {
@@ -160,14 +172,12 @@ app.get("/prices", authenticateExtension, async (req, res) => {
 
         if (!tcgPlayerId) {
              console.log(`[MAPPING 404] Kein TCGplayer ID Eintrag gefunden für ${setSlug}-${cardNumber}`);
-             // Dies ist die Stelle, die den Fehler "Mapping fehlt" in der Extension auslösen soll.
              return res.status(404).json({ error: "Mapping fehlt", message: "TCGplayer ID für diese Karte nicht in der Datenbank gefunden. Bitte hinzufügen." });
         }
         
         // 2. TCGPlayer Abfrage (mit der zuverlässigen TCGplayer ID)
         console.log(`[API CALL] Rufe PriceTracker über TCGplayer ID ${tcgPlayerId} ab.`);
         
-        // PriceTracker API call jetzt mit der TCGplayer ID
         const tcgData = await fetchPriceTrackerApi(
             `/products/tcgplayer?tcgPlayerId=${tcgPlayerId}` 
         );
@@ -220,7 +230,6 @@ app.get("/", (req, res) => {
 
 app.listen(PORT, async () => {
     console.log(`Server läuft auf Port ${PORT}`);
-    // Optional: Testen der Datenbankverbindung beim Start
     try {
         await pool.query('SELECT NOW()');
         console.log("✅ Neon-Datenbank erfolgreich verbunden.");
