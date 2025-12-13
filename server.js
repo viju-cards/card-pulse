@@ -1,131 +1,168 @@
-// server.js - NEUE VERSION FÜR JUSTTCG API
-
+// server.js - FINALE JUSTTCG-VERSION
 const express = require("express");
 const fetch = require("node-fetch");
-require("dotenv").config(); 
+require("dotenv").config(); // Lädt Umgebungsvariablen
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-// ⚠️ NEU: JustTCG API Key (muss in Render Environment Variables gesetzt werden!)
+const JUSTTCG_BASE_URL = "https://api.justtcg.com/v1";
+
+// Hält den JustTCG API Key (aus Render ENV). Bitte in Render 'JUSTTCG_API_KEY' nennen.
 const API_KEY = process.env.JUSTTCG_API_KEY; 
+// Hält den geheimen Schlüssel der Erweiterung (aus Render ENV)
 const EXTENSION_ID_SECRET = process.env.EXTENSION_ID_SECRET; 
-const JUSTTCG_BASE_URL = "https://api.justtcg.com/v1"; 
+
+// Einfacher In-Memory Cache (Für Render ideal)
+const cache = new Map();
+const CACHE_LIFETIME_MS = 1000 * 60 * 60 * 6; // 6 Stunden Cache-Lebensdauer
 
 app.use(express.json());
 
 // =========================================================
-// CACHE DEFINITION (unverändert)
-// =========================================================
-const cache = new Map();
-const CACHE_LIFETIME_MS = 1000 * 60 * 60 * 3; // 3 Stunden Cache
-
-
-// =========================================================
-// HILFSFUNKTIONEN (Angepasst an JustTCG)
+// HILFSFUNKTIONEN & MAPPING
 // =========================================================
 
-// NEUE HILFSFUNKTION: API-Abfrage für JustTCG
+// MAPPING: Wandelt den alten, von der Extension gesendeten Slug (links) 
+// in den korrekten JustTCG Set-ID Slug (rechts) um.
+const JUSTTCG_SET_MAPPING = {
+    // Wenn Sie weitere Sets testen, müssen Sie das korrekte JustTCG-ID hier eintragen.
+    "me01-mega-evolution": "xy-promos", // Annahme für MEG (bitte prüfen!)
+    "swsh01-sword-and-shield-base-set": "sword-shield", // Korrigiert für SSH
+    "me02-phantasmal-flames": "xy-promos", // Annahme für PFL (bitte prüfen!)
+    "sv-black-bolt": "sv-promos", // Annahme für BLK (bitte prüfen!)
+    "sv-paldea-evolved": "paldea-evolved" // Beispiel: Falls Sie einen neuen Slug testen
+};
+
+
+// HILFSFUNKTION: API-Abfrage für JustTCG
 async function fetchJustTCGApi(endpoint) {
+    const apiUrl = `${JUSTTCG_BASE_URL}${endpoint}`;
+
     if (!API_KEY) {
         throw new Error("SERVER_CONFIG_ERROR: JUSTTCG_API_KEY fehlt in der Umgebungsvariable!");
     }
     
-    console.log(`[DEBUG API CALL] Abfrage URL: ${JUSTTCG_BASE_URL}${endpoint}`);
+    console.log(`[DEBUG API CALL] Abfrage URL: ${apiUrl}`);
 
-    const response = await fetch(`${JUSTTCG_BASE_URL}${endpoint}`, {
+    const response = await fetch(apiUrl, {
         headers: {
-            'X-Api-Key': API_KEY, // ⚠️ NEUER HEADER NAME
+            "x-api-key": API_KEY, // Sendet den JustTCG API Key
         },
     });
 
     if (!response.ok) {
-        const errorText = await response.text();
-        console.error("[ERROR] API-Antwort nicht OK:", response.status, errorText);
-        throw new Error(`JustTCG API Fehler (${response.status}): Details siehe Server-Konsole. Response: ${errorText}`);
+        throw new Error(`API-Fehler (${response.status}): ${response.statusText}`);
     }
 
     return response.json();
 }
 
-// NEUE HILFSFUNKTION: Extrahiert TCGPlayer-Preise aus JustTCG Response
-function mapJustTCGPrices(data) {
-    const prices = {};
-    if (data && Array.isArray(data.items) && data.items.length > 0) {
-        const cardData = data.items[0]; 
+// HILFSFUNKTION: Wandelt JustTCG-Daten in das Format für die Extension um
+function mapJustTCGPrices(justTcgData) {
+    const cardData = justTcgData.data?.[0];
+    if (!cardData || !cardData.variants) return { low: null, mid: null, high: null };
 
-        // Annahme: JustTCG liefert die Preise unter 'pricePoints' oder einem ähnlichen Feld.
-        // Die genaue Struktur kann je nach JustTCG-Response variieren.
-        // Wir nehmen die allgemeinen Marktpreise.
-        if (cardData.pricePoints) {
-             // Beispielhafte Mapping-Logik, muss ggf. nach JustTCG Doku angepasst werden:
-            prices['Near Mint'] = cardData.pricePoints.nearMint?.marketPrice;
-            prices['Lightly Played'] = cardData.pricePoints.lightlyPlayed?.marketPrice;
-            prices['Average'] = cardData.pricePoints.marketPrice; // oder ähnliches Feld
-        }
+    // Versucht, den Preis für die 'Near Mint' (NM) und 'Normal' (non-foil) Variante zu finden
+    const nmVariant = cardData.variants.find(v => 
+        v.condition === 'Near Mint' && 
+        v.printing === 'Normal' && 
+        (v.language === 'English' || v.language === 'Japanese') // Englisch oder Japanisch
+    );
 
-        // Falls die Struktur anders ist, müssen Sie dies anpassen.
-        // Für den Übergang nutzen wir das TCGplayer Marktpreis-Feld:
-        const tcgMarketPrice = cardData.marketPrice;
-        if (tcgMarketPrice) {
-            prices['TCG Market'] = tcgMarketPrice;
-        }
-
-        // Geben Sie hier nur die Werte zurück, die Sie in der Extension anzeigen möchten!
+    if (nmVariant) {
+        const price = nmVariant.price; 
+        
+        // Da JustTCG oft nur einen Marktpreis (Market Price) liefert, 
+        // verwenden wir diesen für Low, Mid und High, um die Extension zu befüllen.
+        return {
+            low: price,
+            mid: price, 
+            high: price
+        };
     }
-    return prices;
+
+    // Fallback: Wenn keine Near Mint Normal-Variante gefunden, versuchen wir, den ersten Preis zu verwenden
+    const firstVariant = cardData.variants[0];
+     if (firstVariant) {
+        const price = firstVariant.price; 
+        return {
+            low: price,
+            mid: price, 
+            high: price
+        };
+    }
+
+    return { low: null, mid: null, high: null };
 }
 
-// ⚠️ Diese Funktion ist jetzt nicht mehr relevant, da JustTCG die PSA-Daten nicht liefert!
-function aggregatePsaData(history) {
-    // KEINE PSA-LOGIK MEHR: Rückgabe eines leeren Objekts, um Fehler zu vermeiden.
-    return { psa10: { avg: null, count: 0 }, psa9: { avg: null, count: 0 }, psa8: { avg: null, count: 0 } };
+// HILFSFUNKTION: Simuliert die PSA-Datenaggregation (jetzt leer, da keine Datenquelle)
+function aggregatePsaData(ebayHistory) {
+    // Wir haben keine Datenquelle mehr für die PSA/eBay-Verkäufe.
+    // Wir geben ein leeres Array zurück, damit die Extension korrekt dargestellt wird.
+    return []; 
 }
 
-// =========================================================
-// CORS & HEADERS / MIDDLEWARE (unverändert)
-// =========================================================
-app.use((req, res, next) => { /* ... CORS unverändert ... */ next(); });
-function authenticateExtension(req, res, next) { /* ... Auth unverändert ... */ next(); }
+// MIDDLEWARE: Prüfung des geheimen Schlüssels (Premium-Authentifizierung)
+function authenticateExtension(req, res, next) {
+    const providedId = req.headers['x-extension-id'];
+
+    if (providedId && providedId === EXTENSION_ID_SECRET) {
+        next(); // Erfolgreich authentifiziert
+    } else {
+        console.warn(`[AUTH FAILED] Ungültige oder fehlende 'X-Extension-ID': ${providedId}`);
+        // Wichtig: 401 senden, damit die Extension weiß, dass Premium fehlt
+        return res.status(401).json({ error: "REQUIRES_PREMIUM", message: "Bitte die Erweiterung aktivieren." });
+    }
+}
 
 
 // =========================================================
-// ROUTE: Preise abrufen (MIT CACHE & JUSTTCG-LOGIK)
+// ROUTE: Preise abrufen (MIT KORRIGIERTER JUSTTCG-LOGIK)
 // =========================================================
 app.get("/prices", authenticateExtension, async (req, res) => {
-    const { set, cardNumber } = req.query;
+    // Wir empfangen den alten Slug im 'set'-Parameter von der Extension
+    const { set: oldSlug, cardNumber } = req.query;
 
-    if (!set || !cardNumber) {
+    if (!oldSlug || !cardNumber) {
         return res.status(400).json({ error: "Es fehlen 'set' und 'cardNumber' Parameter." });
     }
+    
+    // 1. NEUES MAPPING ANWENDEN
+    const justTcgSetId = JUSTTCG_SET_MAPPING[oldSlug];
 
-    const cacheKey = `${set}-${cardNumber}`;
+    if (!justTcgSetId) {
+        console.error(`[MAPPING ERROR] Kein JustTCG Set-ID für den Slug: ${oldSlug} gefunden.`);
+        // Senden Sie eine 404, um der Extension zu signalisieren, dass die Karte nicht unterstützt wird.
+        return res.status(404).json({ error: "Karte nicht in JustTCG Set-Mapping gefunden. Bitte Mapping erweitern." });
+    }
+
+    const cacheKey = `${justTcgSetId}-${cardNumber}`;
     const cachedData = cache.get(cacheKey);
 
-    // 1. CACHE HIT: Prüfen, ob Cache gültig ist
+    // 2. CACHE HIT: Prüfen
     if (cachedData && Date.now() - cachedData.timestamp < CACHE_LIFETIME_MS) {
         console.log(`[CACHE HIT] ${cacheKey} - Daten aus dem Cache geladen.`);
         return res.json(cachedData.data);
     }
     
-    // 2. CACHE MISS: Neue Daten von JustTCG abrufen
+    // 3. CACHE MISS: Neue Daten von JustTCG abrufen
     try {
         console.log(`[CACHE MISS] ${cacheKey} - Rufe Daten von JustTCG ab.`);
 
-        // ⚠️ ANNAHME: JustTCG kann über Set-Slug und Card-Number suchen.
-        // Falls die Karte nicht gefunden wird, muss die Suche auf den vollen Titel erweitert werden.
-        const endpoint = `/cards?game=pokemon&set=${set}&cardNumber=${cardNumber}`;
+        // ⚠️ KORREKTER JustTCG ENDPUNKT: mit 'setId' und 'number'
+        const endpoint = `/cards?game=pokemon&setId=${justTcgSetId}&number=${cardNumber}`;
         const justTcgData = await fetchJustTCGApi(endpoint);
         
         // Die JustTCG API gibt ein Array von Karten zurück, wir nehmen die erste.
-        if (!justTcgData.items || justTcgData.items.length === 0) {
+        if (!justTcgData.data || justTcgData.data.length === 0) {
+             console.log(`[404 NOT FOUND] JustTCG fand keine Karte für ${cacheKey}`);
              return res.status(404).json({ error: "Karte nicht in der JustTCG API gefunden." });
         }
         
         const mappedPrices = mapJustTCGPrices(justTcgData);
-        const cardName = justTcgData.items[0].name;
+        const cardName = justTcgData.data[0].name;
 
-        // ⚠️ PSA / eBay LOGIK ENTFERNT / SIMPLIFIZIERT:
-        // Wir können JustTCG nicht für PSA-Averages nutzen.
+        // PSA / eBay LOGIK entfernt (AggregatePsaData liefert jetzt leere Daten)
         const avgPrices = aggregatePsaData([]); 
 
         const finalResponse = { 
@@ -134,18 +171,14 @@ app.get("/prices", authenticateExtension, async (req, res) => {
             ebay: avgPrices // Ist jetzt immer leer/null
         };
         
-        // 3. Im Cache speichern
         cache.set(cacheKey, { data: finalResponse, timestamp: Date.now() });
         console.log("[REQUEST END] Preise erfolgreich gesendet und im Cache gespeichert.");
 
         return res.json(finalResponse); 
 
     } catch (err) {
-        if (err.message.includes('SERVER_CONFIG_ERROR')) {
-             return res.status(500).json({ error: "SERVER_ERROR", message: "JustTCG API Key fehlt." });
-        }
-        if (err.message.includes('404') || err.message.includes('400')) {
-             // 404/400 Fehler des Drittanbieters
+        // Fängt API-Fehler (z.B. 404 von JustTCG) ab
+        if (err.message.includes('404')) {
              return res.status(404).json({ error: "Karte nicht in der API gefunden.", message: "Dienst hat Karte nicht gelistet." });
         }
         
@@ -156,8 +189,13 @@ app.get("/prices", authenticateExtension, async (req, res) => {
 
 
 // =========================================================
-// SERVER START
+// START DER ANWENDUNG
 // =========================================================
+
+app.get("/", (req, res) => {
+    res.send("PokeCardScout API läuft.");
+});
+
 app.listen(PORT, () => {
     console.log(`Server läuft auf Port ${PORT}`);
 });
