@@ -1,18 +1,24 @@
-// api/prices.js - Vercel Serverless Function
+// api/prices.js - Vercel Serverless Function (Mit korrigiertem Such-Mapping)
 
 const fetch = require("node-fetch");
-const { parse } = require('url'); // Nur falls nötig, aber Vercel unterstützt req.query
 
-// 🛑 Umgebungsvariablen werden direkt aus process.env gelesen (muss auf Vercel gesetzt werden)
 const JUSTTCG_BASE_URL = 'https://api.justtcg.com/api/v1'; 
 const JUSTTCG_API_KEY = process.env.JUSTTCG_API_KEY; 
 const EXTENSION_ID_SECRET = process.env.EXTENSION_ID_SECRET; 
 
+// 💡 NEU: Internes Mapping von Cardmarket Slug auf lesbaren Set-Namen für die Suche
+const setSlugToSearchName = {
+    "me01-mega-evolution": "Mega Evolution",
+    "swsh01-sword-and-shield-base-set": "Sword & Shield Base Set",
+    "me02-phantasmal-flames": "Phantasmal Flames",
+    "sv-black-bolt": "Black Bolt"
+    // Fügen Sie hier alle weiteren Slugs aus Ihrer content.js-Mapping hinzu!
+};
+
 // =========================================================
-// HILFSFUNKTIONEN (ANGEPASST AN JUSTTCG)
+// HILFSFUNKTIONEN (Unverändert, außer fetchJustTcgApi Fehlermeldung)
 // =========================================================
 
-// HILFSFUNKTION: API-Abfrage (ANGEPASST für JustTCG)
 async function fetchJustTcgApi(endpoint) {
     if (!JUSTTCG_API_KEY) {
         throw new Error("SERVER_CONFIG_ERROR: JUSTTCG_API_KEY fehlt in der Umgebungsvariable!");
@@ -24,21 +30,22 @@ async function fetchJustTcgApi(endpoint) {
     const response = await fetch(url, {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${JUSTTCG_API_KEY}`, // <--- JustTCG Key
+            'Authorization': `Bearer ${JUSTTCG_API_KEY}`,
         },
     });
 
     if (!response.ok) {
         const errorText = await response.text();
-        console.error("[ERROR] JustTCG API-Antwort nicht OK:", response.status, errorText);
-        throw new Error(`JustTCG API Fehler (${response.status}): ${response.status === 404 ? 'Karte nicht gefunden.' : 'Details siehe Server-Konsole.'}`);
+        console.error("[ERROR] JustTCG API-Antwort nicht OK:", response.status, errorText.substring(0, 100)); // Loggt nur einen Teil der Antwort
+        // Wirft den ursprünglichen Fehler, der in den Vercel-Logs sichtbar ist
+        throw new Error(`JustTCG API Fehler (${response.status}): Details siehe Server-Konsole (Cloudflare 1014).`); 
     }
 
     return response.json();
 }
 
-// HILFSFUNKTION: Preise Mappen (ANGEPASST für JustTCG TCGPlayer)
 function mapAndFilterPrices(tcgPlayerDetails) {
+    // ... (Logik bleibt unverändert) ...
     const toFloatOrNull = (value) => {
         if (value === null || value === undefined || value === '') return null;
         const result = parseFloat(value);
@@ -60,8 +67,8 @@ function mapAndFilterPrices(tcgPlayerDetails) {
     };
 }
 
-// HILFSFUNKTION: PSA-Durchschnittspreise mappen (ANGEPASST für JustTCG gradePrices)
 function mapPsaPrices(gradePrices) {
+    // ... (Logik bleibt unverändert) ...
     const aggregated = {};
     const grades = [10, 9, 8]; 
 
@@ -87,57 +94,51 @@ function mapPsaPrices(gradePrices) {
 }
 
 // =========================================================
-// HAUPT-HANDLER für VERCEL (ersetzt app.get("/prices", ...))
+// HAUPT-HANDLER (mit NEUER Suchlogik)
 // =========================================================
 
 module.exports = async (req, res) => {
     
-    // 1. CORS & METHODEN-Handling (Manuell gesetzt für die Extension)
+    // ... (CORS, OPTIONS, GET-Check, AUTH-Middleware unverändert) ...
     res.setHeader('Access-Control-Allow-Origin', '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Extension-ID'); 
     
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-    
-    if (req.method !== 'GET') {
-        return res.status(405).json({ error: "Method Not Allowed" });
-    }
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'GET') return res.status(405).json({ error: "Method Not Allowed" });
 
-    // 2. Query-Parameter und Auth-Header extrahieren
-    // Vercel Serverless Functions erlauben req.query für GET-Parameter
     const { set: setSlug, cardNumber, tcgPlayerId } = req.query; 
     const extensionId = req.headers['x-extension-id']; 
     
+    // ... (Input & Auth Checks unverändert) ...
     if (!setSlug && !cardNumber && !tcgPlayerId) {
         return res.status(400).json({ error: "Es fehlen die notwendigen Parameter (set/cardNumber oder tcgPlayerId)." });
     }
 
-    // 3. Authentifizierung (ersetzt Middleware)
-    if (!EXTENSION_ID_SECRET) {
-        console.error("[AUTH ERROR] EXTENSION_ID_SECRET fehlt in der Umgebungsvariable!");
-        return res.status(500).json({ error: "SERVER_CONFIG_ERROR", message: "Extension Secret fehlt." });
-    }
-
-    if (extensionId !== EXTENSION_ID_SECRET) {
-        console.warn(`[AUTH] Unerlaubter Zugriff: ${extensionId}`);
-        // Code 401 löst in background.js 'REQUIRES_PREMIUM' aus
-        return res.status(401).json({ error: "REQUIRES_PREMIUM", message: "Premium-Zugriff erforderlich oder Erweiterungsschlüssel ungültig." });
-    }
+    if (!EXTENSION_ID_SECRET) return res.status(500).json({ error: "SERVER_CONFIG_ERROR", message: "Extension Secret fehlt." });
+    if (extensionId !== EXTENSION_ID_SECRET) return res.status(401).json({ error: "REQUIRES_PREMIUM", message: "Premium-Zugriff erforderlich oder Erweiterungsschlüssel ungültig." });
 
     // 4. Hauptlogik (JustTCG Abfrage)
     try {
         let cardData;
         
         if (tcgPlayerId) {
-            // Option A: Abfrage direkt per TCGPlayer ID (JustTCG: /cards/{id})
+            // Option A: Direkte ID-Abfrage
             const endpoint = `/cards/${encodeURIComponent(tcgPlayerId)}`;
             cardData = await fetchJustTcgApi(endpoint);
             
         } else {
-            // Option B: Abfrage per Set-Slug und Nummer (JustTCG: /cards?query=...)
-            const searchQuery = `${setSlug} ${cardNumber}`; 
+            // Option B: Suche
+            const setName = setSlugToSearchName[setSlug];
+            
+            if (!setName) {
+                // Wenn wir den Set-Namen nicht kennen, können wir die Suche nicht durchführen.
+                // ⚠️ HINWEIS: Hier müssten alle Slugs aus content.js im Mapping ergänzt werden!
+                return res.status(400).json({ error: "SET_MAPPING_MISSING", message: `Unbekannter Set-Slug: ${setSlug}. Bitte das Mapping in api/prices.js erweitern.` });
+            }
+            
+            // NEUE, KORREKTE SUCHANFRAGE: "Phantasmal Flames 013"
+            const searchQuery = `${setName} ${cardNumber}`; 
             const endpoint = `/cards?query=${encodeURIComponent(searchQuery)}`;
             
             const searchResult = await fetchJustTcgApi(endpoint);
@@ -150,7 +151,7 @@ module.exports = async (req, res) => {
             }
         }
 
-        // 5. Daten Mappen und formatieren
+        // 5. Daten Mappen und formatieren (Unverändert)
         const tcgPlayerDetails = cardData.tcgPlayer || cardData; 
         
         if (!tcgPlayerDetails) {
@@ -163,13 +164,13 @@ module.exports = async (req, res) => {
         const finalResponse = { 
             prices: mappedPrices, 
             fullTitle: cardData.name || "Unbekannt", 
-            ebay: avgPrices // 'ebay' ist das erwartete Feld im Client (content.js)
+            ebay: avgPrices
         };
             
-        console.log("[REQUEST END] Preise und PSA-Avg erfolgreich von JustTCG gemapped und gesendet.");
         return res.json(finalResponse); 
 
     } catch (err) {
+        // ... (Fehlerbehandlung unverändert) ...
         if (err.message.includes('SERVER_CONFIG_ERROR')) {
              return res.status(500).json({ error: "SERVER_ERROR", message: "JustTCG API Key fehlt." });
         }
