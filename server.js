@@ -1,4 +1,4 @@
-// server.js - ENDGÜLTIGE VERSION MIT KORRIGIERTER REIHENFOLGE DER FUNKTIONEN
+// server.js - ENDGÜLTIGE VERSION MIT KORRIGIERTEM JUSTTCG MAPPING
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -28,10 +28,10 @@ const pool = new Pool({
 app.use(express.json());
 
 // =========================================================
-// MIDDLEWARE UND AUTHENTIFIZIERUNG (JETZT GANZ OBEN DEFINIERT!)
+// MIDDLEWARE UND AUTHENTIFIZIERUNG
 // =========================================================
 
-// MIDDLEWARE: CORS (Unverändert)
+// MIDDLEWARE: CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -42,7 +42,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// AUTHENTIFIZIERUNGSFUNKTION (JETZT VOR DER ROUTE /prices DEFINIERT)
+// AUTHENTIFIZIERUNGSFUNKTION 
 function authenticateExtension(req, res, next) {
     const extensionId = req.headers['x-extension-id']; 
     if (!EXTENSION_ID_SECRET || extensionId !== EXTENSION_ID_SECRET) {
@@ -85,7 +85,6 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
          throw new Error("DATABASE_ERROR: Datenbank-Pool ist nicht initialisiert.");
     }
     
-    // Korrektur: Wir stellen sicher, dass die Kartennummer das DB-Format (025) hat.
     let dbCardNumber = cardNumber;
     if (cardNumber.length < 3 && /^\d+$/.test(cardNumber)) {
         dbCardNumber = cardNumber.padStart(3, '0');
@@ -115,34 +114,67 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
     }
 }
 
-// HILFSFUNKTION: Preise Mappen und Filtern
+// 🚀 NEU UND KORRIGIERT: Preise Mappen und Filtern basierend auf der tatsächlichen JSON-Struktur
 function mapAndFilterPrices(data) {
-    const cardData = Array.isArray(data) ? data[0] : data; 
+    const cardData = Array.isArray(data.data) ? data.data[0] : null; // Zugriff auf data.data[0]
 
-    if (!cardData || !cardData.prices) return {};
-
-    const prices = {};
-    
-    if (cardData.prices.tcgPlayer) {
-        const tcgPrices = cardData.prices.tcgPlayer;
-        
-        prices['Market'] = tcgPrices.market || null; 
-        prices['Low'] = tcgPrices.low || null; 
-        prices['Mid'] = tcgPrices.mid || null; 
-        prices['High'] = tcgPrices.high || null; 
+    if (!cardData || !cardData.variants || !Array.isArray(cardData.variants)) {
+        console.warn("[MAPPING ERROR] 'variants' Array fehlt oder Struktur ist unerwartet.");
+        return {};
     }
+    
+    const prices = {};
+    let allPrices = []; 
+    let conditionPrices = {}; 
+
+    // 1. Preise pro Zustand sammeln
+    for (const variant of cardData.variants) {
+        // Wir berücksichtigen nur English, Holofoil (wenn vorhanden) und Price ist gesetzt
+        if (typeof variant.price === 'number' && variant.language === 'English' && variant.printing === 'Holofoil') {
+            const conditionKey = variant.condition.toUpperCase().trim();
+            const price = variant.price;
+            
+            allPrices.push(price);
+
+            // Speichere den Preis für den Zustand
+            // (Überschreibe nur, wenn der Preis günstiger ist, um das "Low" für den Zustand zu erhalten)
+            if (!conditionPrices[conditionKey] || price < conditionPrices[conditionKey]) {
+                conditionPrices[conditionKey] = price;
+            }
+        }
+    }
+
+    // 2. Gesamt-Low und High berechnen
+    prices['LOW'] = allPrices.length > 0 ? Math.min(...allPrices) : null;
+    prices['HIGH'] = allPrices.length > 0 ? Math.max(...allPrices) : null;
+    
+    // 3. Zustände auf die benötigten Keys mappen (Keys müssen dem UI entsprechen)
+    
+    // Near Mint (NM) ist der Standard-Marktpreis
+    const nearMintPrice = conditionPrices['NEAR MINT'] || null;
+    prices['MARKET PRICE'] = nearMintPrice; 
+    
+    prices['NEAR MINT'] = nearMintPrice;
+    prices['LIGHTLY PLAYED'] = conditionPrices['LIGHTLY PLAYED'] || null;
+    prices['MODERATELY PLAYED'] = conditionPrices['MODERATELY PLAYED'] || null;
+    prices['HEAVILY PLAYED'] = conditionPrices['HEAVILY PLAYED'] || null;
+    prices['DAMAGED/POOR'] = conditionPrices['DAMAGED'] || null; // 'POOR' wird nicht explizit in der API geliefert
+
+    // Debugging, um zu sehen, welche Preise gefunden wurden
+    console.log("[MAPPING SUCCESS] Gemappte Preise:", prices);
     
     return prices;
 }
 
-// HILFSFUNKTION: PSA/eBay Daten (Platzhalter)
+// HILFSFUNKTION: PSA/eBay Daten (Wird nicht mehr benötigt, aber als Platzhalter beibehalten)
 function aggregatePsaData(history) {
+    // Entsprechend Ihrer Anweisung wird dieser Teil leer gelassen
     return { psa10: { avg: null, count: 0 }, psa9: { avg: null, count: 0 }, psa8: { avg: null, count: 0 } };
 }
 
 
 // =========================================================
-// ROUTE: Preise abrufen (JETZT NACH ALLEN FUNKTIONEN DEFINIERT)
+// ROUTE: Preise abrufen
 // =========================================================
 app.get("/prices", authenticateExtension, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
@@ -166,8 +198,11 @@ app.get("/prices", authenticateExtension, async (req, res) => {
         const justTcgData = await fetchJustTcgData(tcgPlayerId);
 
         const mappedPrices = mapAndFilterPrices(justTcgData);
-        const cardTitle = justTcgData[0]?.name || "Unbekannter Titel";
         
+        // Holen des Titels aus der Struktur data[0].name
+        const cardTitle = justTcgData.data && justTcgData.data[0]?.name || "Unbekannter Titel";
+        
+        // PSA/eBay Daten sind leer
         const avgPrices = aggregatePsaData(null); 
 
         const finalResponse = { 
