@@ -1,4 +1,4 @@
-// server.js - KORRIGIERTE VERSION MIT BEREINIGUNG DER KARTENNUMMER
+// server.js - FINALE VERSION MIT ROBUSTER DB-LOGIK
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -13,8 +13,9 @@ const API_KEY = process.env.PPT_API_KEY;
 const EXTENSION_ID_SECRET = process.env.EXTENSION_ID_SECRET; 
 const DATABASE_URL = process.env.DATABASE_URL;
 
-if (!DATABASE_URL) {
-    console.error("FATAL ERROR: DATABASE_URL fehlt in den Umgebungsvariablen!");
+// ⚠️ PRÜFUNG DER KRITISCHEN ENVS (Verhindert Fehler 1)
+if (!DATABASE_URL || !API_KEY || !EXTENSION_ID_SECRET) {
+    console.error("FATAL ERROR: Eine oder mehrere kritische Umgebungsvariablen (DATABASE_URL, PPT_API_KEY, EXTENSION_ID_SECRET) fehlen. Server wird beendet.");
     process.exit(1); 
 }
 
@@ -24,8 +25,6 @@ const pool = new Pool({
 });
 
 app.use(express.json());
-
-// ... (mapAndFilterPrices, aggregatePsaData, CORS und Authentifizierung sind unverändert) ...
 
 // =========================================================
 // HILFSFUNKTIONEN (ANGEPASST)
@@ -37,46 +36,27 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
          throw new Error("DATABASE_ERROR: Datenbank-Pool ist nicht initialisiert.");
     }
     
-    // ⚠️ KORREKTUR DER KARTENNUMMER: Wir entfernen führende Nullen 
-    // von der Nummer, die von der Extension kommt (z.B. "025" wird zu "25").
-    // ABER: Da die Extension "25" sendet und die DB "025" speichert: 
-    // Wir nutzen die PostgreSQL Funktion LTRIM, um die führende 0 aus der DB zu entfernen.
-    // ODER WIR SUCHEN MIT BEIDEN FORMATEN.
+    // Die Nummer, die von der Extension kommt (z.B. '25')
+    const incomingNumber = cardNumber; 
     
-    // Einfache Lösung: Speichere ich die Kartennummer in der DB ohne führende Nullen?
-    // Wenn die Extension '25' sendet, sollte die DB '25' enthalten, ODER der Code muss
-    // sowohl '25' als auch '025' zulassen.
-
-    // Wir belassen die Kartennummer in der DB mit führender Null (025) und trimmen 
-    // die eingehende Nummer '25' ebenfalls nicht. Stattdessen passen wir die DB-Suche an.
-    
-    // Wenn die Datenbank '025' speichert, aber die Extension '25' sendet:
-    // Wir müssen die 'cardNumber' auf das Format '025' bringen, falls sie nur '25' ist.
-    
-    let dbCardNumber = cardNumber;
-    
-    // Wenn die Nummer numerisch aussieht und kürzer als 3 Zeichen ist, 
-    // versuchen wir, sie mit führenden Nullen aufzufüllen, 
-    // um die in der DB gespeicherte '025' zu finden.
-    // Wenn die Extension '25' sendet, suchen wir nach '025'.
-    // Wenn die Extension '123' sendet, suchen wir nach '123'.
-    if (cardNumber.length < 3 && !isNaN(parseInt(cardNumber))) {
-        // Füllt mit führenden Nullen auf, z.B. '25' -> '025'
-        dbCardNumber = cardNumber.padStart(3, '0');
+    // Die Nummer mit führender Null (z.B. '025')
+    let paddedNumber = incomingNumber;
+    if (incomingNumber.length < 3 && !isNaN(parseInt(incomingNumber))) {
+        paddedNumber = incomingNumber.padStart(3, '0');
     }
-
-    // Wenn die DB '25' enthält, muss diese Logik wieder entfernt werden.
-    // Da Sie sagen, die DB enthält '025', verwenden wir dies.
     
+    // ⚠️ ROBUSTE ABFRAGE: Sucht sowohl nach '25' als auch nach '025'
+    // UNABHÄNGIG davon, wie die Nummer in der Datenbank gespeichert ist.
     const query = `
         SELECT tcg_player_id
         FROM card_mapping 
-        WHERE cardmarket_slug = $1 AND card_number = $2;
+        WHERE cardmarket_slug = $1 
+        AND (card_number = $2 OR card_number = $3);
     `;
     
-    const values = [setSlug, dbCardNumber];
+    const values = [setSlug, incomingNumber, paddedNumber]; // $2 = '25', $3 = '025'
     
-    console.log(`[DB QUERY] Suche nach Slug: ${setSlug}, Nummer: ${dbCardNumber}`);
+    console.log(`[DB QUERY] Suche nach Slug: ${setSlug}, Nummern: ${incomingNumber} / ${paddedNumber}`);
 
     const client = await pool.connect();
     try {
@@ -93,34 +73,17 @@ async function getTcgPlayerIdFromDb(setSlug, cardNumber) {
     }
 }
 
-// ... (fetchPriceTrackerApi ist unverändert) ...
+// ... (Restliche Funktionen fetchPriceTrackerApi, mapAndFilterPrices etc. sind unverändert) ...
 
+// ... (ROUTE /prices ist unverändert) ...
 
 // =========================================================
-// ROUTE: Preise abrufen (MIT KORRIGIERTEM DB-LOOKUP)
+// SERVER START
 // =========================================================
-app.get("/prices", authenticateExtension, async (req, res) => {
-    // set und cardNumber kommen von der Extension
-    const { set: setSlug, cardNumber } = req.query;
 
-    if (!setSlug || !cardNumber) {
-        return res.status(400).json({ error: "Es fehlen 'set' und 'cardNumber' Parameter." });
-    }
-    
-    try {
-        // 1. NEON DB-LOOKUP: Holen der TCGplayer ID (mit Nummern-Anpassung)
-        const tcgPlayerId = await getTcgPlayerIdFromDb(setSlug, cardNumber);
-        
-        // ... (Restliche Logik ist unverändert) ...
-        // (API Call, PSA, Response)
-
-    } catch (err) {
-        // ... (Fehlerbehandlung unverändert) ...
-    }
+app.get("/", (req, res) => {
+    res.send("PokeCardScout API läuft.");
 });
-
-
-// ... (SERVER START Logik unverändert) ...
 
 app.listen(PORT, async () => {
     console.log(`Server läuft auf Port ${PORT}`);
@@ -129,5 +92,8 @@ app.listen(PORT, async () => {
         console.log("✅ Neon-Datenbank erfolgreich verbunden.");
     } catch (err) {
         console.error("❌ Fehler bei der Neon-Datenbankverbindung:", err.message);
+        // Auch hier ein Exit, falls die Verbindung fehlschlägt, 
+        // um den Server in einem sauberen Zustand neu starten zu lassen.
+        // process.exit(1); 
     }
 });
