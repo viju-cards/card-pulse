@@ -49,6 +49,21 @@
                 if (isLogin) {
                     localStorage.setItem('token', data.token);
                     document.getElementById('msg').innerText = "Erfolgreich eingeloggt!";
+                    // Zeigt den Button an, sobald der User eingeloggt ist
+document.getElementById('btn').innerText = "Premium aktivieren (Stripe)";
+document.getElementById('btn').onclick = startCheckout;
+
+async function startCheckout() {
+    const res = await fetch('/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: localStorage.getItem('token') })
+    });
+    const data = await res.json();
+    if (data.url) {
+        window.location.href = data.url; // Leitet zu Stripe weiter
+    }
+}
                     // Hier könnte man später zum Stripe-Checkout weiterleiten
                 } else {
                     document.getElementById('msg').innerText = "Registriert! Jetzt einloggen.";
