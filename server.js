@@ -1,3 +1,4 @@
+// server.js - VOLLSTÄNDIGE VERSION FÜR SEAMLESS LOGIN & PREMIUM
 const express = require("express");
 const fetch = require("node-fetch");
 const { Pool } = require("pg"); 
@@ -15,7 +16,7 @@ const API_KEY = process.env.JUSTTCG_API_KEY;
 const DATABASE_URL = process.env.DATABASE_URL; 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// ⚠️ PRÜFUNG DER ENVS
+// ⚠️ PRÜFUNG DER UMGEBUNGSVARIABLEN
 if (!DATABASE_URL || !API_KEY || !JWT_SECRET || !process.env.STRIPE_SECRET_KEY) {
     console.error("FATAL ERROR: Umgebungsvariablen fehlen!");
     process.exit(1); 
@@ -27,7 +28,7 @@ const pool = new Pool({
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK (Rohdaten für Signatur-Prüfung)
+// 1. STRIPE WEBHOOK (Muss VOR express.json() stehen)
 // =========================================================
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -50,8 +51,9 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
 // =========================================================
 // 2. MIDDLEWARES & STATISCHE DATEIEN
 // =========================================================
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+// Stellt sicher, dass Dateien im Ordner "public" (index.html, login.html) erreichbar sind
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
@@ -83,12 +85,24 @@ async function authenticatePremiumUser(req, res, next) {
 }
 
 // =========================================================
-// 3. AUTH & CHECKOUT ROUTEN
+// 3. SEITEN-ROUTEN (HTML)
 // =========================================================
 
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+// Hauptseite (Dashboard)
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-app.post("/auth/register", async (req, res) => {
+// Login-Seite (Behebt "Cannot GET /login.html")
+app.get("/login.html", (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// =========================================================
+// 4. AUTH & CHECKOUT API
+// =========================================================
+
+app.post("/register", async (req, res) => {
     const { email, password } = req.body;
     try {
         const hash = await bcrypt.hash(password, 10);
@@ -97,15 +111,16 @@ app.post("/auth/register", async (req, res) => {
     } catch (err) { res.status(400).json({ error: "Existiert bereits" }); }
 });
 
-app.post("/auth/login", async (req, res) => {
+app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
         const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
         const user = result.rows[0];
         if (user && await bcrypt.compare(password, user.password_hash)) {
+            // Token ist 365 Tage gültig für die Extension
             const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
             res.json({ token, is_premium: user.is_premium });
-        } else { res.status(401).json({ error: "Falsche Daten" }); }
+        } else { res.status(401).json({ error: "Falsche Zugangsdaten" }); }
     } catch (err) { res.status(500).json({ error: "Serverfehler" }); }
 });
 
@@ -115,7 +130,7 @@ app.post("/create-checkout-session", async (req, res) => {
         const decoded = jwt.verify(token, JWT_SECRET);
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'paypal'],
-            line_items: [{ price: 'price_HIER_DEINE_ID', quantity: 1 }], // <-- DEINE ID EINTRAGEN
+            line_items: [{ price: 'price_HIER_DEINE_STRIPE_ID', quantity: 1 }], 
             mode: 'subscription',
             success_url: 'https://pokecardscout-api.onrender.com?status=success',
             cancel_url: 'https://pokecardscout-api.onrender.com?status=cancel',
@@ -126,27 +141,34 @@ app.post("/create-checkout-session", async (req, res) => {
 });
 
 // =========================================================
-// 4. PREIS-ROUTE (GESCHÜTZT)
+// 5. PREIS-ROUTE (GESCHÜTZT)
 // =========================================================
 app.get("/prices", authenticatePremiumUser, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
     try {
+        // Mapping suchen (Cardmarket -> TCGPlayer)
         const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [setSlug, cardNumber.padStart(3, '0')]);
         const tcgId = dbRes.rows[0]?.tcg_player_id;
-        if (!tcgId) return res.status(404).json({ error: "Kein Mapping" });
+        
+        if (!tcgId) return res.status(404).json({ error: "Kein Mapping für diese Karte gefunden." });
 
+        // TCGPlayer API Abruf via JustTCG
         const response = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
         const data = await response.json();
         const card = data.data?.[0];
 
         const prices = { 'MARKET PRICE': null };
         if (card?.variants) {
+            // Nimm Near Mint Preis als Referenz
             const nm = card.variants.find(v => v.condition.toUpperCase().includes("NEAR MINT"));
             prices['MARKET PRICE'] = nm ? nm.price : card.variants[0]?.price;
         }
 
-        res.json({ prices, fullTitle: card?.name || "Unbekannt" });
-    } catch (err) { res.status(500).json({ error: "Serverfehler bei Preisen" }); }
+        res.json({ prices, fullTitle: card?.name || "Unbekannte Karte" });
+    } catch (err) { 
+        console.error("Preis-Abruf Fehler:", err);
+        res.status(500).json({ error: "Serverfehler beim Abrufen der Preise" }); 
+    }
 });
 
 app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
