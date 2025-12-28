@@ -3,91 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PokéScout Premium</title>
+    <title>PokéScout Dashboard</title>
     <style>
-        body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
-        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 320px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #0070f3; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #0051af; }
-        .secondary { background: none; color: #0070f3; font-size: 14px; margin-top: 15px; border: none; cursor: pointer; }
-        #premium-section { display: none; }
+        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f7f9; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 350px; }
+        .btn-premium { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; }
+        .status-badge { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 12px; background: #eee; margin-top: 10px; }
+        #sync-msg { color: #20558a; font-size: 12px; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <div id="auth-section">
-            <h2 id="title">Login</h2>
-            <input type="email" id="email" placeholder="E-Mail">
-            <input type="password" id="password" placeholder="Passwort">
-            <button onclick="handleAuth()" id="main-btn">Einloggen</button>
-            <button class="secondary" onclick="toggleMode()" id="toggle-btn">Konto erstellen</button>
-        </div>
+    <div class="card">
+        <h2>Willkommen bei PokéScout!</h2>
+        <div id="status" class="status-badge">Prüfe Status...</div>
+        
+        <div id="sync-msg" style="display:none;">🔄 Synchronisiere mit Extension...</div>
 
-        <div id="premium-section">
-            <h2>Willkommen!</h2>
-            <p id="status-text">Du hast noch kein Premium-Abo.</p>
-            <button onclick="startCheckout()" style="background: #28a745;">Premium Abo abschließen</button>
-            <p style="font-size: 12px; color: #666; margin-top: 20px;">Kopiere dein Token für die Extension:</p>
-            <input type="text" id="token-display" readonly onclick="this.select()">
+        <div id="premium-area" style="display:none;">
+            <p style="font-size: 14px; color: #666; margin-top: 20px;">Du hast noch kein aktives Premium-Abo.</p>
+            <button onclick="startCheckout()" class="btn-premium">Premium Abo abschließen</button>
         </div>
     </div>
 
     <script>
-        let isLogin = true;
-        
-        function toggleMode() {
-            isLogin = !isLogin;
-            document.getElementById('title').innerText = isLogin ? 'Login' : 'Registrieren';
-            document.getElementById('main-btn').innerText = isLogin ? 'Einloggen' : 'Konto erstellen';
-        }
+        const EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl"; // <--- HIER DEINE ID EINTRAGEN!
+        const token = localStorage.getItem('userToken');
 
-        async function handleAuth() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const route = isLogin ? '/auth/login' : '/auth/register';
-
-            const res = await fetch(route, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                if (isLogin) {
-                    localStorage.setItem('token', data.token);
-                    showPremium(data.is_premium);
-                } else {
-                    alert("Registriert! Jetzt einloggen.");
-                    toggleMode();
-                }
-            } else { alert("Fehler: " + data.error); }
-        }
-
-        function showPremium(isPremium) {
-            document.getElementById('auth-section').style.display = 'none';
-            document.getElementById('premium-section').style.display = 'block';
-            document.getElementById('token-display').value = localStorage.getItem('token');
-            if (isPremium) {
-                document.getElementById('status-text').innerText = "✅ Du bist Premium-Mitglied!";
+        if (!token) {
+            window.location.href = "/login.html"; // Falls nicht eingeloggt
+        } else {
+            document.getElementById('status').innerText = "Eingeloggt";
+            document.getElementById('premium-area').style.display = "block";
+            
+            // AUTOMATISCHE ÜBERTRAGUNG AN DIE EXTENSION
+            if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+                document.getElementById('sync-msg').style.display = "block";
+                chrome.runtime.sendMessage(EXTENSION_ID, { type: "LOGIN_SUCCESS", token: token }, (response) => {
+                    if (response && response.success) {
+                        document.getElementById('sync-msg').innerText = "✅ Extension erfolgreich verbunden!";
+                        document.getElementById('sync-msg').style.color = "green";
+                    }
+                });
             }
         }
 
         async function startCheckout() {
-            const res = await fetch('/create-checkout-session', {
+            const response = await fetch('/create-checkout-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: localStorage.getItem('token') })
+                body: JSON.stringify({ token })
             });
-            const data = await res.json();
+            const data = await response.json();
             if (data.url) window.location.href = data.url;
-        }
-
-        // Check if already logged in
-        if (localStorage.getItem('token')) {
-            // Hier könnte man noch einen Check einbauen, ob das Token noch gültig ist
-            showPremium(false);
         }
     </script>
 </body>
