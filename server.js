@@ -117,23 +117,16 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
     try {
         const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [setSlug, dbNum]);
         const tcgId = dbRes.rows[0]?.tcg_player_id;
-        if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
-
+        
         const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
         const justTcgData = await apiRes.json();
 
-        // DEBUG-LOG: Schau in dein Terminal, was hier ankommt!
-        console.log("API Rohdaten Treffer:", justTcgData.data.length);
-
-        // FILTER: Wir sortieren nach Marktpreis absteigend, um den "0.02$ Schrott" zu ignorieren
-        if (justTcgData.data && justTcgData.data.length > 0) {
-            justTcgData.data.sort((a, b) => (b.marketPrice || 0) - (a.marketPrice || 0));
-        }
+        // DAS HIER IST JETZT WICHTIG:
+        console.log("KOMPLETTE API ANTWORT:", JSON.stringify(justTcgData.data[0], null, 2));
 
         const mappedPrices = mapAndFilterPrices(justTcgData);
         res.json({ prices: mappedPrices, fullTitle: justTcgData.data[0]?.name || "Unbekannt" });
     } catch (err) {
-        console.error("Fehler:", err);
         res.status(500).json({ error: "SERVER_ERROR" });
     }
 });
