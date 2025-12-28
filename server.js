@@ -122,17 +122,20 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
         const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
         const justTcgData = await apiRes.json();
 
-        // FIX: Wir sortieren die API-Ergebnisse nach Preis absteigend, 
-        // damit wir die echte Karte (3.92$) und nicht den 0.02$ Platzhalter erwischen.
-        if (justTcgData.data && justTcgData.data.length > 1) {
+        // DEBUG-LOG: Schau in dein Terminal, was hier ankommt!
+        console.log("API Rohdaten Treffer:", justTcgData.data.length);
+
+        // FILTER: Wir sortieren nach Marktpreis absteigend, um den "0.02$ Schrott" zu ignorieren
+        if (justTcgData.data && justTcgData.data.length > 0) {
             justTcgData.data.sort((a, b) => (b.marketPrice || 0) - (a.marketPrice || 0));
         }
 
         const mappedPrices = mapAndFilterPrices(justTcgData);
-        const cardTitle = justTcgData.data?.[0]?.name || "Unbekannt";
-
-        res.json({ prices: mappedPrices, fullTitle: cardTitle });
-    } catch (err) { res.status(500).json({ error: "SERVER_ERROR" }); }
+        res.json({ prices: mappedPrices, fullTitle: justTcgData.data[0]?.name || "Unbekannt" });
+    } catch (err) {
+        console.error("Fehler:", err);
+        res.status(500).json({ error: "SERVER_ERROR" });
+    }
 });
 
 // AUTH ROUTES (Login/Register wie zuvor...)
