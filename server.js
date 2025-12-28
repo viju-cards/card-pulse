@@ -20,7 +20,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// 1. STRIPE WEBHOOK (Muss vor express.json stehen)
+// STRIPE WEBHOOK
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -41,7 +41,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 2. MANUELLES CORS (Statt dem cors-Modul)
+// MANUELLES CORS (Kein Modul nötig)
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -95,32 +95,35 @@ function mapAndFilterPrices(data) {
     return prices;
 }
 
-// 3. ROUTE MIT DEBUG-LOGS
+// FIX: ROUTE MIT KORREKTEM SQL-FILTER
 app.get("/prices", authenticatePremiumUser, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
     let dbNum = cardNumber.padStart(3, '0');
 
-    console.log(`\n--- [DEBUG] Anfrage erhalten ---`);
-    console.log(`Slug: ${setSlug}, Nummer: ${dbNum}`);
+    console.log(`\n--- [DEBUG] Eindeutige Suche ---`);
+    console.log(`Gesuchter Slug: ${setSlug}, Nummer: ${dbNum}`);
 
     try {
-        const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [setSlug, dbNum]);
-        const tcgId = dbRes.rows[0]?.tcg_player_id;
+        // WICHTIG: Hier müssen BEIDE Werte in WHERE stehen
+        const dbRes = await pool.query(
+            "SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", 
+            [setSlug, dbNum]
+        );
         
-        console.log(`DB liefert TCG-ID: ${tcgId || "FEHLT"}`);
+        const tcgId = dbRes.rows[0]?.tcg_player_id;
+        console.log(`DB-Treffer für dieses Set: ${tcgId || "NICHTS GEFUNDEN"}`);
 
-        if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
+        if (!tcgId) return res.status(404).json({ error: "Mapping für dieses Set fehlt" });
 
-        const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
+        const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { 
+            headers: { "X-API-KEY": API_KEY } 
+        });
         const justTcgData = await apiRes.json();
 
         const cardTitle = justTcgData.data?.[0]?.name || "Unbekannt";
-        console.log(`API liefert Karte: "${cardTitle}" (ID: ${tcgId})`);
+        console.log(`API Resultat: "${cardTitle}" (ID: ${tcgId})`);
 
         const mappedPrices = mapAndFilterPrices(justTcgData);
-        console.log(`Anzahl Varianten in API: ${justTcgData.data?.[0]?.variants?.length || 0}`);
-        console.log(`--- [DEBUG ENDE] ---\n`);
-
         res.json({ prices: mappedPrices, fullTitle: cardTitle });
     } catch (err) { 
         console.error("SERVER ERROR:", err);
@@ -128,7 +131,7 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
     }
 });
 
-// AUTH ROUTES
+// AUTH ROUTES (Login/Checkout...)
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
