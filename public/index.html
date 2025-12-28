@@ -5,14 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéScout Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f7f9; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 380px; }
-        .btn-premium { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; font-size: 14px; }
-        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; background: #eee; margin-top: 10px; font-weight: 600; }
-        #sync-msg { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 13px; line-height: 1.4; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f7f9; color: #333; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 400px; }
+        h2 { margin-bottom: 10px; }
+        .btn-premium { background: #28a745; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; font-size: 16px; transition: background 0.2s; }
+        .btn-premium:hover { background: #218838; }
+        .btn-premium:disabled { background: #ccc; cursor: not-allowed; }
+        .status-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 13px; background: #e6f7ff; color: #1890ff; margin-top: 10px; font-weight: 600; }
+        #sync-msg { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
         .info-blue { background: #e7f3ff; color: #20558a; border: 1px solid #d0e7ff; }
-        .error-red { background: #fff1f0; color: #d93025; border: 1px solid #ffd1cf; }
         .success-green { background: #f6ffed; color: #28a745; border: 1px solid #b7eb8f; }
+        .error-red { background: #fff1f0; color: #d93025; border: 1px solid #ffd1cf; }
+        .description { font-size: 14px; color: #666; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -25,67 +29,87 @@
         </div>
 
         <div id="premium-area" style="display:none;">
-            <p style="font-size: 14px; color: #666; margin-top: 20px;">
+            <p class="description">
                 Hol dir die volle Power und sehe TCGPlayer-Preise live auf Cardmarket.
             </p>
-            <button onclick="startCheckout()" class="btn-premium">Premium Abo abschließen</button>
+            <button id="checkoutBtn" onclick="startCheckout()" class="btn-premium">Premium Abo abschließen</button>
         </div>
     </div>
 
     <script>
-        const EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl"; // Deine spezifische ID
+        // DEINE EXTENSION DATEN
+        const EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
         const token = localStorage.getItem('userToken');
         const syncBox = document.getElementById('sync-msg');
 
-        // 1. Check ob überhaupt eingeloggt auf Webseite
+        // 1. Initialer Check
         if (!token) {
+            // Falls kein Token da ist, zurück zum Login
             window.location.href = "/login.html";
         } else {
             document.getElementById('status').innerText = "Eingeloggt";
-            document.getElementById('status').style.background = "#e6f7ff";
-            document.getElementById('status').style.color = "#1890ff";
             document.getElementById('premium-area').style.display = "block";
             
-            // 2. Versuch die Extension zu kontaktieren
+            // Versuche Token an Extension zu senden
             checkExtension();
         }
 
-      function checkExtension() {
-    const syncBox = document.getElementById('sync-msg');
-    
-    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-        // Wir senden das Token an deine ID: fbckcnpmomkfbggocjjibnjgebjkkocl
-        chrome.runtime.sendMessage(EXTENSION_ID, { type: "LOGIN_SUCCESS", token: token }, (response) => {
-            
-            // WICHTIG: Wenn lastError leer ist, wurde die Extension erreicht!
-            if (chrome.runtime.lastError) {
+        // 2. Funktion zur Kommunikation mit der Extension
+        function checkExtension() {
+            if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage(EXTENSION_ID, { type: "LOGIN_SUCCESS", token: token }, (response) => {
+                    if (chrome.runtime.lastError) {
+                        // Extension nicht gefunden oder ID falsch
+                        syncBox.className = "error-red";
+                        syncBox.innerHTML = "<b>Erweiterung nicht gefunden!</b><br>Bitte stelle sicher, dass PokéScout installiert und aktiviert ist.";
+                    } else {
+                        // Verbindung steht (unabhängig vom Premium-Status)
+                        syncBox.className = "success-green";
+                        syncBox.innerHTML = "✅ <b>Erfolgreich verbunden!</b><br>Deine Extension ist nun einsatzbereit.";
+                        // Box nach 4 Sekunden ausblenden für saubere Optik
+                        setTimeout(() => { syncBox.style.opacity = '0'; setTimeout(() => syncBox.style.display = 'none', 500); }, 4000);
+                    }
+                });
+            } else {
                 syncBox.className = "error-red";
-                syncBox.innerHTML = "<b>Erweiterung nicht gefunden!</b><br>Bitte stelle sicher, dass PokéScout aktiviert ist.";
+                syncBox.innerHTML = "Dieses Feature benötigt einen Chrome-basierten Browser.";
+            }
+        }
+
+        // 3. Stripe Checkout Funktion
+        async function startCheckout() {
+            const btn = document.getElementById('checkoutBtn');
+            
+            if (!token) {
+                alert("Sitzung abgelaufen. Bitte logge dich neu ein.");
+                window.location.href = "/login.html";
                 return;
             }
 
-            // Wenn wir hier sind, hat die Extension geantwortet. 
-            // Auch wenn der Server "PAYMENT_REQUIRED" sagt, ist die Verbindung zur Extension JA ERFOLGREICH.
-            syncBox.className = "success-green";
-            syncBox.innerHTML = "✅ <b>Erfolgreich verbunden!</b><br>Die Extension hat dein Token erhalten.";
-            
-            // Verstecke die Box nach 3 Sekunden automatisch
-            setTimeout(() => { syncBox.style.display = 'none'; }, 3000);
-        });
-    }
-}
+            // Visuelles Feedback
+            btn.innerText = "⏳ Lade sicheren Checkout...";
+            btn.disabled = true;
 
-        async function startCheckout() {
             try {
                 const response = await fetch('/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token })
+                    body: JSON.stringify({ token: token })
                 });
+
                 const data = await response.json();
-                if (data.url) window.location.href = data.url;
-            } catch (e) {
-                alert("Fehler beim Starten des Checkouts.");
+
+                if (data.url) {
+                    // Weiterleitung zu Stripe
+                    window.location.href = data.url;
+                } else {
+                    throw new Error(data.error || "Server konnte keine Checkout-Session erstellen.");
+                }
+            } catch (err) {
+                console.error("Stripe Fehler:", err);
+                alert("Fehler beim Starten des Abos: " + err.message);
+                btn.innerText = "Premium Abo abschließen";
+                btn.disabled = false;
             }
         }
     </script>
