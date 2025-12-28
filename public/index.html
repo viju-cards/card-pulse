@@ -50,24 +50,22 @@
             checkExtension();
         }
 
-        function checkExtension() {
-            if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-                chrome.runtime.sendMessage(EXTENSION_ID, { type: "LOGIN_SUCCESS", token: token }, (response) => {
-                    if (chrome.runtime.lastError) {
-                        // Extension ID nicht gefunden oder nicht installiert
-                        syncBox.className = "error-red";
-                        syncBox.innerHTML = "<b>Erweiterung nicht gefunden!</b><br>Bitte stelle sicher, dass die PokéScout Extension installiert und aktiviert ist.";
-                    } else if (response && response.success) {
-                        // Erfolg: Token wurde übertragen
-                        syncBox.className = "success-green";
-                        syncBox.innerHTML = "✅ <b>Erfolgreich verbunden!</b><br>Deine Preise werden nun automatisch auf Cardmarket angezeigt.";
-                    }
-                });
-            } else {
+       function checkExtension() {
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage(EXTENSION_ID, { type: "LOGIN_SUCCESS", token: token }, (response) => {
+            // Hier prüfen wir, ob die Extension ÜBERHAUPT geantwortet hat
+            if (chrome.runtime.lastError) {
                 syncBox.className = "error-red";
-                syncBox.innerHTML = "Browser unterstützt keine Chrome Extensions oder Skript blockiert.";
+                syncBox.innerHTML = "<b>Erweiterung nicht gefunden!</b><br>Bitte stelle sicher, dass PokéScout aktiviert ist.";
+                return;
             }
-        }
+            
+            // Wenn wir hier landen, hat die Extension geantwortet (egal ob mit Erfolg oder Payment_Required)
+            syncBox.className = "success-green";
+            syncBox.innerHTML = "✅ <b>Erfolgreich verbunden!</b><br>Preise werden nun auf Cardmarket angezeigt.";
+        });
+    }
+}
 
         async function startCheckout() {
             try {
