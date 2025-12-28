@@ -5,7 +5,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const path = require("path");
-const cors = require("cors"); // Sicherstellen, dass CORS importiert wird
 require("dotenv").config(); 
 
 const app = express();
@@ -21,7 +20,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// Stripe Webhook (vor express.json() wegen raw body)
+// 1. STRIPE WEBHOOK (Muss vor express.json stehen)
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -36,13 +35,20 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
         await pool.query('UPDATE users SET is_premium = true, premium_until = $1, stripe_customer_id = $2 WHERE id = $3',
             [expiryDate, session.customer, session.client_reference_id]);
     }
-    // ... restliche Webhook Logik ...
     res.json({ received: true });
 });
 
-app.use(cors()); // CORS aktivieren
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 2. MANUELLES CORS (Statt dem cors-Modul)
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*'); 
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); 
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+    next();
+});
 
 // AUTH MIDDLEWARE
 async function authenticatePremiumUser(req, res, next) {
@@ -89,43 +95,35 @@ function mapAndFilterPrices(data) {
     return prices;
 }
 
-// DEBUG ROUTE: PREISE
+// 3. ROUTE MIT DEBUG-LOGS
 app.get("/prices", authenticatePremiumUser, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
     let dbNum = cardNumber.padStart(3, '0');
 
-    console.log(`\n--- [DEBUG START] ---`);
-    console.log(`1. Request für: Set="${setSlug}", Nummer="${dbNum}"`);
+    console.log(`\n--- [DEBUG] Anfrage erhalten ---`);
+    console.log(`Slug: ${setSlug}, Nummer: ${dbNum}`);
 
     try {
         const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [setSlug, dbNum]);
         const tcgId = dbRes.rows[0]?.tcg_player_id;
         
-        console.log(`2. Datenbank Ergebnis TCG-ID: ${tcgId || "NICHT GEFUNDEN"}`);
+        console.log(`DB liefert TCG-ID: ${tcgId || "FEHLT"}`);
 
         if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
 
-        console.log(`3. API Anfrage an: ${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`);
         const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
         const justTcgData = await apiRes.json();
 
         const cardTitle = justTcgData.data?.[0]?.name || "Unbekannt";
-        console.log(`4. API liefert Karte: "${cardTitle}"`);
-
-        // Check ob .variants oder .skus genutzt werden muss
-        const variants = justTcgData.data?.[0]?.variants || [];
-        console.log(`5. Anzahl Varianten gefunden: ${variants.length}`);
+        console.log(`API liefert Karte: "${cardTitle}" (ID: ${tcgId})`);
 
         const mappedPrices = mapAndFilterPrices(justTcgData);
-        console.log(`6. Resultat MARKET: ${mappedPrices['MARKET PRICE']}`);
+        console.log(`Anzahl Varianten in API: ${justTcgData.data?.[0]?.variants?.length || 0}`);
         console.log(`--- [DEBUG ENDE] ---\n`);
 
-        res.json({ 
-            prices: mappedPrices, 
-            fullTitle: cardTitle 
-        });
+        res.json({ prices: mappedPrices, fullTitle: cardTitle });
     } catch (err) { 
-        console.error("DEBUG FEHLER:", err);
+        console.error("SERVER ERROR:", err);
         res.status(500).json({ error: "SERVER_ERROR" }); 
     }
 });
@@ -133,11 +131,13 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
 // AUTH ROUTES
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
-    const user = (await pool.query("SELECT * FROM users WHERE email = $1", [email])).rows[0];
-    if (user && await bcrypt.compare(password, user.password_hash)) {
-        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
-        res.json({ token, is_premium: user.is_premium, premium_until: user.premium_until });
-    } else { res.status(401).json({ error: "Falsche Daten" }); }
+    try {
+        const user = (await pool.query("SELECT * FROM users WHERE email = $1", [email])).rows[0];
+        if (user && await bcrypt.compare(password, user.password_hash)) {
+            const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
+            res.json({ token, is_premium: user.is_premium, premium_until: user.premium_until });
+        } else { res.status(401).json({ error: "Falsche Daten" }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post("/create-checkout-session", async (req, res) => {
