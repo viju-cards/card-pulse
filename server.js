@@ -110,26 +110,48 @@ function mapAndFilterPrices(data) {
 // =========================================================
 // 3. ROUTE: PREISE (Kombiniert mit Abo-Check)
 // =========================================================
-app.get("/prices", authenticatePremiumUser, async (req, res) => {
+app.get("/prices", authenticateExtension, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
-    let dbNum = cardNumber.padStart(3, '0');
 
+    if (!setSlug || !cardNumber) {
+        return res.status(400).json({ error: "Es fehlen 'set' und 'cardNumber' Parameter." });
+    }
+    
     try {
-        const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [setSlug, dbNum]);
-        const tcgId = dbRes.rows[0]?.tcg_player_id;
-        
-        const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
-        const justTcgData = await apiRes.json();
+        // 1. NEON DB-LOOKUP
+        const tcgPlayerId = await getTcgPlayerIdFromDb(setSlug, cardNumber);
 
-        // DAS HIER IST JETZT WICHTIG:
-        console.log("KOMPLETTE API ANTWORT:", JSON.stringify(justTcgData.data[0], null, 2));
+        if (!tcgPlayerId) {
+             console.log(`[MAPPING 404] Kein TCGplayer ID Eintrag gefunden für ${setSlug}-${cardNumber}`);
+             return res.status(404).json({ error: "Mapping fehlt", message: "TCGplayer ID für diese Karte nicht in der Datenbank gefunden. Bitte hinzufügen." });
+        }
+        
+        // 2. JUSTTCG Abfrage
+        console.log(`[API CALL] Rufe JustTCG über TCGplayer ID ${tcgPlayerId} ab.`);
+        
+        const justTcgData = await fetchJustTcgData(tcgPlayerId);
 
         const mappedPrices = mapAndFilterPrices(justTcgData);
-        res.json({ prices: mappedPrices, fullTitle: justTcgData.data[0]?.name || "Unbekannt" });
+        
+        const cardTitle = justTcgData.data && justTcgData.data[0]?.name || "Unbekannter Titel";
+        
+        const avgPrices = aggregatePsaData(null); 
+
+        const finalResponse = { 
+            prices: mappedPrices, 
+            fullTitle: cardTitle, 
+            ebay: avgPrices 
+        };
+            
+        console.log("[REQUEST END] Preise und PSA-Avg erfolgreich gesendet.");
+        return res.json(finalResponse); 
+
     } catch (err) {
-        res.status(500).json({ error: "SERVER_ERROR" });
+        console.error("[FATAL ERROR] Interner Serverfehler bei JustTCG Abfrage:", err);
+        return res.status(500).json({ error: `SERVER_ERROR`, message: err.message });
     }
 });
+
 
 // AUTH ROUTES (Login/Register wie zuvor...)
 app.post("/login", async (req, res) => {
