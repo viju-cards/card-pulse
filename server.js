@@ -130,7 +130,7 @@ app.post("/create-checkout-session", async (req, res) => {
         const decoded = jwt.verify(token, JWT_SECRET);
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'paypal'],
-            line_items: [{ price: 'price_HIER_DEINE_STRIPE_ID', quantity: 1 }], 
+            line_items: [{ price: 'price_1SjQsWFUZXbTt9dyq5MqFi06', quantity: 1 }], 
             mode: 'subscription',
             success_url: 'https://pokecardscout-api.onrender.com?status=success',
             cancel_url: 'https://pokecardscout-api.onrender.com?status=cancel',
