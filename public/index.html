@@ -50,19 +50,27 @@
             checkExtension();
         }
 
-       function checkExtension() {
+      function checkExtension() {
+    const syncBox = document.getElementById('sync-msg');
+    
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        // Wir senden das Token an deine ID: fbckcnpmomkfbggocjjibnjgebjkkocl
         chrome.runtime.sendMessage(EXTENSION_ID, { type: "LOGIN_SUCCESS", token: token }, (response) => {
-            // Hier prüfen wir, ob die Extension ÜBERHAUPT geantwortet hat
+            
+            // WICHTIG: Wenn lastError leer ist, wurde die Extension erreicht!
             if (chrome.runtime.lastError) {
                 syncBox.className = "error-red";
                 syncBox.innerHTML = "<b>Erweiterung nicht gefunden!</b><br>Bitte stelle sicher, dass PokéScout aktiviert ist.";
                 return;
             }
-            
-            // Wenn wir hier landen, hat die Extension geantwortet (egal ob mit Erfolg oder Payment_Required)
+
+            // Wenn wir hier sind, hat die Extension geantwortet. 
+            // Auch wenn der Server "PAYMENT_REQUIRED" sagt, ist die Verbindung zur Extension JA ERFOLGREICH.
             syncBox.className = "success-green";
-            syncBox.innerHTML = "✅ <b>Erfolgreich verbunden!</b><br>Preise werden nun auf Cardmarket angezeigt.";
+            syncBox.innerHTML = "✅ <b>Erfolgreich verbunden!</b><br>Die Extension hat dein Token erhalten.";
+            
+            // Verstecke die Box nach 3 Sekunden automatisch
+            setTimeout(() => { syncBox.style.display = 'none'; }, 3000);
         });
     }
 }
