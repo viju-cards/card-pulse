@@ -193,35 +193,38 @@ app.post("/create-portal-session", async (req, res) => {
 app.get("/prices", authenticatePremiumUser, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
     try {
-        // 1. Karte in der Mapping-Tabelle finden
         const dbRes = await pool.query(
             "SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", 
             [setSlug, cardNumber.padStart(3, '0')]
         );
         const tcgId = dbRes.rows[0]?.tcg_player_id;
         
-        if (!tcgId) return res.status(404).json({ error: "Karte nicht gefunden" });
+        if (!tcgId) return res.status(404).json({ error: "Kein Mapping gefunden" });
 
-        // 2. JustTCG API abfragen
         const response = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { 
             headers: { "X-API-KEY": API_KEY } 
         });
         const data = await response.json();
-        const card = data.data?.[0];
+        
+        // Wir suchen den Eintrag mit dem höchsten Market Price, um 0.02$ Ausreißer zu ignorieren
+        const card = data.data && data.data.length > 0 
+            ? data.data.sort((a, b) => (b.marketPrice || 0) - (a.marketPrice || 0))[0] 
+            : null;
 
-        if (!card) return res.status(404).json({ error: "Keine Daten von TCGPlayer" });
+        if (!card) return res.status(404).json({ error: "Karte nicht gefunden" });
 
-        // 3. Alle relevanten Daten zurückgeben (Zustände + Spannen)
+        const market = Number(card.marketPrice || 0);
+
         res.json({ 
             fullTitle: card.name || "Unbekannt",
-            variants: card.variants || [], // Near Mint, Lightly Played, etc.
-            marketPrice: card.marketPrice,
-            lowPrice: card.lowPrice,
-            highPrice: card.highPrice
+            variants: card.variants || [], 
+            marketPrice: market,
+            // Falls Low/High von der API fehlen, berechnen wir sie basierend auf dem Market Price
+            lowPrice: card.lowPrice ? Number(card.lowPrice) : Number((market * 0.9).toFixed(2)),
+            highPrice: card.highPrice ? Number(card.highPrice) : Number((market * 1.1).toFixed(2))
         });
     } catch (err) { 
-        console.error("Preis-Abruf Fehler:", err);
-        res.status(500).json({ error: "Serverfehler beim Abruf" }); 
+        res.status(500).json({ error: "Serverfehler" }); 
     }
 });
 
