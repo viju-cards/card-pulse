@@ -1,4 +1,4 @@
-// server.js - VOLLSTÄNDIGE VERSION FÜR SEAMLESS LOGIN & PREMIUM
+// server.js - VOLLSTÄNDIGE VERSION MIT ABO-LOGIK & KÜNDIGUNGS-PORTAL
 const express = require("express");
 const fetch = require("node-fetch");
 const { Pool } = require("pg"); 
@@ -17,8 +17,8 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // ⚠️ PRÜFUNG DER UMGEBUNGSVARIABLEN
-if (!DATABASE_URL || !API_KEY || !JWT_SECRET || !process.env.STRIPE_SECRET_KEY) {
-    console.error("FATAL ERROR: Umgebungsvariablen fehlen!");
+if (!DATABASE_URL || !API_KEY || !JWT_SECRET || !process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("FATAL ERROR: Umgebungsvariablen fehlen (Prüfe auch STRIPE_WEBHOOK_SECRET)!");
     process.exit(1); 
 }
 
@@ -33,26 +33,61 @@ const pool = new Pool({
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
+
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
+        console.error(`Webhook Error: ${err.message}`);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
+    // A. Erster Kauf erfolgreich
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         const userId = session.client_reference_id;
-        await pool.query('UPDATE users SET is_premium = true WHERE id = $1', [userId]);
-        console.log(`✅ User ${userId} ist nun Premium.`);
+        const customerId = session.customer;
+
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 32); // 1 Monat + Puffer
+
+        await pool.query(
+            'UPDATE users SET is_premium = true, premium_until = $1, stripe_customer_id = $2 WHERE id = $3',
+            [expiryDate, customerId, userId]
+        );
+        console.log(`✅ Erst-Abo für User ${userId} aktiviert.`);
     }
-    res.json({received: true});
+
+    // B. Monatliche Verlängerung (Zahlung erfolgreich)
+    if (event.type === 'invoice.paid') {
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+
+        const newExpiryDate = new Date();
+        newExpiryDate.setDate(newExpiryDate.getDate() + 32);
+
+        await pool.query(
+            'UPDATE users SET is_premium = true, premium_until = $1 WHERE stripe_customer_id = $2',
+            [newExpiryDate, customerId]
+        );
+        console.log(`🔄 Abo für Kunde ${customerId} automatisch verlängert.`);
+    }
+
+    // C. Abo gekündigt oder Zahlung fehlgeschlagen
+    if (event.type === 'customer.subscription.deleted' || event.type === 'invoice.payment_failed') {
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+
+        await pool.query('UPDATE users SET is_premium = false WHERE stripe_customer_id = $1', [customerId]);
+        console.log(`🚫 Abo für Kunde ${customerId} beendet.`);
+    }
+
+    res.json({ received: true });
 });
 
 // =========================================================
 // 2. MIDDLEWARES & STATISCHE DATEIEN
 // =========================================================
 app.use(express.json());
-// Stellt sicher, dass Dateien im Ordner "public" (index.html, login.html) erreichbar sind
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
@@ -72,8 +107,11 @@ async function authenticatePremiumUser(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const userRes = await pool.query("SELECT is_premium FROM users WHERE id = $1", [decoded.id]);
-        if (userRes.rows[0]?.is_premium) {
+        const userRes = await pool.query("SELECT is_premium, premium_until FROM users WHERE id = $1", [decoded.id]);
+        const user = userRes.rows[0];
+
+        // Prüfe ob Premium aktiv UND das Datum noch nicht abgelaufen ist
+        if (user?.is_premium && new Date(user.premium_until) > new Date()) {
             req.user = decoded;
             next();
         } else {
@@ -87,16 +125,8 @@ async function authenticatePremiumUser(req, res, next) {
 // =========================================================
 // 3. SEITEN-ROUTEN (HTML)
 // =========================================================
-
-// Hauptseite (Dashboard)
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Login-Seite (Behebt "Cannot GET /login.html")
-app.get("/login.html", (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get("/login.html", (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 
 // =========================================================
 // 4. AUTH & CHECKOUT API
@@ -117,13 +147,18 @@ app.post("/login", async (req, res) => {
         const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
         const user = result.rows[0];
         if (user && await bcrypt.compare(password, user.password_hash)) {
-            // Token ist 365 Tage gültig für die Extension
             const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
-            res.json({ token, is_premium: user.is_premium });
+            // Sende Premium-Daten direkt mit für das Dashboard
+            res.json({ 
+                token, 
+                is_premium: user.is_premium, 
+                premium_until: user.premium_until 
+            });
         } else { res.status(401).json({ error: "Falsche Zugangsdaten" }); }
     } catch (err) { res.status(500).json({ error: "Serverfehler" }); }
 });
 
+// Abo erstellen
 app.post("/create-checkout-session", async (req, res) => {
     const { token } = req.body;
     try {
@@ -140,35 +175,46 @@ app.post("/create-checkout-session", async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Checkout Fehler" }); }
 });
 
+// Kündigungs-Portal öffnen
+app.post("/create-portal-session", async (req, res) => {
+    const { token } = req.body;
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const userRes = await pool.query("SELECT stripe_customer_id FROM users WHERE id = $1", [decoded.id]);
+        const customerId = userRes.rows[0]?.stripe_customer_id;
+
+        if (!customerId) return res.status(400).json({ error: "Kein aktives Abo gefunden." });
+
+        const session = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: 'https://pokecardscout-api.onrender.com',
+        });
+        res.json({ url: session.url });
+    } catch (err) { res.status(500).json({ error: "Portal Fehler" }); }
+});
+
 // =========================================================
-// 5. PREIS-ROUTE (GESCHÜTZT)
+// 5. PREIS-ROUTE
 // =========================================================
 app.get("/prices", authenticatePremiumUser, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
     try {
-        // Mapping suchen (Cardmarket -> TCGPlayer)
         const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [setSlug, cardNumber.padStart(3, '0')]);
         const tcgId = dbRes.rows[0]?.tcg_player_id;
         
-        if (!tcgId) return res.status(404).json({ error: "Kein Mapping für diese Karte gefunden." });
+        if (!tcgId) return res.status(404).json({ error: "Kein Mapping gefunden." });
 
-        // TCGPlayer API Abruf via JustTCG
         const response = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
         const data = await response.json();
         const card = data.data?.[0];
 
         const prices = { 'MARKET PRICE': null };
         if (card?.variants) {
-            // Nimm Near Mint Preis als Referenz
             const nm = card.variants.find(v => v.condition.toUpperCase().includes("NEAR MINT"));
             prices['MARKET PRICE'] = nm ? nm.price : card.variants[0]?.price;
         }
-
-        res.json({ prices, fullTitle: card?.name || "Unbekannte Karte" });
-    } catch (err) { 
-        console.error("Preis-Abruf Fehler:", err);
-        res.status(500).json({ error: "Serverfehler beim Abrufen der Preise" }); 
-    }
+        res.json({ prices, fullTitle: card?.name || "Unbekannt" });
+    } catch (err) { res.status(500).json({ error: "Serverfehler" }); }
 });
 
 app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
