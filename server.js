@@ -1,5 +1,7 @@
 // server.js - ENDGÜLTIGE VERSION MIT KORRIGIERTER JUSTTCG API-KONFIGURATION UND ULTIMATIV FLEXIBLEM MAPPING
-
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const express = require("express");
 const fetch = require("node-fetch");
 const { Pool } = require("pg"); 
