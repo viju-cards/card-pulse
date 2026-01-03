@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéScout Pro - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --poke-blue: #20558a;
             --bg-beige: #f1efe7; 
-            --card-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            --text-dark: #1a1a1a;
+            --card-shadow: 0 15px 35px rgba(0,0,0,0.06);
+            --text-dark: #121826;
             --text-muted: #64748b;
+            --font-head: 'Outfit', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
         }
 
         body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
+            font-family: var(--font-body); 
             background-color: var(--bg-beige); 
             display: flex; 
             justify-content: center; 
@@ -26,11 +31,11 @@
 
         .card { 
             background: white; 
-            padding: 40px 30px; 
-            border-radius: 24px; 
+            padding: 45px 35px; 
+            border-radius: 28px; 
             box-shadow: var(--card-shadow); 
             width: 100%; 
-            max-width: 380px; 
+            max-width: 400px; 
             text-align: center; 
         }
 
@@ -38,65 +43,70 @@
         .logo-container img { width: 160px; height: auto; }
 
         h2 { 
+            font-family: var(--font-head);
             color: var(--text-dark); 
-            margin: 0 0 20px 0; 
-            font-size: 22px; 
+            margin: 0 0 25px 0; 
+            font-size: 26px; 
             font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
         input { 
             width: 100%; 
-            padding: 14px; 
-            margin: 8px 0; 
+            padding: 16px; 
+            margin: 10px 0; 
             border: 1px solid #e2e8f0; 
-            border-radius: 12px; 
+            border-radius: 14px; 
             box-sizing: border-box; 
             font-size: 15px; 
+            font-family: var(--font-body);
             background: #f8fafc;
-            transition: all 0.2s; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
         }
 
         input:focus { 
             border-color: var(--poke-blue); 
             background: white;
             outline: none; 
-            box-shadow: 0 0 0 3px rgba(32, 85, 138, 0.1);
+            box-shadow: 0 0 0 4px rgba(32, 85, 138, 0.08);
         }
 
         button { 
             width: 100%; 
-            padding: 14px; 
-            background: #000000; /* Button auf Schwarz geändert */
+            padding: 16px; 
+            background: #000000; 
             color: white; 
             border: none; 
-            border-radius: 12px; 
+            border-radius: 14px; 
             cursor: pointer; 
+            font-family: var(--font-body);
             font-weight: 700; 
             font-size: 16px; 
             margin-top: 15px; 
-            transition: 0.2s; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        button:hover { opacity: 0.8; transform: translateY(-1px); }
-        button:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+        button:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .toggle-link { 
-            margin-top: 25px; 
-            font-size: 13px; 
+            margin-top: 30px; 
+            font-size: 14px; 
             color: var(--text-muted); 
             cursor: pointer; 
         }
 
-        .toggle-link b { color: var(--poke-blue); text-decoration: none; }
+        .toggle-link b { color: var(--poke-blue); text-decoration: none; font-weight: 700; }
         .toggle-link b:hover { text-decoration: underline; }
 
         #message { 
             margin-top: 20px; 
-            padding: 12px; 
-            border-radius: 10px; 
+            padding: 14px; 
+            border-radius: 12px; 
             font-size: 13px; 
             display: none; 
-            font-weight: 500;
+            font-weight: 600;
             line-height: 1.4; 
         }
 
@@ -139,25 +149,21 @@
 
     toggle.addEventListener('click', () => {
         isLoginMode = !isLoginMode;
-        
         title.innerText = isLoginMode ? "Anmelden" : "Registrieren";
         btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
         toggle.innerHTML = isLoginMode 
             ? "Noch kein Account? <b>Jetzt registrieren</b>" 
             : "Bereits ein Konto? <b>Zum Login</b>";
         
-        // UI RESET: Nachrichten beim Modus-Wechsel komplett entfernen
         message.style.display = 'none';
         message.innerText = '';
         message.className = '';
-        
         btn.disabled = false;
         passwordInput.value = '';
     });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const email = emailInput.value;
         const password = passwordInput.value;
         const endpoint = isLoginMode ? '/login' : '/register';
@@ -166,7 +172,6 @@
             btn.disabled = true;
             btn.innerText = "Verarbeite...";
             message.style.display = 'none';
-            message.className = '';
 
             const response = await fetch(`https://pokecardscout-api.onrender.com${endpoint}`, {
                 method: 'POST',
@@ -181,20 +186,14 @@
                     localStorage.setItem('poketool_token', data.token);
                     message.className = "success";
                     message.innerText = "Erfolgreich eingeloggt!";
-                    
-                    setTimeout(() => {
-                        window.location.href = "index.html"; 
-                    }, 800);
+                    setTimeout(() => { window.location.href = "index.html"; }, 800);
                 } else {
                     message.className = "success";
                     message.innerText = "Konto erstellt! Bitte logge dich jetzt ein.";
                     btn.disabled = false;
                     btn.innerText = "Konto erstellen";
                     passwordInput.value = '';
-
-                    setTimeout(() => {
-                        if (!isLoginMode) toggle.click();
-                    }, 2000);
+                    setTimeout(() => { if (!isLoginMode) toggle.click(); }, 2000);
                 }
             } else {
                 message.className = "error";
@@ -210,6 +209,5 @@
         }
     });
 </script>
-
 </body>
 </html>
