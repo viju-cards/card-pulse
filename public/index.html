@@ -80,13 +80,6 @@
             border-radius: 24px; 
         }
 
-        .cancel-warning { 
-            color: #d93025; 
-            font-size: 13px; 
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-
         .btn-main { 
             width: 100%; 
             padding: 16px; 
@@ -100,19 +93,8 @@
             box-sizing: border-box;
         }
 
-        .btn-premium { 
-            background: #000000; 
-            color: white; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .btn-premium:hover { opacity: 0.85; transform: translateY(-1px); }
-
-        .btn-manage { 
-            background: white; 
-            color: #121826; 
-            border: 1px solid #e2e8f0;
-        }
-        .btn-manage:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .btn-premium { background: #000000; color: white; }
+        .btn-manage { background: white; color: #121826; border: 1px solid #e2e8f0; }
 
         .logout-link {
             display: inline-block;
@@ -123,10 +105,6 @@
             cursor: pointer;
             font-weight: 500;
         }
-        .logout-link:hover { color: var(--poke-blue); }
-
-        .expiry-text { font-size: 14px; color: #475569; margin-bottom: 15px; font-weight: 500; }
-        .expiry-text b { color: var(--text-dark); }
     </style>
 </head>
 <body>
@@ -141,8 +119,7 @@
     <h2>Schön, dass du da bist!</h2>
 
     <div class="welcome-info">
-        Mit dem Premium-Abo siehst du die TCGplayer-Preise direkt auf Cardmarket - ganz einfach über unsere Browser-Extension.<br><br>
-        Besuche unsere <a href="sets.html" style="color: var(--poke-blue); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--poke-blue);">Set-Übersicht</a> für alle bereits unterstützten Sets.
+        Mit dem Premium-Abo siehst du die TCGplayer-Preise direkt auf Cardmarket.
     </div>
 
     <div id="content-area"></div>
@@ -153,24 +130,20 @@
 <script>
     const token = localStorage.getItem('poketool_token');
     const apiBase = 'https://pokecardscout-api.onrender.com';
-    // Deine Extension ID
     const POKESCOUT_EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
 
     if (!token) window.location.href = "login.html";
 
-    /**
-     * Sendet den Token an die Chrome Extension
-     */
-    function syncWithExtension(tokenToSync) {
+    function syncWithExtension(t) {
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
             chrome.runtime.sendMessage(POKESCOUT_EXTENSION_ID, {
                 type: "LOGIN_SUCCESS",
-                token: tokenToSync
+                token: t
             }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.log("[PokéScout] Extension nicht erreichbar.");
+                    console.log("Extension noch nicht bereit.");
                 } else {
-                    console.log("[PokéScout] Synchronisiert.");
+                    console.log("Erfolgreich synchronisiert.");
                 }
             });
         }
@@ -178,23 +151,24 @@
 
     async function init() {
         try {
+            // Hier nutzen wir Authorization Header für den Check
             const res = await fetch(`${apiBase}/login_check`, {
                 method: 'POST',
                 headers: { 
-                    'Authorization': `Bearer ${token}`, 
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json' 
                 }
             });
-            const data = await res.json();
             
             if (res.ok) {
+                const data = await res.json();
                 renderDashboard(data);
                 syncWithExtension(token);
             } else {
                 logout();
             }
         } catch (e) {
-            console.error(e);
+            console.error("Init Error:", e);
             document.getElementById('status-badge').innerText = "Verbindungsfehler";
         }
     }
@@ -206,54 +180,39 @@
         if (data.is_premium) {
             badge.innerText = "Premium Aktiv ✨";
             badge.className = "status-badge premium-active";
-            const dateStr = new Date(data.premium_until).toLocaleDateString('de-DE');
-            area.innerHTML = `
-                <div class="info-box">
-                    ${data.cancel_at_period_end ? `
-                        <div class="cancel-warning">Abo gekündigt, endet am ${dateStr}</div>` : `
-                        <div class="expiry-text">Nächste Abrechnung: <b>${dateStr}</b></div>
-                    `}
-                    <button class="btn-main btn-manage" onclick="manage()">Abo verwalten</button>
-                </div>`;
+            area.innerHTML = `<div class="info-box"><button class="btn-main btn-manage" onclick="manage()">Abo verwalten</button></div>`;
         } else {
             badge.innerText = "Standard Account";
             badge.className = "status-badge premium-none";
-            area.innerHTML = `
-                <div class="info-box">
-                    <button class="btn-main btn-premium" onclick="checkout()">Premium freischalten</button>
-                </div>`;
+            area.innerHTML = `<div class="info-box"><button class="btn-main btn-premium" onclick="checkout()">Premium freischalten</button></div>`;
         }
     }
 
-
     async function checkout() {
-    const res = await fetch(`${apiBase}/create-checkout-session`, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json' // Wichtig!
-        },
-        // Dein Server braucht den Token im Body (siehe server.txt Zeile 187)
-        body: JSON.stringify({ token: token }) 
-    });
-    const d = await res.json(); 
-    if (d.url) window.location.href = d.url;
-}
+        try {
+            const res = await fetch(`${apiBase}/create-checkout-session`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // WICHTIG: Laut server.txt Zeile 187 muss der Token in den BODY!
+                body: JSON.stringify({ token: token })
+            });
+            const d = await res.json(); 
+            if (d.url) window.location.href = d.url;
+        } catch (e) { alert("Checkout-Fehler"); }
+    }
 
     async function manage() {
         const res = await fetch(`${apiBase}/create-portal-session`, {
-            method: 'POST', 
-            headers: { 'Authorization': `Bearer ${token}` }
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token })
         });
         const d = await res.json(); 
         if (d.url) window.location.href = d.url;
     }
 
-    /**
-     * NEU: Loggt den User aus und löscht den Token auch in der Extension
-     */
     function logout() { 
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-            // Extension informieren, dass der Token gelöscht werden soll
             chrome.runtime.sendMessage(POKESCOUT_EXTENSION_ID, { type: "LOGOUT" }, () => {
                 localStorage.clear(); 
                 window.location.href = "login.html"; 
