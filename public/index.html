@@ -119,7 +119,7 @@
     <h2 id="welcome-title">Einen Moment bitte</h2>
 
     <div class="welcome-info" id="welcome-text">
-        Wir laden dein Profil. Sollte dies länger als 10 Sekunden dauern, wecke den Server bitte mit einem Neuladen der Seite auf.
+        Wir laden dein Profil, einen kleinen Augeblick bitte.
     </div>
 
     <div id="content-area"></div>
@@ -181,14 +181,25 @@
         const area = document.getElementById('content-area');
         const badge = document.getElementById('status-badge');
 
-        if (data.is_premium) {
+       if (data.is_premium) {
             badge.innerText = "Premium Aktiv ✨";
             badge.className = "status-badge premium-active";
-            area.innerHTML = `<div class="info-box"><button class="btn-main btn-manage" onclick="manage()">Abo verwalten</button></div>`;
+            const dateStr = new Date(data.premium_until).toLocaleDateString('de-DE');
+            area.innerHTML = `
+                <div class="info-box">
+                    ${data.cancel_at_period_end ? `
+                        <div class="cancel-warning">Abo gekündigt, endet am ${dateStr}</div>` : `
+                        <div class="expiry-text">Nächste Abrechnung: <b>${dateStr}</b></div>
+                    `}
+                    <button class="btn-main btn-manage" onclick="manage()">Abo verwalten</button>
+                </div>`;
         } else {
             badge.innerText = "Standard Account";
             badge.className = "status-badge premium-none";
-            area.innerHTML = `<div class="info-box"><button class="btn-main btn-premium" onclick="checkout()">Premium freischalten</button></div>`;
+            area.innerHTML = `
+                <div class="info-box">
+                    <button class="btn-main btn-premium" onclick="checkout()">Premium freischalten</button>
+                </div>`;
         }
     }
 
