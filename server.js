@@ -82,9 +82,17 @@ app.post("/register", async (req, res) => {
     try {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
-        await pool.query("INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, false, NOW())", [email, passwordHash]);
+        await pool.query(
+            "INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, false, NOW())", 
+            [email, passwordHash]
+        );
         res.json({ success: true });
     } catch (err) { 
+        // Prüfen auf doppelte E-Mail (PostgreSQL Error Code 23505)
+        if (err.code === '23505') {
+            return res.status(400).json({ error: "Diese E-Mail-Adresse wird bereits verwendet" });
+        }
+        console.error("Registrierungsfehler:", err);
         res.status(500).json({ error: "Registrierung fehlgeschlagen" }); 
     }
 });
@@ -142,6 +150,9 @@ app.post("/create-checkout-session", authenticateUser, async (req, res) => {
 
 app.post("/create-portal-session", authenticateUser, async (req, res) => {
     try {
+        if (!req.user.stripe_customer_id) {
+            return res.status(400).json({ error: "Keine Stripe-Kunden-ID vorhanden" });
+        }
         const session = await stripe.billingPortal.sessions.create({
             customer: req.user.stripe_customer_id,
             return_url: 'https://pokecardscout-api.onrender.com/index.html',
