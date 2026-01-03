@@ -153,8 +153,26 @@
 <script>
     const token = localStorage.getItem('poketool_token');
     const apiBase = 'https://pokecardscout-api.onrender.com';
+    // Deine Extension ID
+    const POKESCOUT_EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
 
     if (!token) window.location.href = "login.html";
+
+    // NEU: Funktion zur Kommunikation mit der Extension
+    function syncWithExtension(tokenToSync) {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+            chrome.runtime.sendMessage(POKESCOUT_EXTENSION_ID, {
+                type: "LOGIN_SUCCESS",
+                token: tokenToSync
+            }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.log("[PokéScout] Extension noch nicht installiert oder ID falsch.");
+                } else if (response && response.success) {
+                    console.log("[PokéScout] Erfolgreich mit Extension synchronisiert.");
+                }
+            });
+        }
+    }
 
     async function init() {
         try {
@@ -166,8 +184,14 @@
                 }
             });
             const data = await res.json();
-            if (res.ok) renderDashboard(data);
-            else logout();
+            
+            if (res.ok) {
+                renderDashboard(data);
+                // WICHTIG: Hier synchronisieren wir den Token mit der Extension
+                syncWithExtension(token);
+            } else {
+                logout();
+            }
         } catch (e) {
             document.getElementById('status-badge').innerText = "Verbindungsfehler";
         }
@@ -221,6 +245,7 @@
         localStorage.clear(); 
         window.location.href = "login.html"; 
     }
+    
     init();
 </script>
 </body>
