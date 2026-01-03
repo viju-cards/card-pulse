@@ -159,8 +159,7 @@
     if (!token) window.location.href = "login.html";
 
     /**
-     * Sendet den Token an die Chrome Extension, 
-     * damit diese autorisierte Anfragen stellen kann.
+     * Sendet den Token an die Chrome Extension
      */
     function syncWithExtension(tokenToSync) {
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
@@ -169,9 +168,9 @@
                 token: tokenToSync
             }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.log("[PokéScout] Extension nicht erreichbar oder ID falsch.");
-                } else if (response && response.success) {
-                    console.log("[PokéScout] Token erfolgreich mit Extension synchronisiert.");
+                    console.log("[PokéScout] Extension nicht erreichbar.");
+                } else {
+                    console.log("[PokéScout] Synchronisiert.");
                 }
             });
         }
@@ -190,7 +189,6 @@
             
             if (res.ok) {
                 renderDashboard(data);
-                // Synchronisation mit der Extension anstoßen
                 syncWithExtension(token);
             } else {
                 logout();
@@ -245,9 +243,20 @@
         if (d.url) window.location.href = d.url;
     }
 
+    /**
+     * NEU: Loggt den User aus und löscht den Token auch in der Extension
+     */
     function logout() { 
-        localStorage.clear(); 
-        window.location.href = "login.html"; 
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+            // Extension informieren, dass der Token gelöscht werden soll
+            chrome.runtime.sendMessage(POKESCOUT_EXTENSION_ID, { type: "LOGOUT" }, () => {
+                localStorage.clear(); 
+                window.location.href = "login.html"; 
+            });
+        } else {
+            localStorage.clear(); 
+            window.location.href = "login.html"; 
+        }
     }
     
     init();
