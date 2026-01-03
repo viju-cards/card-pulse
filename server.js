@@ -58,7 +58,6 @@ app.use((req, res, next) => {
 // 2. AUTHENTIFIZIERUNG & REGISTRIERUNG
 // =========================================================
 
-// REGISTRIERUNG
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -66,41 +65,29 @@ app.post("/register", async (req, res) => {
         if (existingUser.rows.length > 0) {
             return res.status(400).json({ error: "Benutzername/E-Mail bereits vergeben." });
         }
-
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
-
         await pool.query(
             "INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, $3, NOW())",
             [email, passwordHash, false]
         );
-
         res.json({ success: true, message: "Konto erfolgreich erstellt!" });
     } catch (err) {
-        console.error("Registrierungsfehler:", err);
         res.status(500).json({ error: "Serverfehler bei der Registrierung." });
     }
 });
 
-// LOGIN
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
         const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
         const user = result.rows[0];
-        
-        if (!user) {
-            return res.status(401).json({ error: "Kein Account mit dieser E-Mail gefunden." });
-        }
+        if (!user) return res.status(401).json({ error: "Kein Account gefunden." });
 
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (isMatch) {
-            const formattedDate = user.created_at 
-                ? new Date(user.created_at).toLocaleDateString('de-DE') 
-                : '--';
-
+            const formattedDate = user.created_at ? new Date(user.created_at).toLocaleDateString('de-DE') : '--';
             const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
-            
             res.json({ 
                 token, 
                 is_premium: user.is_premium, 
@@ -110,108 +97,98 @@ app.post("/login", async (req, res) => {
         } else { 
             res.status(401).json({ error: "Das Passwort ist nicht korrekt." }); 
         }
-    } catch (e) { 
-        res.status(500).json({ error: "Serverfehler beim Login." }); 
-    }
+    } catch (e) { res.status(500).json({ error: "Serverfehler." }); }
 });
 
-// AUTH MIDDLEWARE
-async function authenticatePremiumUser(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    
+async function authenticateUser(req, res, next) {
+    const token = req.headers['authorization']?.split(' ')[1] || req.body.token;
     if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const user = (await pool.query("SELECT is_premium, premium_until FROM users WHERE id = $1", [decoded.id])).rows[0];
-        if (user?.is_premium && new Date(user.premium_until) > new Date()) {
-            req.user = decoded;
-            next();
-        } else { 
-            res.status(403).json({ error: "PAYMENT_REQUIRED" }); 
-        }
-    } catch (err) { 
-        res.status(403).json({ error: "INVALID_TOKEN" }); 
-    }
+        const user = (await pool.query("SELECT * FROM users WHERE id = $1", [decoded.id])).rows[0];
+        if (!user) return res.status(401).json({ error: "USER_NOT_FOUND" });
+        req.user = user;
+        next();
+    } catch (err) { res.status(403).json({ error: "INVALID_TOKEN" }); }
 }
 
 // =========================================================
-// 3. PREIS LOGIK & MAPPING
+// 3. PREIS LOGIK
 // =========================================================
 
 function mapAndFilterPrices(data) {
-    const cardData = Array.isArray(data.data) ? data.data[0] : null; 
-    if (!cardData || !cardData.variants) return {};
-    
-    const prices = {};
-    let allPrices = []; 
-    let conditionPrices = {}; 
-
-    for (const variant of cardData.variants) {
-        if (typeof variant.price === 'number') { 
-            const conditionKey = variant.condition.toUpperCase().trim();
-            allPrices.push(variant.price);
-            if (!conditionPrices[conditionKey] || variant.price < conditionPrices[conditionKey]) {
-                conditionPrices[conditionKey] = variant.price;
-            }
+    const cardData = data.data?.[0]; 
+    if (!cardData?.variants) return {};
+    let all = [];
+    let low = null;
+    for (const v of cardData.variants) {
+        if (typeof v.price === 'number') {
+            all.push(v.price);
+            if (low === null || v.price < low) low = v.price;
         }
     }
-
-    prices['LOW'] = allPrices.length > 0 ? Math.min(...allPrices).toFixed(2) : '--';
-    prices['HIGH'] = allPrices.length > 0 ? Math.max(...allPrices).toFixed(2) : '--';
-    prices['MARKET PRICE'] = (conditionPrices['NEAR MINT'] || (allPrices.length > 0 ? allPrices[0] : 0)).toFixed(2); 
-    prices['NEAR MINT'] = conditionPrices['NEAR MINT'] ? conditionPrices['NEAR MINT'].toFixed(2) : null;
-    prices['LIGHTLY PLAYED'] = conditionPrices['LIGHTLY PLAYED'] ? conditionPrices['LIGHTLY PLAYED'].toFixed(2) : null;
-
-    return prices;
+    return {
+        LOW: low ? low.toFixed(2) : '--',
+        HIGH: all.length ? Math.max(...all).toFixed(2) : '--',
+        MARKET: all.length ? all[0].toFixed(2) : '--'
+    };
 }
 
-app.get("/prices", authenticatePremiumUser, async (req, res) => {
-    const { set: setSlug, cardNumber } = req.query;
-    let dbNum = cardNumber.padStart(3, '0');
+app.get("/prices", async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
 
     try {
-        const dbRes = await pool.query(
-            "SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", 
-            [setSlug, dbNum]
-        );
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = (await pool.query("SELECT is_premium, premium_until FROM users WHERE id = $1", [decoded.id])).rows[0];
         
+        if (!user?.is_premium || new Date(user.premium_until) < new Date()) {
+            return res.status(403).json({ error: "PAYMENT_REQUIRED" });
+        }
+
+        const { set, cardNumber } = req.query;
+        const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [set, cardNumber.padStart(3, '0')]);
         const tcgId = dbRes.rows[0]?.tcg_player_id;
         if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
 
-        const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { 
-            headers: { "X-API-KEY": API_KEY } 
-        });
-        const justTcgData = await apiRes.json();
-
-        const cardTitle = justTcgData.data?.[0]?.name || "Unbekannt";
-        const mappedPrices = mapAndFilterPrices(justTcgData);
-        
-        res.json({ prices: mappedPrices, fullTitle: cardTitle });
-    } catch (err) { 
-        console.error("SERVER ERROR:", err);
-        res.status(500).json({ error: "SERVER_ERROR" }); 
-    }
+        const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
+        const data = await apiRes.json();
+        res.json({ prices: mapAndFilterPrices(data), fullTitle: data.data?.[0]?.name });
+    } catch (err) { res.status(500).json({ error: "SERVER_ERROR" }); }
 });
 
 // =========================================================
-// 4. STRIPE CHECKOUT
+// 4. STRIPE SESSIONS (Checkout & Portal)
 // =========================================================
-app.post("/create-checkout-session", async (req, res) => {
+
+app.post("/create-checkout-session", authenticateUser, async (req, res) => {
     try {
-        const decoded = jwt.verify(req.body.token, JWT_SECRET);
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'paypal'],
             line_items: [{ price: 'price_1SjQsWFUZXbTt9dyq5MqFi06', quantity: 1 }], 
             mode: 'subscription',
             success_url: 'https://pokecardscout-api.onrender.com?status=success',
             cancel_url: 'https://pokecardscout-api.onrender.com?status=cancel',
-            client_reference_id: decoded.id.toString(),
+            client_reference_id: req.user.id.toString(),
+            customer_email: req.user.email
         });
         res.json({ url: session.url });
-    } catch (e) { 
-        res.status(500).json({ error: e.message }); 
-    }
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// NEU: Stripe Customer Portal für die Abo-Verwaltung
+app.post("/create-portal-session", authenticateUser, async (req, res) => {
+    try {
+        if (!req.user.stripe_customer_id) {
+            return res.status(400).json({ error: "Keine aktive Stripe-Kunden-ID gefunden." });
+        }
+        const session = await stripe.billingPortal.sessions.create({
+            customer: req.user.stripe_customer_id,
+            return_url: 'https://pokecardscout-api.onrender.com',
+        });
+        res.json({ url: session.url });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
