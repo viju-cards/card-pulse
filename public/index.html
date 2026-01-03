@@ -7,7 +7,7 @@
     <style>
         :root {
             --poke-blue: #20558a;
-            --bg-beige: #f1efe7; /* Hintergrund passend zum Logo */
+            --bg-beige: #f1efe7; 
             --card-shadow: 0 10px 25px rgba(0,0,0,0.05);
             --text-dark: #1a1a1a;
             --text-muted: #64748b;
@@ -32,17 +32,30 @@
             width: 100%; 
             max-width: 380px; 
             text-align: center; 
-            position: relative;
         }
 
         .logo-container {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .logo-container img {
             width: 160px;
             height: auto;
         }
+
+        /* Status Badge direkt unter dem Logo */
+        .status-badge { 
+            display: inline-block; 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-size: 11px; 
+            font-weight: 800; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 25px;
+        }
+        .premium-active { background: #e6f4ea; color: #1e7e34; }
+        .premium-none { background: #f1f3f5; color: #495057; }
 
         h2 { 
             color: var(--text-dark); 
@@ -56,30 +69,8 @@
             font-size: 14px;
             line-height: 1.6;
             color: var(--text-muted);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .user-mail { 
-            font-size: 13px; 
-            color: var(--poke-blue); 
-            font-weight: 600;
-            margin-bottom: 20px; 
-            display: block; 
-        }
-
-        .status-badge { 
-            display: inline-block; 
-            padding: 6px 14px; 
-            border-radius: 20px; 
-            font-size: 11px; 
-            font-weight: 800; 
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
             margin-bottom: 25px;
         }
-        .premium-active { background: #e6f4ea; color: #1e7e34; }
-        .premium-none { background: #f1f3f5; color: #495057; }
 
         .info-box { 
             background: #fafafa; 
@@ -110,7 +101,7 @@
             background: var(--poke-blue); 
             color: white; 
         }
-        .btn-premium:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-premium:hover { opacity: 0.9; }
 
         .btn-manage { 
             background: white; 
@@ -139,16 +130,14 @@
         <img src="logo.png" alt="PokéScout">
     </div>
 
+    <div id="status-badge" class="status-badge">Prüfe Status...</div>
+
     <h2>Schön, dass du dabei bist!</h2>
     
     <div class="welcome-info">
         Mit deinem Premium-Abo siehst du jetzt die TCGplayer-Preisübersicht direkt auf Cardmarket – einfach und übersichtlich über unsere Browser-Extension.<br><br>
         Der Pricetracker ist aktuell speziell für <strong>Pokémon-Karten</strong> verfügbar. Viel Erfolg beim Vergleichen und Tracken!
     </div>
-
-    <span id="display-email" class="user-mail">Laden...</span>
-
-    <div id="status-badge" class="status-badge">Prüfe Status...</div>
 
     <div id="content-area"></div>
 
@@ -173,13 +162,11 @@
             const data = await res.json();
             
             if (res.ok) {
-                document.getElementById('display-email').innerText = data.email;
                 renderDashboard(data);
             } else { 
                 logout(); 
             }
         } catch (e) {
-            console.error("Fehler:", e);
             document.getElementById('status-badge').innerText = "Verbindungsfehler";
         }
     }
@@ -189,7 +176,7 @@
         const badge = document.getElementById('status-badge');
 
         if (data.is_premium) {
-            badge.innerText = "Premium Aktiv ✨";
+            badge.innerText = "PREMIUM AKTIV ✨";
             badge.className = "status-badge premium-active";
             
             const dateStr = new Date(data.premium_until).toLocaleDateString('de-DE');
@@ -206,13 +193,10 @@
                 </div>
             `;
         } else {
-            badge.innerText = "Standard Account";
+            badge.innerText = "STANDARD ACCOUNT";
             badge.className = "status-badge premium-none";
             area.innerHTML = `
                 <div class="info-box">
-                    <p style="font-size: 13px; color: #6c757d; margin-top: 0; margin-bottom: 15px;">
-                        Upgrade für unbegrenzte Preis-Checks und volle Extension-Features.
-                    </p>
                     <button class="btn-main btn-premium" onclick="checkout()">Pro freischalten</button>
                 </div>
             `;
