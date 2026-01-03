@@ -16,6 +16,7 @@
             --text-muted: #64748b;
             --font-head: 'Outfit', sans-serif;
             --font-body: 'Plus Jakarta Sans', sans-serif;
+            --danger-red: #dc2626;
         }
 
         body { 
@@ -106,8 +107,20 @@
             font-weight: 500;
         }
 
-        .expiry-text { font-size: 14px; color: #475569; margin-bottom: 15px; font-weight: 500; }
-        .expiry-text b { color: var(--text-dark); }
+        /* Styling für die Info-Texte */
+        .expiry-text { 
+            font-size: 13px; 
+            color: var(--text-dark); 
+            margin-bottom: 15px; 
+            font-weight: 500; 
+        }
+        
+        .cancel-warning { 
+            font-size: 13px; 
+            color: var(--danger-red); 
+            margin-bottom: 15px; 
+            font-weight: 600;
+        }
         
         /* Style für den Link */
         .set-link {
@@ -143,7 +156,6 @@
     const apiBase = 'https://pokecardscout-api.onrender.com';
     const POKESCOUT_EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
 
-    // Text mit Link als Variable, um ihn einfach wiederzuverwenden
     const premiumWelcomeText = `
         Mit dem Premium-Abo siehst du die TCGplayer-Preise direkt auf Cardmarket - ganz einfach über unsere Browser-Extension.<br><br>
         Besuche unsere <a href="sets.html" class="set-link">Set-Übersicht</a> für alle bereits unterstützten Sets.
@@ -164,7 +176,6 @@
 
     async function init() {
         try {
-            console.log("Starte Login-Check...");
             const res = await fetch(`${apiBase}/login_check`, {
                 method: 'POST',
                 headers: { 
@@ -175,22 +186,17 @@
             
             if (res.ok) {
                 const data = await res.json();
-                console.log("Server Check OK:", data);
                 document.getElementById('welcome-title').innerText = "Schön, dass du da bist!";
-                
-                // Hier wird der neue Text mit Link eingefügt
                 document.getElementById('welcome-text').innerHTML = premiumWelcomeText;
                 
                 renderDashboard(data);
                 syncWithExtension(token);
             } else if (res.status === 401 || res.status === 403) {
-                console.warn("Token ungültig.");
                 logout();
             } else {
                 throw new Error("Server antwortet nicht korrekt");
             }
         } catch (e) {
-            console.error("Init Error:", e);
             document.getElementById('status-badge').innerText = "Server schläft...";
             setTimeout(init, 5000);
         }
@@ -204,6 +210,7 @@
             badge.innerText = "Premium Aktiv ✨";
             badge.className = "status-badge premium-active";
             const dateStr = new Date(data.premium_until).toLocaleDateString('de-DE');
+            
             area.innerHTML = `
                 <div class="info-box">
                     ${data.cancel_at_period_end ? `
@@ -231,7 +238,7 @@
             });
             const d = await res.json(); 
             if (d.url) window.location.href = d.url;
-        } catch (e) { alert("Checkout zurzeit nicht möglich. Bitte Seite neu laden."); }
+        } catch (e) { alert("Checkout zurzeit nicht möglich."); }
     }
 
     async function manage() {
