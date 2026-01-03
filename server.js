@@ -23,7 +23,7 @@ const pool = new Pool({
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK (Muss vor express.json stehen)
+// 1. STRIPE WEBHOOK
 // =========================================================
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -58,23 +58,21 @@ app.use((req, res, next) => {
 // 2. AUTHENTIFIZIERUNG & REGISTRIERUNG
 // =========================================================
 
-// REGISTRIERUNG (Neu hinzugefügt)
+// REGISTRIERUNG (Mit created_at)
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
     try {
-        // Prüfen, ob User bereits existiert
         const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
         if (existingUser.rows.length > 0) {
             return res.status(400).json({ error: "Email wird bereits verwendet." });
         }
 
-        // Passwort hashen (Sicherheit)
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // User in Neon DB speichern
+        // User in Neon DB speichern inklusive NOW() für created_at
         await pool.query(
-            "INSERT INTO users (email, password_hash, is_premium) VALUES ($1, $2, $3)",
+            "INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, $3, NOW())",
             [email, passwordHash, false]
         );
 
@@ -96,7 +94,8 @@ app.post("/login", async (req, res) => {
             res.json({ 
                 token, 
                 is_premium: user.is_premium, 
-                premium_until: user.premium_until 
+                premium_until: user.premium_until,
+                created_at: user.created_at // Hier geben wir es beim Login mit zurück
             });
         } else { 
             res.status(401).json({ error: "E-Mail oder Passwort falsch." }); 
