@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéScout Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f7f9; color: #333; }
+        body { font-family: 'Segoe UI', -apple-system, sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f7f9; color: #333; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 400px; position: relative; }
         .btn-premium { background: #28a745; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; font-size: 16px; transition: 0.2s; }
         .btn-secondary { background: #6c757d; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; font-size: 14px; }
@@ -15,6 +15,7 @@
         .premium-none { background: #e6f7ff; color: #1890ff; }
         #sync-msg { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 14px; }
         .success-green { background: #f6ffed; color: #28a745; border: 1px solid #b7eb8f; }
+        .error-red { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
         .info-blue { background: #e7f3ff; color: #20558a; border: 1px solid #d0e7ff; }
         .expiry-info { font-size: 13px; color: #666; margin-top: 15px; padding: 10px; background: #fafafa; border-radius: 6px; }
     </style>
@@ -28,19 +29,23 @@
         
         <div id="sync-msg" class="info-blue">🔄 Synchronisiere mit Extension...</div>
 
-        <div id="premium-area" style="display:none;">
-            </div>
+        <div id="premium-area" style="display:none;"></div>
+        
+        <div id="member-since" style="font-size: 11px; color: #bbb; margin-top: 20px;"></div>
     </div>
 
     <script>
-        const EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl"; // Deine ID
-        const token = localStorage.getItem('userToken');
+        const EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl"; 
+        
+        // WICHTIG: Key muss mit login.html übereinstimmen (poketool_token)
+        const token = localStorage.getItem('poketool_token');
         const isPremium = localStorage.getItem('isPremium') === 'true';
         const premiumUntil = localStorage.getItem('premiumUntil');
+        const memberSince = localStorage.getItem('memberSince');
 
-        // 1. Zugriffsschutz
+        // 1. Zugriffsschutz: Wenn kein Token, dann zurück zum Login
         if (!token) {
-            window.location.href = "/login.html";
+            window.location.href = "login.html";
         } else {
             initDashboard();
         }
@@ -48,22 +53,25 @@
         function initDashboard() {
             const statusBadge = document.getElementById('status-badge');
             const premiumArea = document.getElementById('premium-area');
+            const memberInfo = document.getElementById('member-since');
+            
             premiumArea.style.display = "block";
+            if(memberSince) memberInfo.innerText = `Mitglied seit: ${memberSince}`;
 
-            if (isPremium && premiumUntil) {
-                // Layout für Premium Nutzer
+            // Prüfung auf Premium
+            if (isPremium && premiumUntil && new Date(premiumUntil) > new Date()) {
                 statusBadge.innerText = "Premium Aktiv ✨";
                 statusBadge.className = "status-badge premium-active";
                 
-                const dateStr = new Date(premiumUntil).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+                const dateStr = new Date(premiumUntil).toLocaleDateString('de-DE', { 
+                    day: '2-digit', month: 'long', year: 'numeric' 
+                });
                 
                 premiumArea.innerHTML = `
                     <div class="expiry-info">Abo aktiv bis: <b>${dateStr}</b></div>
                     <button onclick="manageBilling()" class="btn-secondary">Abo verwalten / Kündigen</button>
-                    <p style="font-size: 12px; color: #999; margin-top: 10px;">Änderungen im Stripe-Portal werden sofort übernommen.</p>
                 `;
             } else {
-                // Layout für Standard Nutzer
                 statusBadge.innerText = "Standard Account";
                 statusBadge.className = "status-badge premium-none";
                 
@@ -77,18 +85,21 @@
         }
 
         function checkExtension() {
-            if (typeof chrome !== "undefined" && chrome.runtime) {
+            if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
                 chrome.runtime.sendMessage(EXTENSION_ID, { type: "LOGIN_SUCCESS", token: token }, (response) => {
                     const syncBox = document.getElementById('sync-msg');
                     if (chrome.runtime.lastError) {
                         syncBox.className = "error-red";
-                        syncBox.innerHTML = "❌ Erweiterung nicht gefunden.";
+                        syncBox.innerHTML = "❌ Erweiterung nicht gefunden oder ID falsch.";
                     } else {
                         syncBox.className = "success-green";
                         syncBox.innerHTML = "✅ Mit Browser-Erweiterung synchronisiert.";
                         setTimeout(() => syncBox.style.display = 'none', 3000);
                     }
                 });
+            } else {
+                // Fallback wenn chrome.runtime nicht verfügbar (z.B. im normalen Browser Tab)
+                document.getElementById('sync-msg').innerHTML = "ℹ️ Öffne Cardmarket, um die Preise zu sehen.";
             }
         }
 
@@ -96,17 +107,24 @@
             const btn = document.getElementById('checkoutBtn');
             btn.disabled = true;
             btn.innerText = "Lade Stripe...";
-            const res = await fetch('/create-checkout-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
-            });
-            const data = await res.json();
-            if (data.url) window.location.href = data.url;
+            try {
+                const res = await fetch('https://pokecardscout-api.onrender.com/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+            } catch (e) {
+                alert("Fehler beim Starten von Stripe.");
+                btn.disabled = false;
+                btn.innerText = "Premium Abo abschließen";
+            }
         }
 
         async function manageBilling() {
-            const res = await fetch('/create-portal-session', {
+            // Hinweis: Endpoint /create-portal-session muss in server.js existieren
+            const res = await fetch('https://pokecardscout-api.onrender.com/create-portal-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token })
@@ -117,7 +135,7 @@
 
         function logout() {
             localStorage.clear();
-            window.location.href = "/login.html";
+            window.location.href = "login.html";
         }
     </script>
 </body>
