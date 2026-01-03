@@ -23,7 +23,7 @@ const pool = new Pool({
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK (Muss vor express.json stehen)
+// 1. STRIPE WEBHOOK
 // =========================================================
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -82,7 +82,7 @@ app.post("/register", async (req, res) => {
     }
 });
 
-// LOGIN (Mit formatiertem Datum)
+// LOGIN
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -95,7 +95,6 @@ app.post("/login", async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (isMatch) {
-            // Datum formatieren für die Anzeige
             const formattedDate = user.created_at 
                 ? new Date(user.created_at).toLocaleDateString('de-DE') 
                 : '--';
@@ -118,7 +117,9 @@ app.post("/login", async (req, res) => {
 
 // AUTH MIDDLEWARE
 async function authenticatePremiumUser(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1];
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
     if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -126,8 +127,12 @@ async function authenticatePremiumUser(req, res, next) {
         if (user?.is_premium && new Date(user.premium_until) > new Date()) {
             req.user = decoded;
             next();
-        } else { res.status(403).json({ error: "PAYMENT_REQUIRED" }); }
-    } catch (err) { res.status(403).json({ error: "INVALID_TOKEN" }); }
+        } else { 
+            res.status(403).json({ error: "PAYMENT_REQUIRED" }); 
+        }
+    } catch (err) { 
+        res.status(403).json({ error: "INVALID_TOKEN" }); 
+    }
 }
 
 // =========================================================
@@ -184,6 +189,7 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
         
         res.json({ prices: mappedPrices, fullTitle: cardTitle });
     } catch (err) { 
+        console.error("SERVER ERROR:", err);
         res.status(500).json({ error: "SERVER_ERROR" }); 
     }
 });
@@ -203,7 +209,9 @@ app.post("/create-checkout-session", async (req, res) => {
             client_reference_id: decoded.id.toString(),
         });
         res.json({ url: session.url });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { 
+        res.status(500).json({ error: e.message }); 
+    }
 });
 
 app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
