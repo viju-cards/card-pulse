@@ -7,7 +7,9 @@
     <style>
         :root {
             --poke-blue: #20558a;
-            --bg-beige: #f1efe7; /* Exakter Farbcode aus dem Logo-Bild */
+            --poke-yellow: #ffcb05;
+            --bg-beige: #f1efe7; /* Dein gewünschter Farbcode */
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.05);
         }
 
         body { 
@@ -16,98 +18,107 @@
             display: flex; 
             justify-content: center; 
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0; 
         }
 
         .card { 
             background: white; 
-            padding: 35px 25px; 
-            border-radius: 24px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); 
-            width: 100%; 
-            max-width: 340px; /* Sehr kompakt gehalten */
-            text-align: center;
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: var(--card-shadow); 
+            width: 90%; 
+            max-width: 360px; /* Kompakter als vorher */
+            text-align: center; 
+            position: relative;
         }
 
-        .logo-container img {
-            width: 160px;
-            height: auto;
+        .logo-container {
             margin-bottom: 15px;
         }
 
-        h2 { 
-            color: #000; 
-            margin: 0; 
-            font-size: 22px; 
-            font-weight: 700;
-            word-break: break-all;
+        .logo-container img {
+            width: 180px; /* Logo etwas prominenter */
+            height: auto;
         }
 
-        .sub-text { 
+        h2 { 
+            color: #1a1a1a; 
+            margin: 0; 
+            font-size: 20px; 
+            font-weight: 700;
+        }
+
+        .user-mail { 
             font-size: 13px; 
-            color: #8899a6; 
+            color: #657786; 
             margin-bottom: 20px; 
             display: block; 
         }
 
         .status-badge { 
             display: inline-block; 
-            padding: 8px 16px; 
-            border-radius: 20px; 
+            padding: 6px 14px; 
+            border-radius: 12px; 
             font-size: 12px; 
             font-weight: 700; 
             text-transform: uppercase;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
-        .premium-active { background: #eefaf2; color: #2eb85c; }
-        .premium-none { background: #f8f9fa; color: #6c757d; }
+        .premium-active { background: #e6f4ea; color: #1e7e34; }
+        .premium-none { background: #f1f3f5; color: #495057; }
 
         .info-box { 
-            background: #f8f9fa; 
-            border: 1px solid #f1f3f5; 
+            background: #fafafa; 
+            border: 1px solid #f0f0f0; 
             padding: 20px; 
-            border-radius: 18px; 
+            border-radius: 16px; 
         }
 
-        .status-msg { 
-            font-size: 13px; 
+        .cancel-warning { 
+            color: #d93025; 
+            font-size: 12px; 
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            line-height: 1.4;
         }
-        .cancel-warning { color: #e53e3e; }
-        .active-msg { color: #4a5568; }
 
         .btn-main { 
             width: 100%; 
             padding: 14px; 
-            border-radius: 12px; 
+            border-radius: 10px; 
             cursor: pointer; 
             font-weight: 700; 
             font-size: 15px; 
             transition: 0.2s;
-            border: 1px solid #dee2e6;
-            background: white;
-            color: var(--poke-blue);
-        }
-        .btn-main:hover { background: #f8fbff; border-color: var(--poke-blue); }
-
-        .btn-upgrade {
-            background: var(--poke-blue);
-            color: white;
             border: none;
         }
-        .btn-upgrade:hover { opacity: 0.9; }
+
+        .btn-premium { 
+            background: var(--poke-blue); 
+            color: white; 
+        }
+        .btn-premium:hover { background: #1a446e; opacity: 0.9; }
+
+        .btn-manage { 
+            background: #f8f9fa; 
+            color: #495057; 
+            border: 1px solid #dee2e6;
+            margin-top: 10px;
+        }
+        .btn-manage:hover { background: #e9ecef; }
 
         .logout-link {
-            display: inline-block;
-            margin-top: 25px;
-            font-size: 14px;
+            display: block;
+            margin-top: 20px;
+            font-size: 13px;
             color: #adb5bd;
             text-decoration: none;
             cursor: pointer;
         }
-        .logout-link:hover { color: #4a5568; }
+        .logout-link:hover { color: #d93025; }
+
+        .expiry-text { font-size: 13px; color: #495057; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -118,9 +129,9 @@
     </div>
 
     <h2 id="display-email">Laden...</h2>
-    <span class="sub-text">Dashboard</span>
+    <span class="user-mail">Dashboard</span>
 
-    <div id="status-badge" class="status-badge">Status wird geprüft...</div>
+    <div id="status-badge" class="status-badge">Prüfe Status...</div>
 
     <div id="content-area">
         </div>
@@ -150,7 +161,7 @@
                 logout(); 
             }
         } catch (e) {
-            console.error("Dashboard-Fehler:", e);
+            console.error("Fehler:", e);
         }
     }
 
@@ -166,10 +177,13 @@
 
             area.innerHTML = `
                 <div class="info-box">
-                    <div class="status-msg ${data.cancel_at_period_end ? 'cancel-warning' : 'active-msg'}">
-                        ${data.cancel_at_period_end ? `Abo endet am ${dateStr}` : `Verlängert sich am ${dateStr}`}
-                    </div>
-                    <button class="btn-main" onclick="manage()">Abo verwalten</button>
+                    ${data.cancel_at_period_end ? `
+                        <div class="cancel-warning">
+                            Abo endet am ${dateStr}
+                        </div>` : `
+                        <div class="expiry-text">Nächste Abrechnung: <b>${dateStr}</b></div>
+                    `}
+                    <button class="btn-main btn-manage" onclick="manage()">Abo verwalten</button>
                 </div>
             `;
         } else {
@@ -177,8 +191,8 @@
             badge.className = "status-badge premium-none";
             area.innerHTML = `
                 <div class="info-box">
-                    <p style="font-size: 13px; color: #718096; margin-top: 0; margin-bottom: 15px;">Upgrade für unbegrenzten Zugriff.</p>
-                    <button class="btn-main btn-upgrade" onclick="checkout()">Pro freischalten</button>
+                    <p style="font-size: 13px; color: #6c757d; margin-top: 0;">Upgrade für unbegrenzte Preis-Checks.</p>
+                    <button class="btn-main btn-premium" onclick="checkout()">Pro freischalten</button>
                 </div>
             `;
         }
@@ -204,4 +218,11 @@
 
     function logout() { 
         localStorage.clear(); 
-        window.location
+        window.location.href = "login.html"; 
+    }
+
+    init();
+</script>
+
+</body>
+</html>
