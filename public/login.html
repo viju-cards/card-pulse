@@ -2,24 +2,129 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>PokéScout Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéScout | Login</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f7f9; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 320px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #20558a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        h2 { text-align: center; color: #333; }
+        :root {
+            --primary: #ef5350; /* Pokéball Rot */
+            --secondary: #2a75bb; /* Pokémon Blau */
+            --bg: #f0f2f5;
+            --text: #333;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%;
+            max-width: 360px; 
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 20px;
+        }
+
+        .logo-placeholder {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            border: 4px solid #333;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Simpler CSS Pokéball als Logo-Ersatz */
+        .logo-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 0;
+            width: 100%; height: 4px;
+            background: #333;
+            transform: translateY(-50%);
+        }
+
+        h2 { margin: 10px 0 25px; color: var(--text); font-weight: 700; }
+
+        .input-group { text-align: left; margin-bottom: 15px; }
+
+        input { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 2px solid #eee; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            transition: border-color 0.3s;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px;
+            transition: transform 0.2s, background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover { background: #d32f2f; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+
+        .footer-links { margin-top: 25px; font-size: 14px; color: #666; }
+        .footer-links a { color: var(--secondary); text-decoration: none; font-weight: bold; }
+        .footer-links a:hover { text-decoration: underline; }
+
+        #error { color: #e53935; font-size: 13px; margin-top: 15px; display: none; background: #ffebee; padding: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
+
     <div class="card">
-        <h2>PokéScout Login</h2>
+        <div class="logo-container">
+            <img src="logo.png" alt="PokéScout Logo" style="width: 100px; height: auto; display: none;" id="mainLogo">
+            <div class="logo-placeholder" id="tempLogo"></div>
+        </div>
+
+        <h2>Willkommen zurück</h2>
+        
         <form id="loginForm">
-            <input type="email" id="email" placeholder="E-Mail" required>
-            <input type="password" id="password" placeholder="Passwort" required>
+            <div class="input-group">
+                <input type="email" id="email" placeholder="E-Mail Adresse" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Passwort" required>
+            </div>
             <button type="submit">Einloggen</button>
         </form>
-        <p id="error" style="color: red; font-size: 12px; text-align: center; display: none;"></p>
+
+        <p id="error"></p>
+
+        <div class="footer-links">
+            Noch kein Scout? <a href="/register.html">Jetzt registrieren</a>
+        </div>
     </div>
 
     <script>
@@ -27,20 +132,25 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const err = document.getElementById('error');
 
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
-            const data = await response.json();
-            if (data.token) {
-                localStorage.setItem('userToken', data.token);
-                window.location.href = "/index.html"; // Weiterleitung nach Erfolg
-            } else {
-                const err = document.getElementById('error');
-                err.innerText = data.error || "Login fehlgeschlagen";
+                const data = await response.json();
+                if (data.token) {
+                    localStorage.setItem('userToken', data.token);
+                    window.location.href = "/index.html";
+                } else {
+                    err.innerText = data.error || "Login fehlgeschlagen";
+                    err.style.display = "block";
+                }
+            } catch (k) {
+                err.innerText = "Server-Verbindung fehlgeschlagen";
                 err.style.display = "block";
             }
         };
