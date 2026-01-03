@@ -37,7 +37,6 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
     }
 
     try {
-        // Fall 1: Abo-Abschluss (Erster Kauf)
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object;
             const expiryDate = new Date();
@@ -49,16 +48,11 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
             );
             console.log(`✅ Checkout erfolgreich für User: ${session.client_reference_id}`);
         } 
-
-        // Fall 2: Abo-Änderung (z.B. Kündigung im Portal)
         else if (event.type === 'customer.subscription.updated') {
             const subscription = event.data.object;
-            
-            // FIX: Sicherstellen, dass das Datum valide ist (Vermeidung von NaN Fehlern)
-            let expiryDate = null;
-            if (subscription.current_period_end) {
-                expiryDate = new Date(subscription.current_period_end * 1000);
-            }
+            let expiryDate = subscription.current_period_end 
+                ? new Date(subscription.current_period_end * 1000) 
+                : null;
 
             if (expiryDate && !isNaN(expiryDate.getTime())) {
                 await pool.query(
@@ -73,8 +67,6 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
             }
             console.log(`ℹ️ Abo aktualisiert für Kunde: ${subscription.customer}`);
         }
-
-        // Fall 3: Abo endgültig beendet
         else if (event.type === 'customer.subscription.deleted') {
             const subscription = event.data.object;
             await pool.query(
@@ -83,9 +75,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
             );
             console.log(`🚫 Abo gelöscht für Kunde: ${subscription.customer}`);
         }
-
         res.json({ received: true });
-
     } catch (dbErr) {
         console.error("❌ Datenbank-Fehler im Webhook:", dbErr.message);
         res.status(500).json({ error: "Internal Server Error" });
@@ -93,7 +83,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
 });
 
 // =========================================================
-// 2. MIDDLEWARES & CORS (Nach dem Webhook!)
+// 2. MIDDLEWARES & CORS
 // =========================================================
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -107,52 +97,41 @@ app.use((req, res, next) => {
 });
 
 // =========================================================
-// 3. AUTHENTIFIZIERUNG & REGISTRIERUNG
+// 3. AUTHENTIFIZIERUNG
 // =========================================================
 
 app.post("/login_check", async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-
     if (!token) return res.status(401).json({ error: "No token provided" });
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         const result = await pool.query("SELECT is_premium, premium_until, cancel_at_period_end FROM users WHERE id = $1", [decoded.id]);
         const user = result.rows[0];
-
         if (!user) return res.status(404).json({ error: "User not found" });
-
         res.json({
             is_premium: user.is_premium,
             premium_until: user.premium_until,
             cancel_at_period_end: user.cancel_at_period_end
         });
-    } catch (err) {
-        res.status(401).json({ error: "Invalid token" });
-    }
+    } catch (err) { res.status(401).json({ error: "Invalid token" }); }
 });
 
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
     try {
         const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-        if (existingUser.rows.length > 0) {
-            return res.status(400).json({ error: "Benutzername/E-Mail bereits vergeben." });
-        }
+        if (existingUser.rows.length > 0) return res.status(400).json({ error: "E-Mail bereits vergeben." });
 
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
-
         await pool.query(
             "INSERT INTO users (email, password_hash, is_premium, created_at, cancel_at_period_end) VALUES ($1, $2, $3, NOW(), false)",
             [email, passwordHash, false]
         );
-
-        res.json({ success: true, message: "Konto erfolgreich erstellt!" });
-    } catch (err) {
-        res.status(500).json({ error: "Serverfehler bei der Registrierung." });
-    }
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: "Serverfehler." }); }
 });
 
 app.post("/login", async (req, res) => {
@@ -160,39 +139,20 @@ app.post("/login", async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
         const user = result.rows[0];
-        
-        if (!user) {
-            return res.status(401).json({ error: "Kein Account mit dieser E-Mail gefunden." });
+        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+            return res.status(401).json({ error: "Logindaten ungültig." });
         }
-
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (isMatch) {
-            const formattedDate = user.created_at 
-                ? new Date(user.created_at).toLocaleDateString('de-DE') 
-                : '--';
-
-            const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
-            
-            res.json({ 
-                token, 
-                is_premium: user.is_premium, 
-                premium_until: user.premium_until,
-                cancel_at_period_end: user.cancel_at_period_end,
-                member_since: formattedDate 
-            });
-        } else { 
-            res.status(401).json({ error: "Das Passwort ist nicht korrekt." }); 
-        }
-    } catch (e) { 
-        res.status(500).json({ error: "Serverfehler beim Login." }); 
-    }
+        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
+        res.json({ 
+            token, is_premium: user.is_premium, premium_until: user.premium_until,
+            cancel_at_period_end: user.cancel_at_period_end 
+        });
+    } catch (e) { res.status(500).json({ error: "Serverfehler." }); }
 });
 
-// AUTH MIDDLEWARE
 async function authenticatePremiumUser(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    
     if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -200,17 +160,23 @@ async function authenticatePremiumUser(req, res, next) {
         if (user?.is_premium && new Date(user.premium_until) > new Date()) {
             req.user = decoded;
             next();
-        } else { 
-            res.status(403).json({ error: "PAYMENT_REQUIRED" }); 
-        }
-    } catch (err) { 
-        res.status(403).json({ error: "INVALID_TOKEN" }); 
-    }
+        } else { res.status(403).json({ error: "PAYMENT_REQUIRED" }); }
+    } catch (err) { res.status(403).json({ error: "INVALID_TOKEN" }); }
 }
 
 // =========================================================
-// 4. PREIS LOGIK & MAPPING
+// 4. PREIS LOGIK & WECHSELKURS
 // =========================================================
+
+async function getExchangeRate() {
+    try {
+        const response = await fetch("https://open.er-api.com/v6/latest/USD");
+        const data = await response.json();
+        return data.rates.EUR || 0.92;
+    } catch (err) {
+        return 0.92;
+    }
+}
 
 function mapAndFilterPrices(data) {
     const cardData = Array.isArray(data.data) ? data.data[0] : null; 
@@ -233,8 +199,12 @@ function mapAndFilterPrices(data) {
     prices['LOW'] = allPrices.length > 0 ? Math.min(...allPrices).toFixed(2) : '--';
     prices['HIGH'] = allPrices.length > 0 ? Math.max(...allPrices).toFixed(2) : '--';
     prices['MARKET PRICE'] = (conditionPrices['NEAR MINT'] || (allPrices.length > 0 ? allPrices[0] : 0)).toFixed(2); 
-    prices['NEAR MINT'] = conditionPrices['NEAR MINT'] ? conditionPrices['NEAR MINT'].toFixed(2) : null;
-    prices['LIGHTLY PLAYED'] = conditionPrices['LIGHTLY PLAYED'] ? conditionPrices['LIGHTLY PLAYED'].toFixed(2) : null;
+    prices['NEAR MINT'] = conditionPrices['NEAR MINT'] ? conditionPrices['NEAR MINT'].toFixed(2) : '--';
+    prices['LIGHTLY PLAYED'] = conditionPrices['LIGHTLY PLAYED'] ? conditionPrices['LIGHTLY PLAYED'].toFixed(2) : '--';
+    prices['MODERATELY PLAYED'] = conditionPrices['MODERATELY PLAYED'] ? conditionPrices['MODERATELY PLAYED'].toFixed(2) : '--';
+    prices['HEAVILY PLAYED'] = conditionPrices['HEAVILY PLAYED'] ? conditionPrices['HEAVILY PLAYED'].toFixed(2) : '--';
+    prices['DAMAGED'] = (conditionPrices['DAMAGED'] || conditionPrices['POOR']) ? 
+        (conditionPrices['DAMAGED'] || conditionPrices['POOR']).toFixed(2) : '--';
 
     return prices;
 }
@@ -246,22 +216,20 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
             "SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", 
             [setSlug, cardNumber] 
         );
-        
         const tcgId = dbRes.rows[0]?.tcg_player_id;
         if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
 
-        const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { 
-            headers: { "X-API-KEY": API_KEY } 
-        });
-        const justTcgData = await apiRes.json();
+        const [apiRes, exchangeRate] = await Promise.all([
+            fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } }),
+            getExchangeRate()
+        ]);
 
+        const justTcgData = await apiRes.json();
         const cardTitle = justTcgData.data?.[0]?.name || "Unbekannt";
         const mappedPrices = mapAndFilterPrices(justTcgData);
         
-        res.json({ prices: mappedPrices, fullTitle: cardTitle });
-    } catch (err) { 
-        res.status(500).json({ error: "SERVER_ERROR" }); 
-    }
+        res.json({ prices: mappedPrices, fullTitle: cardTitle, exchangeRate: exchangeRate });
+    } catch (err) { res.status(500).json({ error: "SERVER_ERROR" }); }
 });
 
 // =========================================================
@@ -272,7 +240,6 @@ app.post("/create-checkout-session", async (req, res) => {
     try {
         const { token } = req.body;
         const decoded = jwt.verify(token, JWT_SECRET);
-        
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'paypal'],
             line_items: [{ price: 'price_1SjQsWFUZXbTt9dyq5MqFi06', quantity: 1 }], 
@@ -282,9 +249,7 @@ app.post("/create-checkout-session", async (req, res) => {
             client_reference_id: decoded.id.toString(),
         });
         res.json({ url: session.url });
-    } catch (e) { 
-        res.status(500).json({ error: e.message }); 
-    }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post("/create-portal-session", async (req, res) => {
@@ -292,19 +257,14 @@ app.post("/create-portal-session", async (req, res) => {
         const { token } = req.body;
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = (await pool.query("SELECT stripe_customer_id FROM users WHERE id = $1", [decoded.id])).rows[0];
-
-        if (!user?.stripe_customer_id) {
-            return res.status(400).json({ error: "Keine aktive Stripe-ID gefunden." });
-        }
+        if (!user?.stripe_customer_id) return res.status(400).json({ error: "Keine Stripe-ID." });
 
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: user.stripe_customer_id,
             return_url: 'https://pokecardscout-api.onrender.com',
         });
         res.json({ url: portalSession.url });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.listen(PORT, () => console.log(`🚀 Server läuft auf Port ${PORT}`));
