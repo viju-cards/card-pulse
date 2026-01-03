@@ -32,55 +32,72 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) { 
-        console.error(`Webhook Error: ${err.message}`);
+        console.error(`❌ Webhook Error: ${err.message}`);
         return res.status(400).send(`Webhook Error: ${err.message}`); 
     }
 
-    // Fall 1: Abo-Abschluss (Erster Kauf)
-    if (event.type === 'checkout.session.completed') {
-        const session = event.data.object;
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 32); 
-        
-        await pool.query(
-            'UPDATE users SET is_premium = true, premium_until = $1, stripe_customer_id = $2, cancel_at_period_end = false WHERE id = $3',
-            [expiryDate, session.customer, session.client_reference_id]
-        );
-        console.log(`Checkout erfolgreich für User: ${session.client_reference_id}`);
-    } 
+    try {
+        // Fall 1: Abo-Abschluss (Erster Kauf)
+        if (event.type === 'checkout.session.completed') {
+            const session = event.data.object;
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 32); 
+            
+            await pool.query(
+                'UPDATE users SET is_premium = true, premium_until = $1, stripe_customer_id = $2, cancel_at_period_end = false WHERE id = $3',
+                [expiryDate, session.customer, session.client_reference_id]
+            );
+            console.log(`✅ Checkout erfolgreich für User: ${session.client_reference_id}`);
+        } 
 
-    // Fall 2: Abo-Änderung (z.B. Kündigung im Portal)
-    else if (event.type === 'customer.subscription.updated') {
-        const subscription = event.data.object;
-        
-        await pool.query(
-            'UPDATE users SET cancel_at_period_end = $1, premium_until = $2 WHERE stripe_customer_id = $3',
-            [
-                subscription.cancel_at_period_end, 
-                new Date(subscription.current_period_end * 1000), 
-                subscription.customer
-            ]
-        );
-        console.log(`Abo aktualisiert für Kunde: ${subscription.customer} (Gekündigt: ${subscription.cancel_at_period_end})`);
+        // Fall 2: Abo-Änderung (z.B. Kündigung im Portal)
+        else if (event.type === 'customer.subscription.updated') {
+            const subscription = event.data.object;
+            
+            // FIX: Sicherstellen, dass das Datum valide ist (Vermeidung von NaN Fehlern)
+            let expiryDate = null;
+            if (subscription.current_period_end) {
+                expiryDate = new Date(subscription.current_period_end * 1000);
+            }
+
+            if (expiryDate && !isNaN(expiryDate.getTime())) {
+                await pool.query(
+                    'UPDATE users SET cancel_at_period_end = $1, premium_until = $2 WHERE stripe_customer_id = $3',
+                    [subscription.cancel_at_period_end, expiryDate, subscription.customer]
+                );
+            } else {
+                await pool.query(
+                    'UPDATE users SET cancel_at_period_end = $1 WHERE stripe_customer_id = $2',
+                    [subscription.cancel_at_period_end, subscription.customer]
+                );
+            }
+            console.log(`ℹ️ Abo aktualisiert für Kunde: ${subscription.customer}`);
+        }
+
+        // Fall 3: Abo endgültig beendet
+        else if (event.type === 'customer.subscription.deleted') {
+            const subscription = event.data.object;
+            await pool.query(
+                'UPDATE users SET is_premium = false, cancel_at_period_end = false WHERE stripe_customer_id = $1',
+                [subscription.customer]
+            );
+            console.log(`🚫 Abo gelöscht für Kunde: ${subscription.customer}`);
+        }
+
+        res.json({ received: true });
+
+    } catch (dbErr) {
+        console.error("❌ Datenbank-Fehler im Webhook:", dbErr.message);
+        res.status(500).json({ error: "Internal Server Error" });
     }
-
-    // Fall 3: Abo endgültig beendet
-    else if (event.type === 'customer.subscription.deleted') {
-        const subscription = event.data.object;
-        await pool.query(
-            'UPDATE users SET is_premium = false, cancel_at_period_end = false WHERE stripe_customer_id = $1',
-            [subscription.customer]
-        );
-        console.log(`Abo gelöscht für Kunde: ${subscription.customer}`);
-    }
-
-    res.json({ received: true });
 });
 
+// =========================================================
+// 2. MIDDLEWARES & CORS (Nach dem Webhook!)
+// =========================================================
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MANUELLES CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -90,10 +107,9 @@ app.use((req, res, next) => {
 });
 
 // =========================================================
-// 2. AUTHENTIFIZIERUNG & REGISTRIERUNG
+// 3. AUTHENTIFIZIERUNG & REGISTRIERUNG
 // =========================================================
 
-// LOGIN CHECK (Wichtig für das Dashboard)
 app.post("/login_check", async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -117,7 +133,6 @@ app.post("/login_check", async (req, res) => {
     }
 });
 
-// REGISTRIERUNG
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -136,12 +151,10 @@ app.post("/register", async (req, res) => {
 
         res.json({ success: true, message: "Konto erfolgreich erstellt!" });
     } catch (err) {
-        console.error("Registrierungsfehler:", err);
         res.status(500).json({ error: "Serverfehler bei der Registrierung." });
     }
 });
 
-// LOGIN
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -196,7 +209,7 @@ async function authenticatePremiumUser(req, res, next) {
 }
 
 // =========================================================
-// 3. PREIS LOGIK & MAPPING
+// 4. PREIS LOGIK & MAPPING
 // =========================================================
 
 function mapAndFilterPrices(data) {
@@ -235,9 +248,7 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
         );
         
         const tcgId = dbRes.rows[0]?.tcg_player_id;
-        if (!tcgId) {
-            return res.status(404).json({ error: "Mapping fehlt" });
-        }
+        if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
 
         const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { 
             headers: { "X-API-KEY": API_KEY } 
@@ -249,14 +260,12 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
         
         res.json({ prices: mappedPrices, fullTitle: cardTitle });
     } catch (err) { 
-        console.error("SERVER ERROR:", err);
         res.status(500).json({ error: "SERVER_ERROR" }); 
     }
 });
 
-
 // =========================================================
-// 4. STRIPE CHECKOUT & PORTAL
+// 5. STRIPE CHECKOUT & PORTAL
 // =========================================================
 
 app.post("/create-checkout-session", async (req, res) => {
@@ -298,4 +307,4 @@ app.post("/create-portal-session", async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server läuft auf Port ${PORT}`));
