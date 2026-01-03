@@ -58,13 +58,11 @@
             ? "Noch kein Account? <b>Jetzt registrieren</b>" 
             : "Bereits ein Konto? <b>Zum Login</b>";
         
-        // Button freigeben und Nachrichten löschen
+        // UI aufräumen
         btn.disabled = false;
         message.style.display = 'none';
         message.innerText = '';
         message.className = '';
-        
-        // Passwort leeren, E-Mail bleibt stehen
         passwordInput.value = '';
     });
 
@@ -90,8 +88,12 @@
 
             if (response.ok) {
                 if (isLoginMode) {
-                    // Login erfolgreich
+                    // WICHTIG: Alle Daten speichern, damit index.html funktioniert
                     localStorage.setItem('poketool_token', data.token);
+                    localStorage.setItem('isPremium', data.is_premium);
+                    localStorage.setItem('premiumUntil', data.premium_until);
+                    localStorage.setItem('memberSince', data.member_since);
+                    
                     message.className = "success";
                     message.innerText = "Login erfolgreich! Leite weiter...";
                     
@@ -99,22 +101,21 @@
                         window.location.href = "index.html"; 
                     }, 1000);
                 } else {
-                    // Registrierung erfolgreich
+                    // Registrierung erfolgreich: E-Mail bleibt stehen
                     message.className = "success";
                     message.innerText = "Konto erstellt! Du kannst dich jetzt einloggen.";
                     
-                    // Button für Login vorbereiten
                     btn.disabled = false;
                     btn.innerText = "Login";
                     passwordInput.value = '';
 
-                    // Automatisch zum Login-Modus wechseln nach 2 Sek.
+                    // Automatisch zum Login-Modus wechseln
                     setTimeout(() => {
                         if (!isLoginMode) toggle.click();
                     }, 2000);
                 }
             } else {
-                // Fehler anzeigen
+                // Fehlermeldung vom Server anzeigen
                 message.className = "error";
                 message.innerText = data.error || "Ein Fehler ist aufgetreten.";
                 btn.disabled = false;
