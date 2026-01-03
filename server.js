@@ -23,7 +23,7 @@ const pool = new Pool({
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK
+// 1. STRIPE WEBHOOK (Muss vor express.json() stehen!)
 // =========================================================
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -57,6 +57,29 @@ app.use((req, res, next) => {
 // =========================================================
 // 2. AUTHENTIFIZIERUNG & REGISTRIERUNG
 // =========================================================
+
+// NEU: LOGIN CHECK (Verhindert den Logout-Loop im Dashboard)
+app.post("/login_check", async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).json({ error: "No token provided" });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const result = await pool.query("SELECT is_premium, premium_until FROM users WHERE id = $1", [decoded.id]);
+        const user = result.rows[0];
+
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        res.json({
+            is_premium: user.is_premium,
+            premium_until: user.premium_until
+        });
+    } catch (err) {
+        res.status(401).json({ error: "Invalid token" });
+    }
+});
 
 // REGISTRIERUNG
 app.post("/register", async (req, res) => {
@@ -99,6 +122,7 @@ app.post("/login", async (req, res) => {
                 ? new Date(user.created_at).toLocaleDateString('de-DE') 
                 : '--';
 
+            // Token enthält user.id passend zum decoded.id in anderen Routen
             const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
             
             res.json({ 
@@ -115,7 +139,7 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// AUTH MIDDLEWARE
+// AUTH MIDDLEWARE (Für Preisabfragen der Extension)
 async function authenticatePremiumUser(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -168,9 +192,6 @@ function mapAndFilterPrices(data) {
 
 app.get("/prices", authenticatePremiumUser, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
-    
-    // WICHTIG: Nutze cardNumber direkt, ohne .padStart(3, '0')
-    // Da deine DB bereits "012", "013" etc. speichert.
     try {
         const dbRes = await pool.query(
             "SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", 
@@ -179,7 +200,6 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
         
         const tcgId = dbRes.rows[0]?.tcg_player_id;
         if (!tcgId) {
-            console.log(`Kein Mapping gefunden: ${setSlug} - ${cardNumber}`);
             return res.status(404).json({ error: "Mapping fehlt" });
         }
 
@@ -200,11 +220,15 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
 
 
 // =========================================================
-// 4. STRIPE CHECKOUT
+// 4. STRIPE CHECKOUT & PORTAL
 // =========================================================
+
+// Checkout Session erstellen
 app.post("/create-checkout-session", async (req, res) => {
     try {
-        const decoded = jwt.verify(req.body.token, JWT_SECRET);
+        const { token } = req.body;
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card', 'paypal'],
             line_items: [{ price: 'price_1SjQsWFUZXbTt9dyq5MqFi06', quantity: 1 }], 
@@ -216,6 +240,27 @@ app.post("/create-checkout-session", async (req, res) => {
         res.json({ url: session.url });
     } catch (e) { 
         res.status(500).json({ error: e.message }); 
+    }
+});
+
+// NEU: Stripe Customer Portal (Abo verwalten)
+app.post("/create-portal-session", async (req, res) => {
+    try {
+        const { token } = req.body;
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = (await pool.query("SELECT stripe_customer_id FROM users WHERE id = $1", [decoded.id])).rows[0];
+
+        if (!user?.stripe_customer_id) {
+            return res.status(400).json({ error: "Keine aktive Stripe-ID gefunden." });
+        }
+
+        const portalSession = await stripe.billingPortal.sessions.create({
+            customer: user.stripe_customer_id,
+            return_url: 'https://pokecardscout-api.onrender.com',
+        });
+        res.json({ url: portalSession.url });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });
 
