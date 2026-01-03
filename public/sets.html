@@ -4,77 +4,148 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unterstützte Sets - PokéScout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --poke-blue: #20558a;
             --bg-beige: #f1efe7; 
-            --card-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            --text-dark: #1a1a1a;
+            --card-shadow: 0 10px 40px rgba(0,0,0,0.06);
+            --text-dark: #121826;
             --text-muted: #64748b;
+            /* Font Zuweisung */
+            --font-head: 'Outfit', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
         }
 
         body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
+            font-family: var(--font-body); 
             background-color: var(--bg-beige); 
             display: flex; 
             justify-content: center; 
             align-items: center;
             min-height: 100vh;
             margin: 0; 
-            padding: 20px;
+            padding: 40px 20px;
+            color: var(--text-dark);
         }
 
         .card { 
             background: white; 
-            padding: 35px 25px; 
-            border-radius: 24px; 
+            padding: 50px 40px; 
+            border-radius: 32px; /* Noch weichere Ecken */
             box-shadow: var(--card-shadow); 
             width: 100%; 
-            max-width: 380px; 
+            max-width: 950px; 
             text-align: center; 
+            box-sizing: border-box;
         }
 
-        .logo-container { margin-bottom: 20px; }
-        .logo-container img { width: 140px; height: auto; }
+        .logo-container { margin-bottom: 30px; }
+        .logo-container img { width: 150px; height: auto; }
 
         h2 { 
+            font-family: var(--font-head);
             color: var(--text-dark); 
             margin: 0 0 15px 0; 
-            font-size: 20px; 
+            font-size: 24px; /* Größer und markanter */
             font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
-        .set-list {
+        .description {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h3 {
+            font-family: var(--font-head);
             text-align: left;
-            background: #fafafa;
-            border: 1px solid #f0f0f0;
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 25px;
+            font-size: 16px;
+            color: var(--poke-blue);
+            margin: 35px 0 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        h3::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+            margin-left: 15px;
+        }
+
+        .set-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 40px;
+            text-align: left;
+            background: #fcfcfc;
+            border: 1px solid #f1f5f9;
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
         }
 
         .set-item {
             padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 14px;
-            color: var(--text-dark);
-            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .set-item:hover {
+            transform: translateX(5px);
+            color: var(--poke-blue);
         }
 
         .set-item:last-child { border-bottom: none; }
+        
+        .set-item span { 
+            margin-right: 12px; 
+            color: #94a3b8;
+            font-size: 10px;
+        }
 
         .btn-back { 
-            width: 100%; 
-            padding: 14px; 
-            border-radius: 12px; 
+            font-family: var(--font-body);
+            display: inline-block;
+            min-width: 280px;
+            padding: 18px 35px; 
+            border-radius: 16px; 
             cursor: pointer; 
             font-weight: 700; 
-            font-size: 15px; 
-            background: var(--poke-blue); 
+            font-size: 16px; 
+            background: #000000; 
             color: white;
             border: none;
             text-decoration: none;
-            display: block;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-back:hover {
+            opacity: 0.85;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 768px) {
+            .set-grid { grid-template-columns: 1fr; }
+            .card { padding: 35px 20px; }
+            h2 { font-size: 26px; }
         }
     </style>
 </head>
@@ -82,16 +153,56 @@
 
 <div class="card">
     <div class="logo-container">
-        <img src="logo.png" alt="PokéScout">
+        <a href="index.html"><img src="logo.png" alt="PokéScout"></a>
     </div>
 
     <h2>Unterstützte Sets</h2>
     
-    <div class="set-list">
-        <div class="set-item">✨ Mega Entwicklungen: Fatale Flammen</div>
-        <div class="set-item">✨ Mega Entwicklungen (Basis)</div>
-        <div class="set-item">✨ Karmesin & Purpur: Die Reisegefährten</div>
-        <div class="set-item">✨ Weitere Sets folgen laufend...</div>
+    <div class="description">
+        Unsere Datenbank wird ständig um weitere Karten erweitert, da wir dir möglichst viele Preise zur Verfügung stellen möchten. Hier eine Auflistung aller bereits vollständig vorhandenen Sets.
+    </div>
+	
+	<h3>Mega-Entwicklungen</h3>
+    <div class="set-grid">
+        <div class="set-item"><span>●</span> Mega Entwicklungen (Basis)</div>
+        <div class="set-item"><span>●</span> Fatale Flammen</div>
+    </div>
+
+    <h3>Karmesin & Purpur</h3>
+    <div class="set-grid">
+        <div class="set-item"><span>●</span> Karmesin & Purpur (Basis)</div>
+        <div class="set-item"><span>●</span> Entwicklungen in Paldea</div>
+        <div class="set-item"><span>●</span> Obsidianflammen</div>
+        <div class="set-item"><span>●</span> Pokémon 151</div>
+        <div class="set-item"><span>●</span> Paradoxdrift</div>
+        <div class="set-item"><span>●</span> Paldeas Schicksale</div>
+        <div class="set-item"><span>●</span> Gewalten der Zeit</div>
+        <div class="set-item"><span>●</span> Maskerade im Zwielicht</div>
+        <div class="set-item"><span>●</span> Nebel der Sagen</div>
+        <div class="set-item"><span>●</span> Stellarkrone</div>
+        <div class="set-item"><span>●</span> Die Reisegefährten</div>
+        <div class="set-item"><span>●</span> Prismatische Entwicklungen</div>
+    </div>
+
+    <h3>Schwert & Schild</h3>
+    <div class="set-grid">
+        <div class="set-item"><span>●</span> Schwert & Schild (Basis)</div>
+        <div class="set-item"><span>●</span> Clash der Rebellen</div>
+        <div class="set-item"><span>●</span> Flammende Finsternis</div>
+        <div class="set-item"><span>●</span> Weg des Champs</div>
+        <div class="set-item"><span>●</span> Farbenschock</div>
+        <div class="set-item"><span>●</span> Glänzendes Schicksal</div>
+        <div class="set-item"><span>●</span> Kampfstile</div>
+        <div class="set-item"><span>●</span> Schaurige Herrschaft</div>
+        <div class="set-item"><span>●</span> Drachenwandel</div>
+        <div class="set-item"><span>●</span> Celebrations</div>
+        <div class="set-item"><span>●</span> Fusion Strike</div>
+        <div class="set-item"><span>●</span> Strahlende Sterne</div>
+        <div class="set-item"><span>●</span> Astraler Glanz</div>
+        <div class="set-item"><span>●</span> Pokémon GO</div>
+        <div class="set-item"><span>●</span> Verlorener Ursprung</div>
+        <div class="set-item"><span>●</span> Silberne Sturmwinde</div>
+        <div class="set-item"><span>●</span> Zenit der Könige</div>
     </div>
 
     <a href="index.html" class="btn-back">Zurück zum Dashboard</a>
