@@ -5,25 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéScout Pro - Login</title>
     <style>
-        body { font-family: 'Inter', -apple-system, sans-serif; background: #f4f7f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        h2 { color: #20558a; margin-bottom: 25px; font-size: 24px; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #e1e8ed; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: border 0.3s; }
-        input:focus { border-color: #20558a; outline: none; }
-        button { width: 100%; padding: 14px; background: #20558a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 20px; transition: 0.3s; }
-        button:hover { background: #1a446e; }
-        button:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
-        .toggle-link { margin-top: 20px; font-size: 14px; color: #657786; cursor: pointer; }
-        .toggle-link b { color: #20558a; text-decoration: underline; }
-        #message { margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 14px; display: none; line-height: 1.4; }
+        :root {
+            --poke-blue: #20558a;
+            --bg-beige: #f1efe7; 
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            --text-dark: #1a1a1a;
+            --text-muted: #64748b;
+        }
+
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background-color: var(--bg-beige); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+            margin: 0; 
+            padding: 20px;
+        }
+
+        .card { 
+            background: white; 
+            padding: 40px 30px; 
+            border-radius: 24px; 
+            box-shadow: var(--card-shadow); 
+            width: 100%; 
+            max-width: 380px; 
+            text-align: center; 
+        }
+
+        .logo-container { margin-bottom: 25px; }
+        .logo-container img { width: 160px; height: auto; }
+
+        h2 { 
+            color: var(--text-dark); 
+            margin: 0 0 20px 0; 
+            font-size: 22px; 
+            font-weight: 800;
+        }
+
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 8px 0; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+            background: #f8fafc;
+            transition: all 0.2s; 
+        }
+
+        input:focus { 
+            border-color: var(--poke-blue); 
+            background: white;
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(32, 85, 138, 0.1);
+        }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: var(--poke-blue); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 16px; 
+            margin-top: 15px; 
+            transition: 0.2s; 
+        }
+
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+
+        .toggle-link { 
+            margin-top: 25px; 
+            font-size: 13px; 
+            color: var(--text-muted); 
+            cursor: pointer; 
+        }
+
+        .toggle-link b { color: var(--poke-blue); text-decoration: none; }
+        .toggle-link b:hover { text-decoration: underline; }
+
+        #message { 
+            margin-top: 20px; 
+            padding: 12px; 
+            border-radius: 10px; 
+            font-size: 13px; 
+            display: none; 
+            font-weight: 500;
+            line-height: 1.4; 
+        }
+
         .error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; display: block !important; }
-        .success { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; display: block !important; }
+        .success { background: #eefaf2; color: #16a34a; border: 1px solid #86efac; display: block !important; }
     </style>
 </head>
 <body>
 
 <div class="card">
+    <div class="logo-container">
+        <img src="logo.png" alt="PokéScout">
+    </div>
+
     <h2 id="form-title">Anmelden</h2>
+
     <form id="auth-form">
         <input type="email" id="email" placeholder="E-Mail Adresse" required>
         <input type="password" id="password" placeholder="Passwort" required>
@@ -48,21 +137,16 @@
     
     let isLoginMode = true;
 
-    // Umschalten zwischen Login und Registrierung
     toggle.addEventListener('click', () => {
         isLoginMode = !isLoginMode;
-        
         title.innerText = isLoginMode ? "Anmelden" : "Registrieren";
         btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
         toggle.innerHTML = isLoginMode 
             ? "Noch kein Account? <b>Jetzt registrieren</b>" 
             : "Bereits ein Konto? <b>Zum Login</b>";
         
-        // UI aufräumen
         btn.disabled = false;
         message.style.display = 'none';
-        message.innerText = '';
-        message.className = '';
         passwordInput.value = '';
     });
 
@@ -88,34 +172,25 @@
 
             if (response.ok) {
                 if (isLoginMode) {
-                    // WICHTIG: Alle Daten speichern, damit index.html funktioniert
                     localStorage.setItem('poketool_token', data.token);
-                    localStorage.setItem('isPremium', data.is_premium);
-                    localStorage.setItem('premiumUntil', data.premium_until);
-                    localStorage.setItem('memberSince', data.member_since);
-                    
                     message.className = "success";
-                    message.innerText = "Login erfolgreich! Leite weiter...";
+                    message.innerText = "Erfolgreich eingeloggt!";
                     
                     setTimeout(() => {
                         window.location.href = "index.html"; 
-                    }, 1000);
+                    }, 800);
                 } else {
-                    // Registrierung erfolgreich: E-Mail bleibt stehen
                     message.className = "success";
-                    message.innerText = "Konto erstellt! Du kannst dich jetzt einloggen.";
-                    
+                    message.innerText = "Konto erstellt! Bitte logge dich jetzt ein.";
                     btn.disabled = false;
                     btn.innerText = "Login";
                     passwordInput.value = '';
 
-                    // Automatisch zum Login-Modus wechseln
                     setTimeout(() => {
                         if (!isLoginMode) toggle.click();
                     }, 2000);
                 }
             } else {
-                // Fehlermeldung vom Server anzeigen
                 message.className = "error";
                 message.innerText = data.error || "Ein Fehler ist aufgetreten.";
                 btn.disabled = false;
@@ -123,7 +198,7 @@
             }
         } catch (err) {
             message.className = "error";
-            message.innerText = "Verbindung zum Server fehlgeschlagen.";
+            message.innerText = "Server nicht erreichbar.";
             btn.disabled = false;
             btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
         }
