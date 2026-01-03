@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéScout Pro - Login</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f4f7f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #f4f7f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        h2 { color: #20558a; margin-bottom: 25px; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #e1e8ed; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        h2 { color: #20558a; margin-bottom: 25px; font-size: 24px; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #e1e8ed; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: border 0.3s; }
+        input:focus { border-color: #20558a; outline: none; }
         button { width: 100%; padding: 14px; background: #20558a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 20px; transition: 0.3s; }
+        button:hover { background: #1a446e; }
         button:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
         .toggle-link { margin-top: 20px; font-size: 14px; color: #657786; cursor: pointer; }
-        .toggle-link b { color: #20558a; }
+        .toggle-link b { color: #20558a; text-decoration: underline; }
         #message { margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 14px; display: none; line-height: 1.4; }
         .error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; display: block !important; }
         .success { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; display: block !important; }
@@ -46,28 +48,29 @@
     
     let isLoginMode = true;
 
+    // Umschalten zwischen Login und Registrierung
     toggle.addEventListener('click', () => {
         isLoginMode = !isLoginMode;
         
-        // Texte anpassen
         title.innerText = isLoginMode ? "Anmelden" : "Registrieren";
         btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
-        toggle.innerHTML = isLoginMode ? "Noch kein Account? <b>Jetzt registrieren</b>" : "Bereits ein Konto? <b>Zum Login</b>";
+        toggle.innerHTML = isLoginMode 
+            ? "Noch kein Account? <b>Jetzt registrieren</b>" 
+            : "Bereits ein Konto? <b>Zum Login</b>";
         
-        // Button freigeben
+        // Button freigeben und Nachrichten löschen
         btn.disabled = false;
-        
-        // Alte Nachrichten löschen beim Modus-Wechsel
         message.style.display = 'none';
         message.innerText = '';
         message.className = '';
         
-        // Passwort immer leeren, E-Mail nur wenn wir NICHT gerade erfolgreich registriert haben
+        // Passwort leeren, E-Mail bleibt stehen
         passwordInput.value = '';
     });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
         const email = emailInput.value;
         const password = passwordInput.value;
         const endpoint = isLoginMode ? '/login' : '/register';
@@ -87,27 +90,31 @@
 
             if (response.ok) {
                 if (isLoginMode) {
+                    // Login erfolgreich
                     localStorage.setItem('poketool_token', data.token);
                     message.className = "success";
-                    message.innerText = "Erfolgreich eingeloggt! Du wirst weitergeleitet...";
-                    setTimeout(() => window.location.href = "index.html", 1000);
+                    message.innerText = "Login erfolgreich! Leite weiter...";
+                    
+                    setTimeout(() => {
+                        window.location.href = "index.html"; 
+                    }, 1000);
                 } else {
-                    // Erfolg bei Registrierung
+                    // Registrierung erfolgreich
                     message.className = "success";
                     message.innerText = "Konto erstellt! Du kannst dich jetzt einloggen.";
                     
+                    // Button für Login vorbereiten
                     btn.disabled = false;
-                    btn.innerText = "Login"; 
-
-                    // E-Mail Adresse im Feld lassen, nur Passwort leeren
+                    btn.innerText = "Login";
                     passwordInput.value = '';
 
-                    // Automatisch zum Login-Modus umschalten
+                    // Automatisch zum Login-Modus wechseln nach 2 Sek.
                     setTimeout(() => {
-                        if (!isLoginMode) toggle.click(); 
+                        if (!isLoginMode) toggle.click();
                     }, 2000);
                 }
             } else {
+                // Fehler anzeigen
                 message.className = "error";
                 message.innerText = data.error || "Ein Fehler ist aufgetreten.";
                 btn.disabled = false;
@@ -115,7 +122,7 @@
             }
         } catch (err) {
             message.className = "error";
-            message.innerText = "Server nicht erreichbar. Bitte später versuchen.";
+            message.innerText = "Verbindung zum Server fehlgeschlagen.";
             btn.disabled = false;
             btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
         }
