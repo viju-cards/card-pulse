@@ -7,9 +7,10 @@
     <style>
         :root {
             --poke-blue: #20558a;
-            --poke-yellow: #ffcb05;
-            --bg-beige: #f1efe7; /* Dein gewünschter Farbcode */
+            --bg-beige: #f1efe7; /* Hintergrund passend zum Logo */
             --card-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            --text-dark: #1a1a1a;
+            --text-muted: #64748b;
         }
 
         body { 
@@ -20,38 +21,49 @@
             align-items: center;
             min-height: 100vh;
             margin: 0; 
+            padding: 20px;
         }
 
         .card { 
             background: white; 
-            padding: 30px; 
-            border-radius: 20px; 
+            padding: 35px 25px; 
+            border-radius: 24px; 
             box-shadow: var(--card-shadow); 
-            width: 90%; 
-            max-width: 360px; /* Kompakter als vorher */
+            width: 100%; 
+            max-width: 380px; 
             text-align: center; 
             position: relative;
         }
 
         .logo-container {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .logo-container img {
-            width: 180px; /* Logo etwas prominenter */
+            width: 160px;
             height: auto;
         }
 
         h2 { 
-            color: #1a1a1a; 
-            margin: 0; 
-            font-size: 20px; 
-            font-weight: 700;
+            color: var(--text-dark); 
+            margin: 0 0 12px 0; 
+            font-size: 22px; 
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .welcome-info {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .user-mail { 
             font-size: 13px; 
-            color: #657786; 
+            color: var(--poke-blue); 
+            font-weight: 600;
             margin-bottom: 20px; 
             display: block; 
         }
@@ -59,11 +71,12 @@
         .status-badge { 
             display: inline-block; 
             padding: 6px 14px; 
-            border-radius: 12px; 
-            font-size: 12px; 
-            font-weight: 700; 
+            border-radius: 20px; 
+            font-size: 11px; 
+            font-weight: 800; 
             text-transform: uppercase;
-            margin-bottom: 20px;
+            letter-spacing: 0.05em;
+            margin-bottom: 25px;
         }
         .premium-active { background: #e6f4ea; color: #1e7e34; }
         .premium-none { background: #f1f3f5; color: #495057; }
@@ -72,21 +85,20 @@
             background: #fafafa; 
             border: 1px solid #f0f0f0; 
             padding: 20px; 
-            border-radius: 16px; 
+            border-radius: 18px; 
         }
 
         .cancel-warning { 
             color: #d93025; 
-            font-size: 12px; 
-            font-weight: 600;
-            margin-bottom: 10px;
-            line-height: 1.4;
+            font-size: 13px; 
+            font-weight: 700;
+            margin-bottom: 12px;
         }
 
         .btn-main { 
             width: 100%; 
             padding: 14px; 
-            border-radius: 10px; 
+            border-radius: 12px; 
             cursor: pointer; 
             font-weight: 700; 
             font-size: 15px; 
@@ -98,27 +110,26 @@
             background: var(--poke-blue); 
             color: white; 
         }
-        .btn-premium:hover { background: #1a446e; opacity: 0.9; }
+        .btn-premium:hover { opacity: 0.9; transform: translateY(-1px); }
 
         .btn-manage { 
-            background: #f8f9fa; 
+            background: white; 
             color: #495057; 
             border: 1px solid #dee2e6;
-            margin-top: 10px;
         }
-        .btn-manage:hover { background: #e9ecef; }
+        .btn-manage:hover { background: #f8f9fa; }
 
         .logout-link {
-            display: block;
-            margin-top: 20px;
+            display: inline-block;
+            margin-top: 25px;
             font-size: 13px;
             color: #adb5bd;
             text-decoration: none;
             cursor: pointer;
         }
-        .logout-link:hover { color: #d93025; }
+        .logout-link:hover { color: var(--poke-blue); }
 
-        .expiry-text { font-size: 13px; color: #495057; margin-bottom: 10px; }
+        .expiry-text { font-size: 13px; color: #495057; margin-bottom: 12px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -128,24 +139,31 @@
         <img src="logo.png" alt="PokéScout">
     </div>
 
-    <h2 id="display-email">Laden...</h2>
-    <span class="user-mail">Dashboard</span>
+    <h2>Schön, dass du dabei bist!</h2>
+    
+    <div class="welcome-info">
+        Mit deinem Premium-Abo siehst du jetzt die TCGplayer-Preisübersicht direkt auf Cardmarket – einfach und übersichtlich über unsere Browser-Extension.<br><br>
+        Der Pricetracker ist aktuell speziell für <strong>Pokémon-Karten</strong> verfügbar. Viel Erfolg beim Vergleichen und Tracken!
+    </div>
+
+    <span id="display-email" class="user-mail">Laden...</span>
 
     <div id="status-badge" class="status-badge">Prüfe Status...</div>
 
-    <div id="content-area">
-        </div>
+    <div id="content-area"></div>
 
     <a class="logout-link" onclick="logout()">Abmelden</a>
 </div>
 
 <script>
     const token = localStorage.getItem('poketool_token');
+    const apiBase = 'https://pokecardscout-api.onrender.com';
+
     if (!token) window.location.href = "login.html";
 
     async function init() {
         try {
-            const res = await fetch('https://pokecardscout-api.onrender.com/login_check', {
+            const res = await fetch(`${apiBase}/login_check`, {
                 method: 'POST',
                 headers: { 
                     'Authorization': `Bearer ${token}`, 
@@ -162,6 +180,7 @@
             }
         } catch (e) {
             console.error("Fehler:", e);
+            document.getElementById('status-badge').innerText = "Verbindungsfehler";
         }
     }
 
@@ -191,7 +210,9 @@
             badge.className = "status-badge premium-none";
             area.innerHTML = `
                 <div class="info-box">
-                    <p style="font-size: 13px; color: #6c757d; margin-top: 0;">Upgrade für unbegrenzte Preis-Checks.</p>
+                    <p style="font-size: 13px; color: #6c757d; margin-top: 0; margin-bottom: 15px;">
+                        Upgrade für unbegrenzte Preis-Checks und volle Extension-Features.
+                    </p>
                     <button class="btn-main btn-premium" onclick="checkout()">Pro freischalten</button>
                 </div>
             `;
@@ -199,7 +220,7 @@
     }
 
     async function checkout() {
-        const res = await fetch('https://pokecardscout-api.onrender.com/create-checkout-session', {
+        const res = await fetch(`${apiBase}/create-checkout-session`, {
             method: 'POST', 
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -208,7 +229,7 @@
     }
 
     async function manage() {
-        const res = await fetch('https://pokecardscout-api.onrender.com/create-portal-session', {
+        const res = await fetch(`${apiBase}/create-portal-session`, {
             method: 'POST', 
             headers: { 'Authorization': `Bearer ${token}` }
         });
