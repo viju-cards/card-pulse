@@ -7,7 +7,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const path = require("path");
 require("dotenv").config(); 
 
-const app = express()
+const app = express();
 const PORT = process.env.PORT || 3000;
 
 const pool = new Pool({
@@ -16,14 +16,16 @@ const pool = new Pool({
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK (Vor express.json!)
+// 1. STRIPE WEBHOOK (Muss vor express.json stehen!)
 // =========================================================
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err) { return res.status(400).send(`Webhook Error: ${err.message}`); }
+    } catch (err) { 
+        return res.status(400).send(`Webhook Error: ${err.message}`); 
+    }
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
@@ -57,7 +59,7 @@ app.use((req, res, next) => {
 });
 
 // =========================================================
-// 2. AUTH MIDDLEWARE & ROUTEN
+// 2. AUTHENTIFIZIERUNG
 // =========================================================
 
 async function authenticateUser(req, res, next) {
@@ -66,11 +68,13 @@ async function authenticateUser(req, res, next) {
     if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = (await pool.query("SELECT * FROM users WHERE id = $1", [decoded.id])).rows[0];
-        if (!user) return res.status(401).json({ error: "USER_NOT_FOUND" });
-        req.user = user;
+        const result = await pool.query("SELECT * FROM users WHERE id = $1", [decoded.id]);
+        if (result.rows.length === 0) return res.status(401).json({ error: "USER_NOT_FOUND" });
+        req.user = result.rows[0];
         next();
-    } catch (err) { res.status(403).json({ error: "INVALID_TOKEN" }); }
+    } catch (err) { 
+        res.status(403).json({ error: "INVALID_TOKEN" }); 
+    }
 }
 
 app.post("/register", async (req, res) => {
@@ -80,22 +84,30 @@ app.post("/register", async (req, res) => {
         const passwordHash = await bcrypt.hash(password, salt);
         await pool.query("INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, false, NOW())", [email, passwordHash]);
         res.json({ success: true });
-    } catch (err) { res.status(500).json({ error: "Registrierung fehlgeschlagen" }); }
+    } catch (err) { 
+        res.status(500).json({ error: "Registrierung fehlgeschlagen" }); 
+    }
 });
 
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = (await pool.query("SELECT * FROM users WHERE email = $1", [email])).rows[0];
+        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        const user = result.rows[0];
         if (user && await bcrypt.compare(password, user.password_hash)) {
             const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
             res.json({ 
-                token, is_premium: user.is_premium, 
+                token, 
+                is_premium: user.is_premium, 
                 premium_until: user.premium_until,
                 cancel_at_period_end: user.cancel_at_period_end 
             });
-        } else { res.status(401).json({ error: "Daten falsch" }); }
-    } catch (e) { res.status(500).json({ error: "Serverfehler" }); }
+        } else { 
+            res.status(401).json({ error: "Daten inkorrekt" }); 
+        }
+    } catch (e) { 
+        res.status(500).json({ error: "Serverfehler" }); 
+    }
 });
 
 app.post("/login_check", authenticateUser, async (req, res) => {
@@ -111,6 +123,23 @@ app.post("/login_check", authenticateUser, async (req, res) => {
 // 3. STRIPE SESSIONS
 // =========================================================
 
+app.post("/create-checkout-session", authenticateUser, async (req, res) => {
+    try {
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card', 'paypal'],
+            line_items: [{ price: 'price_1SjQsWFUZXbTt9dyq5MqFi06', quantity: 1 }], 
+            mode: 'subscription',
+            success_url: 'https://pokecardscout-api.onrender.com/index.html?status=success',
+            cancel_url: 'https://pokecardscout-api.onrender.com/index.html?status=cancel',
+            client_reference_id: req.user.id.toString(),
+            customer_email: req.user.email
+        });
+        res.json({ url: session.url });
+    } catch (e) { 
+        res.status(500).json({ error: e.message }); 
+    }
+});
+
 app.post("/create-portal-session", authenticateUser, async (req, res) => {
     try {
         const session = await stripe.billingPortal.sessions.create({
@@ -118,7 +147,9 @@ app.post("/create-portal-session", authenticateUser, async (req, res) => {
             return_url: 'https://pokecardscout-api.onrender.com/index.html',
         });
         res.json({ url: session.url });
-    } catch (e) { res.status(500).json({ error: "Portal Fehler" }); }
+    } catch (e) { 
+        res.status(500).json({ error: "Portal Fehler" }); 
+    }
 });
 
 app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
