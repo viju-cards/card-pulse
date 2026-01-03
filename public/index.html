@@ -5,21 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéScout Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f7f9; color: #333; }
+        body { font-family: 'Segoe UI', -apple-system, sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f4f7f9; color: #333; }
         .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; width: 420px; position: relative; border: 1px solid #eef2f6; }
-        h2 { color: #20558a; margin-bottom: 5px; }
+        
+        /* Header & User Info */
+        h2 { color: #20558a; margin-top: 10px; margin-bottom: 5px; }
         .user-mail { font-size: 14px; color: #657786; margin-bottom: 20px; display: block; }
-        .btn-logout { background: #fff; color: #d93025; border: 1px solid #ffccc7; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; position: absolute; top: 15px; right: 15px; }
-        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-size: 14px; margin: 15px 0; font-weight: 700; }
+        .btn-logout { background: #fff; color: #d93025; border: 1px solid #ffccc7; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; position: absolute; top: 15px; right: 15px; transition: 0.2s; }
+        .btn-logout:hover { background: #fff1f0; }
+
+        /* Status Badges */
+        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-size: 14px; margin: 15px 0; font-weight: 700; letter-spacing: 0.5px; }
         .premium-active { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
         .premium-none { background: #f0f7ff; color: #0050b3; border: 1px solid #91d5ff; }
+
+        /* Info Boxen */
         .info-container { margin-top: 20px; padding: 20px; border-radius: 12px; text-align: left; }
         .premium-info-box { background: #fffbe6; border: 1px solid #ffe58f; }
         .standard-info-box { background: #f9f9f9; border: 1px solid #e1e8ed; }
-        .btn-premium { background: #28a745; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; }
-        .btn-manage { background: #fff; color: #20558a; border: 1px solid #20558a; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; }
-        .cancel-warning { background: #fff2f0; color: #ff4d4f; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; border: 1px solid #ffccc7; line-height: 1.4; }
-        #sync-msg { margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 13px; }
+        
+        .expiry-text { font-size: 15px; color: #856404; margin-bottom: 10px; font-weight: 500; }
+        .info-text { font-size: 14px; color: #4b5563; line-height: 1.5; margin-bottom: 15px; }
+
+        /* Kündigungs-Warnung */
+        .cancel-warning { background: #fff2f0; color: #ff4d4f; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffccc7; font-size: 13px; line-height: 1.4; }
+
+        /* Buttons */
+        .btn-premium { background: #28a745; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; transition: 0.3s; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2); }
+        .btn-premium:hover { background: #218838; transform: translateY(-1px); }
+        .btn-manage { background: #fff; color: #20558a; border: 1px solid #20558a; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.2s; }
+        .btn-manage:hover { background: #f0f7ff; }
+
+        /* Sync Status */
+        #sync-msg { margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 500; }
         .success-green { background: #f6ffed; color: #28a745; border: 1px solid #b7eb8f; }
     </style>
 </head>
@@ -27,9 +45,13 @@
     <div class="card">
         <button class="btn-logout" onclick="logout()">Abmelden</button>
         <h2>PokéScout Dashboard</h2>
-        <span id="display-email" class="user-mail">...</span>
+        <span id="display-email" class="user-mail">Lade Nutzerdaten...</span>
+        
         <div id="status-badge" class="status-badge">Prüfe Account...</div>
-        <div id="main-area"></div>
+        
+        <div id="main-area">
+            </div>
+
         <div id="sync-msg" style="display:none;"></div>
     </div>
 
@@ -37,77 +59,118 @@
         const EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
         const token = localStorage.getItem('poketool_token');
 
-        if (!token) { window.location.href = "login.html"; } else { updateUserStatus(); }
+        // 1. Zugriffsschutz
+        if (!token) {
+            window.location.href = "login.html";
+        } else {
+            updateUserStatus();
+        }
 
+        // 2. Status vom Server abrufen
         async function updateUserStatus() {
             try {
                 const res = await fetch('https://pokecardscout-api.onrender.com/login_check', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    }
                 });
+                
                 const data = await res.json();
+                
                 if (res.ok) {
                     renderDashboard(data.is_premium, data.premium_until, data.email, data.cancel_at_period_end);
-                } else { logout(); }
-            } catch (e) { renderDashboard(false, null, "Fehler", false); }
+                } else {
+                    logout(); 
+                }
+            } catch (e) {
+                console.error("Fehler beim Status-Update:", e);
+                document.getElementById('status-badge').innerText = "Verbindungsfehler";
+            }
         }
 
+        // 3. UI rendern
         function renderDashboard(isPremium, premiumUntil, email, isCancelled) {
             const statusBadge = document.getElementById('status-badge');
             const mainArea = document.getElementById('main-area');
-            document.getElementById('display-email').innerText = email;
+            const displayEmail = document.getElementById('display-email');
+            
+            displayEmail.innerText = email;
 
             if (isPremium && premiumUntil && new Date(premiumUntil) > new Date()) {
                 statusBadge.innerText = "PREMIUM ACCOUNT ✨";
                 statusBadge.className = "status-badge premium-active";
-                const dateStr = new Date(premiumUntil).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+                
+                const dateStr = new Date(premiumUntil).toLocaleDateString('de-DE', { 
+                    day: '2-digit', month: 'long', year: 'numeric' 
+                });
 
-                // Anzeige bei Kündigung
+                // Kündigungs-Hinweis (wird nur angezeigt, wenn isCancelled TRUE ist)
                 const cancelHtml = isCancelled ? `
                     <div class="cancel-warning">
-                        <b>Abo gekündigt:</b> Dein Zugriff endet am ${dateStr}. Es wird nichts mehr abgebucht.
+                        ⚠️ <b>Abo gekündigt:</b> Dein Premium-Zugriff endet automatisch am ${dateStr}. Es wird keine weitere Abbuchung vorgenommen.
                     </div>` : '';
 
                 mainArea.innerHTML = `
                     <div class="info-container premium-info-box">
                         ${cancelHtml}
-                        <div style="font-size:15px; margin-bottom:10px;">Zugriff aktiv bis: <b>${dateStr}</b></div>
-                        <button onclick="manageBilling()" class="btn-manage">${isCancelled ? 'Abo reaktivieren' : 'Abo verwalten'}</button>
-                    </div>`;
+                        <div class="expiry-text">Abonnement aktiv bis: <b>${dateStr}</b></div>
+                        <p class="info-text">Du hast vollen Zugriff auf alle TCGPlayer-Preise direkt in der Erweiterung.</p>
+                        <button onclick="manageBilling()" class="btn-manage">
+                            ${isCancelled ? 'Abo reaktivieren / Verwalten' : 'Abo verwalten / Kündigen'}
+                        </button>
+                    </div>
+                `;
             } else {
+                // Standard User Layout
                 statusBadge.innerText = "STANDARD ACCOUNT";
                 statusBadge.className = "status-badge premium-none";
+                
                 mainArea.innerHTML = `
                     <div class="info-container standard-info-box">
+                        <p class="info-text">Aktuell nutzt du die kostenlose Version. Werde Mitglied, um unbegrenzt TCGPlayer-Preise auf Cardmarket zu sehen.</p>
                         <button id="checkoutBtn" onclick="startCheckout()" class="btn-premium">Jetzt Premium aktivieren</button>
-                    </div>`;
+                    </div>
+                `;
             }
             
-            // Erfolg nach Stripe-Rückkehr anzeigen
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('status') === 'success') {
-                const msg = document.getElementById('sync-msg');
-                msg.className = "success-green"; msg.style.display = "block";
-                msg.innerHTML = "🎉 Zahlung erfolgreich! Premium ist nun aktiv.";
-                window.history.replaceState({}, '', '/index.html');
+            // Check auf URL Parameter (Erfolg nach Stripe)
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('status') === 'success') {
+                const syncBox = document.getElementById('sync-msg');
+                syncBox.className = "success-green";
+                syncBox.style.display = 'block';
+                syncBox.innerHTML = "🎉 Zahlung erfolgreich! Dein Premium-Status ist nun aktiv.";
+                window.history.replaceState({}, document.title, "/index.html");
             }
         }
 
+        // 4. Aktionen
         async function startCheckout() {
+            const btn = document.getElementById('checkoutBtn');
+            btn.disabled = true; btn.innerText = "Lade Stripe...";
             const res = await fetch('https://pokecardscout-api.onrender.com/create-checkout-session', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
             });
-            const data = await res.json(); if (data.url) window.location.href = data.url;
+            const data = await res.json();
+            if (data.url) window.location.href = data.url;
         }
 
         async function manageBilling() {
             const res = await fetch('https://pokecardscout-api.onrender.com/create-portal-session', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
             });
-            const data = await res.json(); if (data.url) window.location.href = data.url;
+            const data = await res.json();
+            if (data.url) window.location.href = data.url;
         }
 
-        function logout() { localStorage.clear(); window.location.href = "login.html"; }
+        function logout() {
+            localStorage.clear();
+            window.location.href = "login.html";
+        }
     </script>
 </body>
 </html>
