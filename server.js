@@ -7,7 +7,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const path = require("path");
 require("dotenv").config(); 
 
-const app = express();
+const app = express()
 const PORT = process.env.PORT || 3000;
 
 const pool = new Pool({
