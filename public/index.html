@@ -108,6 +108,14 @@
 
         .expiry-text { font-size: 14px; color: #475569; margin-bottom: 15px; font-weight: 500; }
         .expiry-text b { color: var(--text-dark); }
+        
+        /* Style für den Link */
+        .set-link {
+            color: var(--poke-blue); 
+            font-weight: 700; 
+            text-decoration: none; 
+            border-bottom: 1px solid var(--poke-blue);
+        }
     </style>
 </head>
 <body>
@@ -122,7 +130,7 @@
     <h2 id="welcome-title">Einen Moment bitte</h2>
 
     <div class="welcome-info" id="welcome-text">
-        Wir laden dein Profil, einen kleinen Augeblick bitte.
+        Wir laden dein Profil, einen kleinen Augenblick bitte.
     </div>
 
     <div id="content-area"></div>
@@ -134,6 +142,12 @@
     const token = localStorage.getItem('poketool_token');
     const apiBase = 'https://pokecardscout-api.onrender.com';
     const POKESCOUT_EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
+
+    // Text mit Link als Variable, um ihn einfach wiederzuverwenden
+    const premiumWelcomeText = `
+        Mit dem Premium-Abo siehst du die TCGplayer-Preise direkt auf Cardmarket - ganz einfach über unsere Browser-Extension.<br><br>
+        Besuche unsere <a href="sets.html" class="set-link">Set-Übersicht</a> für alle bereits unterstützten Sets.
+    `;
 
     if (!token) window.location.href = "login.html";
 
@@ -163,7 +177,10 @@
                 const data = await res.json();
                 console.log("Server Check OK:", data);
                 document.getElementById('welcome-title').innerText = "Schön, dass du da bist!";
-                document.getElementById('welcome-text').innerText = "Mit dem Premium-Abo siehst du die TCGplayer-Preise direkt auf Cardmarket.";
+                
+                // Hier wird der neue Text mit Link eingefügt
+                document.getElementById('welcome-text').innerHTML = premiumWelcomeText;
+                
                 renderDashboard(data);
                 syncWithExtension(token);
             } else if (res.status === 401 || res.status === 403) {
@@ -175,8 +192,7 @@
         } catch (e) {
             console.error("Init Error:", e);
             document.getElementById('status-badge').innerText = "Server schläft...";
-            // Wir loggen NICHT aus bei einem Netzwerkfehler, damit der User nicht in der Schleife landet
-            setTimeout(init, 5000); // Versuche es in 5 Sek erneut
+            setTimeout(init, 5000);
         }
     }
 
@@ -184,7 +200,7 @@
         const area = document.getElementById('content-area');
         const badge = document.getElementById('status-badge');
 
-       if (data.is_premium) {
+        if (data.is_premium) {
             badge.innerText = "Premium Aktiv ✨";
             badge.className = "status-badge premium-active";
             const dateStr = new Date(data.premium_until).toLocaleDateString('de-DE');
