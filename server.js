@@ -23,7 +23,7 @@ const pool = new Pool({
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK
+// 1. STRIPE WEBHOOK (Vor express.json platzieren)
 // =========================================================
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -58,19 +58,18 @@ app.use((req, res, next) => {
 // 2. AUTHENTIFIZIERUNG & REGISTRIERUNG
 // =========================================================
 
-// REGISTRIERUNG (Mit created_at)
+// REGISTRIERUNG
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
     try {
         const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
         if (existingUser.rows.length > 0) {
-            return res.status(400).json({ error: "Email wird bereits verwendet." });
+            return res.status(400).json({ error: "Diese E-Mail wird bereits verwendet." });
         }
 
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // User in Neon DB speichern inklusive NOW() für created_at
         await pool.query(
             "INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, $3, NOW())",
             [email, passwordHash, false]
@@ -79,39 +78,53 @@ app.post("/register", async (req, res) => {
         res.json({ success: true, message: "Konto erfolgreich erstellt!" });
     } catch (err) {
         console.error("Registrierungsfehler:", err);
-        res.status(500).json({ error: "Fehler bei der Registrierung." });
+        res.status(500).json({ error: "Fehler bei der Datenbank-Verbindung." });
     }
 });
 
-// LOGIN
+// LOGIN (Mit spezifischen Fehlermeldungen)
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = (await pool.query("SELECT * FROM users WHERE email = $1", [email])).rows[0];
+        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        const user = result.rows[0];
         
-        if (user && await bcrypt.compare(password, user.password_hash)) {
+        // Prüfen, ob Nutzer überhaupt existiert
+        if (!user) {
+            return res.status(401).json({ error: "Kein Account mit dieser E-Mail gefunden." });
+        }
+
+        // Passwort-Abgleich
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (isMatch) {
             const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
             res.json({ 
                 token, 
                 is_premium: user.is_premium, 
-                premium_until: user.premium_until,
-                created_at: user.created_at // Hier geben wir es beim Login mit zurück
+                premium_until: user.premium_until 
             });
         } else { 
-            res.status(401).json({ error: "E-Mail oder Passwort falsch." }); 
+            // Passwort falsch
+            res.status(401).json({ error: "Das eingegebene Passwort ist falsch." }); 
         }
     } catch (e) { 
+        console.error("Login-Error:", e);
         res.status(500).json({ error: "Serverfehler beim Login." }); 
     }
 });
 
-// AUTH MIDDLEWARE
+// MIDDLEWARE: Prüfung auf Premium-Status
 async function authenticatePremiumUser(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1];
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
     if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
+    
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const user = (await pool.query("SELECT is_premium, premium_until FROM users WHERE id = $1", [decoded.id])).rows[0];
+        const userRes = await pool.query("SELECT is_premium, premium_until FROM users WHERE id = $1", [decoded.id]);
+        const user = userRes.rows[0];
+
         if (user?.is_premium && new Date(user.premium_until) > new Date()) {
             req.user = decoded;
             next();
@@ -145,6 +158,7 @@ function mapAndFilterPrices(data) {
         }
     }
 
+    // Formatierung für die Anzeige
     prices['LOW'] = allPrices.length > 0 ? Math.min(...allPrices).toFixed(2) : '--';
     prices['HIGH'] = allPrices.length > 0 ? Math.max(...allPrices).toFixed(2) : '--';
     prices['MARKET PRICE'] = (conditionPrices['NEAR MINT'] || (allPrices.length > 0 ? allPrices[0] : 0)).toFixed(2); 
@@ -197,7 +211,9 @@ app.post("/create-checkout-session", async (req, res) => {
             client_reference_id: decoded.id.toString(),
         });
         res.json({ url: session.url });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { 
+        res.status(500).json({ error: e.message }); 
+    }
 });
 
 app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
