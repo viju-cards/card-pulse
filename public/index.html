@@ -132,14 +132,17 @@
 
     <div id="status-badge" class="status-badge">Prüfe Status...</div>
 
+	<br>
+	<br>
     <h2>Schön, dass du da bist!</h2>
 
     <div class="welcome-info">
         Mit dem Premium-Abo siehst du die TCGplayer-Preisübersicht direkt auf cardmarket – einfach und übersichtlich über unsere Browser-Extension.<br><br>
         Der Pricetracker ist aktuell speziell für <strong>Pokémon-Karten</strong> verfügbar. 
-        <a href="sets.html" style="color: var(--poke-blue); font-weight: 700; text-decoration: underline;">Hier</a> findest du eine Übersicht über die momentan unterstützen Sets und Karten.<br><br>
+        <a href="sets.html" style="color: var(--poke-blue); font-weight: 700; text-decoration: underline;">Hier</a> findest du eine Übersicht über die momentan unterstützten Sets und Karten.<br><br>
         Viel Spaß beim Tracken!
     </div>
+	<br>
 
     <div id="content-area"></div>
 
@@ -187,7 +190,7 @@
                 <div class="info-box">
                     ${data.cancel_at_period_end ? `
                         <div class="cancel-warning">
-                            Abo endet am ${dateStr}
+                            Abo gekündigt, endet am ${dateStr}
                         </div>` : `
                         <div class="expiry-text">Nächste Abrechnung: <b>${dateStr}</b></div>
                     `}
