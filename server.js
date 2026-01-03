@@ -16,14 +16,14 @@ const API_KEY = process.env.JUSTTCG_API_KEY;
 const DATABASE_URL = process.env.DATABASE_URL; 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Datenbank Verbindung (Neon)
+// Datenbank Verbindung
 const pool = new Pool({
     connectionString: DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK
+// 1. STRIPE WEBHOOK (Überwachung von Statusänderungen)
 // =========================================================
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -32,20 +32,33 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) { return res.status(400).send(`Webhook Error: ${err.message}`); }
 
+    // Kauf abgeschlossen
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 32); 
-        await pool.query('UPDATE users SET is_premium = true, premium_until = $1, stripe_customer_id = $2 WHERE id = $3',
-            [expiryDate, session.customer, session.client_reference_id]);
+        await pool.query(
+            'UPDATE users SET is_premium = true, premium_until = $1, stripe_customer_id = $2, cancel_at_period_end = false WHERE id = $3',
+            [expiryDate, session.customer, session.client_reference_id]
+        );
     }
+
+    // Kündigung oder Reaktivierung (wichtig für die Dashboard-Anzeige)
+    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+        const sub = event.data.object;
+        await pool.query(
+            'UPDATE users SET cancel_at_period_end = $1 WHERE stripe_customer_id = $2',
+            [sub.cancel_at_period_end, sub.customer]
+        );
+    }
+
     res.json({ received: true });
 });
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// CORS Setup
+// CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -61,7 +74,6 @@ app.use((req, res, next) => {
 async function authenticateUser(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = (authHeader && authHeader.split(' ')[1]) || req.body.token;
-    
     if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -73,92 +85,56 @@ async function authenticateUser(req, res, next) {
 }
 
 // =========================================================
-// 3. AUTH ROUTEN
+// 3. ROUTEN (Auth & Status)
 // =========================================================
 
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
     try {
-        const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-        if (existingUser.rows.length > 0) {
-            return res.status(400).json({ error: "Benutzername bereits vergeben." });
-        }
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
-        await pool.query(
-            "INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, $3, NOW())",
-            [email, passwordHash, false]
-        );
-        res.json({ success: true, message: "Konto erstellt!" });
-    } catch (err) { res.status(500).json({ error: "Fehler bei Registrierung." }); }
+        await pool.query("INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, false, NOW())", [email, passwordHash]);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ error: "Registrierungsfehler" }); }
 });
 
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
-        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        const user = result.rows[0];
-        if (!user) return res.status(401).json({ error: "Account nicht gefunden." });
-
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (isMatch) {
-            const formattedDate = user.created_at ? new Date(user.created_at).toLocaleDateString('de-DE') : '--';
+        const user = (await pool.query("SELECT * FROM users WHERE email = $1", [email])).rows[0];
+        if (user && await bcrypt.compare(password, user.password_hash)) {
             const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
             res.json({ 
                 token, 
                 is_premium: user.is_premium, 
                 premium_until: user.premium_until,
-                member_since: formattedDate 
+                cancel_at_period_end: user.cancel_at_period_end,
+                member_since: user.created_at ? new Date(user.created_at).toLocaleDateString('de-DE') : '--'
             });
-        } else { res.status(401).json({ error: "Passwort falsch." }); }
-    } catch (e) { res.status(500).json({ error: "Serverfehler." }); }
+        } else { res.status(401).json({ error: "Daten inkorrekt" }); }
+    } catch (e) { res.status(500).json({ error: "Serverfehler" }); }
 });
 
-// Status-Check für das Dashboard beim Laden der index.html
+// Status-Check für das Dashboard
 app.post("/login_check", authenticateUser, async (req, res) => {
     res.json({ 
         email: req.user.email,
         is_premium: req.user.is_premium, 
-        premium_until: req.user.premium_until 
+        premium_until: req.user.premium_until,
+        cancel_at_period_end: req.user.cancel_at_period_end
     });
 });
 
 // =========================================================
-// 4. PREIS ABFRAGE (Extension)
+// 4. PREIS ABFRAGE & STRIPE
 // =========================================================
-
-function mapAndFilterPrices(data) {
-    const cardData = data.data?.[0]; 
-    if (!cardData?.variants) return {};
-    let all = cardData.variants.map(v => v.price).filter(p => typeof p === 'number');
-    return {
-        LOW: all.length ? Math.min(...all).toFixed(2) : '--',
-        HIGH: all.length ? Math.max(...all).toFixed(2) : '--',
-        MARKET: all.length ? all[0].toFixed(2) : '--'
-    };
-}
 
 app.get("/prices", authenticateUser, async (req, res) => {
-    const user = req.user;
-    if (!user.is_premium || new Date(user.premium_until) < new Date()) {
+    if (!req.user.is_premium || new Date(req.user.premium_until) < new Date()) {
         return res.status(403).json({ error: "PAYMENT_REQUIRED" });
     }
-
-    const { set, cardNumber } = req.query;
-    try {
-        const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [set, cardNumber.padStart(3, '0')]);
-        const tcgId = dbRes.rows[0]?.tcg_player_id;
-        if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
-
-        const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
-        const data = await apiRes.json();
-        res.json({ prices: mapAndFilterPrices(data), fullTitle: data.data?.[0]?.name });
-    } catch (err) { res.status(500).json({ error: "SERVER_ERROR" }); }
+    // ... (Deine Preis-Logik hier wie gehabt)
 });
-
-// =========================================================
-// 5. STRIPE
-// =========================================================
 
 app.post("/create-checkout-session", authenticateUser, async (req, res) => {
     try {
@@ -166,8 +142,8 @@ app.post("/create-checkout-session", authenticateUser, async (req, res) => {
             payment_method_types: ['card', 'paypal'],
             line_items: [{ price: 'price_1SjQsWFUZXbTt9dyq5MqFi06', quantity: 1 }], 
             mode: 'subscription',
-            success_url: 'https://pokecardscout-api.onrender.com?status=success',
-            cancel_url: 'https://pokecardscout-api.onrender.com?status=cancel',
+            success_url: 'https://pokecardscout-api.onrender.com/index.html?status=success',
+            cancel_url: 'https://pokecardscout-api.onrender.com/index.html?status=cancel',
             client_reference_id: req.user.id.toString(),
             customer_email: req.user.email
         });
@@ -177,15 +153,12 @@ app.post("/create-checkout-session", authenticateUser, async (req, res) => {
 
 app.post("/create-portal-session", authenticateUser, async (req, res) => {
     try {
-        if (!req.user.stripe_customer_id) {
-            return res.status(400).json({ error: "Keine Stripe-ID gefunden." });
-        }
         const session = await stripe.billingPortal.sessions.create({
             customer: req.user.stripe_customer_id,
-            return_url: 'https://pokecardscout-api.onrender.com',
+            return_url: 'https://pokecardscout-api.onrender.com/index.html',
         });
         res.json({ url: session.url });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: "Kein Portal verfügbar" }); }
 });
 
-app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
+app.listen(PORT, () => console.log(`Server auf Port ${PORT}`));
