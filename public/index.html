@@ -158,7 +158,10 @@
 
     if (!token) window.location.href = "login.html";
 
-    // NEU: Funktion zur Kommunikation mit der Extension
+    /**
+     * Sendet den Token an die Chrome Extension, 
+     * damit diese autorisierte Anfragen stellen kann.
+     */
     function syncWithExtension(tokenToSync) {
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
             chrome.runtime.sendMessage(POKESCOUT_EXTENSION_ID, {
@@ -166,9 +169,9 @@
                 token: tokenToSync
             }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.log("[PokéScout] Extension noch nicht installiert oder ID falsch.");
+                    console.log("[PokéScout] Extension nicht erreichbar oder ID falsch.");
                 } else if (response && response.success) {
-                    console.log("[PokéScout] Erfolgreich mit Extension synchronisiert.");
+                    console.log("[PokéScout] Token erfolgreich mit Extension synchronisiert.");
                 }
             });
         }
@@ -187,12 +190,13 @@
             
             if (res.ok) {
                 renderDashboard(data);
-                // WICHTIG: Hier synchronisieren wir den Token mit der Extension
+                // Synchronisation mit der Extension anstoßen
                 syncWithExtension(token);
             } else {
                 logout();
             }
         } catch (e) {
+            console.error(e);
             document.getElementById('status-badge').innerText = "Verbindungsfehler";
         }
     }
