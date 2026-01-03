@@ -225,14 +225,19 @@
         }
     }
 
+
     async function checkout() {
-        const res = await fetch(`${apiBase}/create-checkout-session`, {
-            method: 'POST', 
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const d = await res.json(); 
-        if (d.url) window.location.href = d.url;
-    }
+    const res = await fetch(`${apiBase}/create-checkout-session`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json' // Wichtig!
+        },
+        // Dein Server braucht den Token im Body (siehe server.txt Zeile 187)
+        body: JSON.stringify({ token: token }) 
+    });
+    const d = await res.json(); 
+    if (d.url) window.location.href = d.url;
+}
 
     async function manage() {
         const res = await fetch(`${apiBase}/create-portal-session`, {
