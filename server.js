@@ -168,16 +168,20 @@ function mapAndFilterPrices(data) {
 
 app.get("/prices", authenticatePremiumUser, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
-    let dbNum = cardNumber.padStart(3, '0');
-
+    
+    // WICHTIG: Nutze cardNumber direkt, ohne .padStart(3, '0')
+    // Da deine DB bereits "012", "013" etc. speichert.
     try {
         const dbRes = await pool.query(
             "SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", 
-            [setSlug, dbNum]
+            [setSlug, cardNumber] 
         );
         
         const tcgId = dbRes.rows[0]?.tcg_player_id;
-        if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
+        if (!tcgId) {
+            console.log(`Kein Mapping gefunden: ${setSlug} - ${cardNumber}`);
+            return res.status(404).json({ error: "Mapping fehlt" });
+        }
 
         const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { 
             headers: { "X-API-KEY": API_KEY } 
@@ -193,6 +197,7 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
         res.status(500).json({ error: "SERVER_ERROR" }); 
     }
 });
+
 
 // =========================================================
 // 4. STRIPE CHECKOUT
