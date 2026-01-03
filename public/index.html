@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PokéScout Premoium - Dashboard</title>
+    <title>PokéScout Premium - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --poke-blue: #20558a;
             --bg-beige: #f1efe7; 
-            --card-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            --text-dark: #1a1a1a;
+            --card-shadow: 0 15px 40px rgba(0,0,0,0.06);
+            --text-dark: #121826;
             --text-muted: #64748b;
+            --font-head: 'Outfit', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
         }
 
         body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
+            font-family: var(--font-body); 
             background-color: var(--bg-beige); 
             display: flex; 
             justify-content: center; 
@@ -26,101 +31,102 @@
 
         .card { 
             background: white; 
-            padding: 35px 25px; 
-            border-radius: 24px; 
+            padding: 45px 35px; 
+            border-radius: 32px; 
             box-shadow: var(--card-shadow); 
             width: 100%; 
-            max-width: 380px; 
+            max-width: 420px; 
             text-align: center; 
+            box-sizing: border-box;
         }
 
-        .logo-container {
-            margin-bottom: 10px;
-        }
+        .logo-container { margin-bottom: 15px; }
+        .logo-container img { width: 160px; height: auto; }
 
-        .logo-container img {
-            width: 160px;
-            height: auto;
-        }
-
-        /* Status Badge direkt unter dem Logo */
         .status-badge { 
             display: inline-block; 
-            padding: 6px 14px; 
-            border-radius: 20px; 
+            padding: 8px 16px; 
+            border-radius: 100px; 
             font-size: 11px; 
             font-weight: 800; 
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 25px;
+            letter-spacing: 0.08em;
+            margin-bottom: 30px;
         }
         .premium-active { background: #e6f4ea; color: #1e7e34; }
         .premium-none { background: #f1f3f5; color: #495057; }
 
         h2 { 
+            font-family: var(--font-head);
             color: var(--text-dark); 
-            margin: 0 0 12px 0; 
-            font-size: 22px; 
+            margin: 0 0 15px 0; 
+            font-size: 28px; 
             font-weight: 800;
-            line-height: 1.2;
+            letter-spacing: -0.5px;
         }
 
         .welcome-info {
             font-size: 14px;
             line-height: 1.6;
             color: var(--text-muted);
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            padding: 0 5px;
         }
 
         .info-box { 
-            background: #f1efe7; 
-            border: 1px solid #f0f0f0; 
-            padding: 20px; 
-            border-radius: 18px; 
+            background: #fcfcfc; 
+            border: 1px solid #f1f5f9; 
+            padding: 25px; 
+            border-radius: 24px; 
         }
 
         .cancel-warning { 
             color: #d93025; 
             font-size: 13px; 
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .btn-main { 
             width: 100%; 
-            padding: 14px; 
-            border-radius: 12px; 
+            padding: 16px; 
+            border-radius: 14px; 
             cursor: pointer; 
+            font-family: var(--font-body);
             font-weight: 700; 
             font-size: 15px; 
-            transition: 0.2s;
+            transition: all 0.2s;
             border: none;
+            box-sizing: border-box;
         }
 
         .btn-premium { 
             background: #000000; 
             color: white; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .btn-premium:hover { opacity: 0.9; }
+        .btn-premium:hover { opacity: 0.85; transform: translateY(-1px); }
 
         .btn-manage { 
             background: white; 
-            color: #495057; 
-            border: 1px solid #dee2e6;
+            color: #121826; 
+            border: 1px solid #e2e8f0;
         }
-        .btn-manage:hover { background: #f8f9fa; }
+        .btn-manage:hover { background: #f8fafc; border-color: #cbd5e1; }
 
         .logout-link {
             display: inline-block;
-            margin-top: 25px;
-            font-size: 13px;
-            color: #adb5bd;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #94a3b8;
             text-decoration: none;
             cursor: pointer;
+            font-weight: 500;
         }
         .logout-link:hover { color: var(--poke-blue); }
 
-        .expiry-text { font-size: 13px; color: #495057; margin-bottom: 12px; font-weight: 500; }
+        .expiry-text { font-size: 14px; color: #475569; margin-bottom: 15px; font-weight: 500; }
+        .expiry-text b { color: var(--text-dark); }
     </style>
 </head>
 <body>
@@ -132,17 +138,12 @@
 
     <div id="status-badge" class="status-badge">Prüfe Status...</div>
 
-	<br>
-	<br>
     <h2>Schön, dass du da bist!</h2>
 
     <div class="welcome-info">
-        Mit dem Premium-Abo siehst du die TCGplayer-Preisübersicht direkt auf cardmarket – einfach und übersichtlich über unsere Browser-Extension.<br><br>
-        Der Pricetracker ist aktuell speziell für <strong>Pokémon-Karten</strong> verfügbar. 
-        <a href="sets.html" style="color: var(--poke-blue); font-weight: 700; text-decoration: underline;">Hier</a> findest du eine Übersicht über die momentan unterstützten Sets und Karten.<br><br>
-        Viel Spaß beim Tracken!
+        Mit dem Premium-Abo siehst du die TCGplayer-Preise direkt auf Cardmarket - ganz einfach über unsere Browser-Extension.<br><br>
+        Besuche unsere <a href="sets.html" style="color: var(--poke-blue); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--poke-blue);">Set-Übersicht</a> für alle bereits unterstützten Sets.
     </div>
-	<br>
 
     <div id="content-area"></div>
 
@@ -165,12 +166,8 @@
                 }
             });
             const data = await res.json();
-            
-            if (res.ok) {
-                renderDashboard(data);
-            } else { 
-                logout(); 
-            }
+            if (res.ok) renderDashboard(data);
+            else logout();
         } catch (e) {
             document.getElementById('status-badge').innerText = "Verbindungsfehler";
         }
@@ -181,30 +178,24 @@
         const badge = document.getElementById('status-badge');
 
         if (data.is_premium) {
-            badge.innerText = "PREMIUM AKTIV ✨";
+            badge.innerText = "Premium Aktiv ✨";
             badge.className = "status-badge premium-active";
-            
             const dateStr = new Date(data.premium_until).toLocaleDateString('de-DE');
-
             area.innerHTML = `
                 <div class="info-box">
                     ${data.cancel_at_period_end ? `
-                        <div class="cancel-warning">
-                            Abo gekündigt, endet am ${dateStr}
-                        </div>` : `
+                        <div class="cancel-warning">Abo gekündigt, endet am ${dateStr}</div>` : `
                         <div class="expiry-text">Nächste Abrechnung: <b>${dateStr}</b></div>
                     `}
                     <button class="btn-main btn-manage" onclick="manage()">Abo verwalten</button>
-                </div>
-            `;
+                </div>`;
         } else {
-            badge.innerText = "STANDARD ACCOUNT";
+            badge.innerText = "Standard Account";
             badge.className = "status-badge premium-none";
             area.innerHTML = `
                 <div class="info-box">
                     <button class="btn-main btn-premium" onclick="checkout()">Premium freischalten</button>
-                </div>
-            `;
+                </div>`;
         }
     }
 
@@ -230,9 +221,7 @@
         localStorage.clear(); 
         window.location.href = "login.html"; 
     }
-
     init();
 </script>
-
 </body>
 </html>
