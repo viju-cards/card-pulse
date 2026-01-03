@@ -28,17 +28,52 @@ const pool = new Pool({
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
+
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err) { return res.status(400).send(`Webhook Error: ${err.message}`); }
+    } catch (err) { 
+        console.error(`Webhook Error: ${err.message}`);
+        return res.status(400).send(`Webhook Error: ${err.message}`); 
+    }
 
+    // Fall 1: Abo-Abschluss (Erster Kauf)
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 32); 
-        await pool.query('UPDATE users SET is_premium = true, premium_until = $1, stripe_customer_id = $2 WHERE id = $3',
-            [expiryDate, session.customer, session.client_reference_id]);
+        
+        await pool.query(
+            'UPDATE users SET is_premium = true, premium_until = $1, stripe_customer_id = $2, cancel_at_period_end = false WHERE id = $3',
+            [expiryDate, session.customer, session.client_reference_id]
+        );
+        console.log(`Checkout erfolgreich für User: ${session.client_reference_id}`);
+    } 
+
+    // Fall 2: Abo-Änderung (z.B. Kündigung im Portal)
+    else if (event.type === 'customer.subscription.updated') {
+        const subscription = event.data.object;
+        
+        await pool.query(
+            'UPDATE users SET cancel_at_period_end = $1, premium_until = $2 WHERE stripe_customer_id = $3',
+            [
+                subscription.cancel_at_period_end, 
+                new Date(subscription.current_period_end * 1000), 
+                subscription.customer
+            ]
+        );
+        console.log(`Abo aktualisiert für Kunde: ${subscription.customer} (Gekündigt: ${subscription.cancel_at_period_end})`);
     }
+
+    // Fall 3: Abo endgültig beendet
+    else if (event.type === 'customer.subscription.deleted') {
+        const subscription = event.data.object;
+        await pool.query(
+            'UPDATE users SET is_premium = false, cancel_at_period_end = false WHERE stripe_customer_id = $1',
+            [subscription.customer]
+        );
+        console.log(`Abo gelöscht für Kunde: ${subscription.customer}`);
+    }
+
     res.json({ received: true });
 });
 
@@ -58,7 +93,7 @@ app.use((req, res, next) => {
 // 2. AUTHENTIFIZIERUNG & REGISTRIERUNG
 // =========================================================
 
-// NEU: LOGIN CHECK (Verhindert den Logout-Loop im Dashboard)
+// LOGIN CHECK (Wichtig für das Dashboard)
 app.post("/login_check", async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -67,14 +102,15 @@ app.post("/login_check", async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const result = await pool.query("SELECT is_premium, premium_until FROM users WHERE id = $1", [decoded.id]);
+        const result = await pool.query("SELECT is_premium, premium_until, cancel_at_period_end FROM users WHERE id = $1", [decoded.id]);
         const user = result.rows[0];
 
         if (!user) return res.status(404).json({ error: "User not found" });
 
         res.json({
             is_premium: user.is_premium,
-            premium_until: user.premium_until
+            premium_until: user.premium_until,
+            cancel_at_period_end: user.cancel_at_period_end
         });
     } catch (err) {
         res.status(401).json({ error: "Invalid token" });
@@ -94,7 +130,7 @@ app.post("/register", async (req, res) => {
         const passwordHash = await bcrypt.hash(password, salt);
 
         await pool.query(
-            "INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, $3, NOW())",
+            "INSERT INTO users (email, password_hash, is_premium, created_at, cancel_at_period_end) VALUES ($1, $2, $3, NOW(), false)",
             [email, passwordHash, false]
         );
 
@@ -122,13 +158,13 @@ app.post("/login", async (req, res) => {
                 ? new Date(user.created_at).toLocaleDateString('de-DE') 
                 : '--';
 
-            // Token enthält user.id passend zum decoded.id in anderen Routen
             const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
             
             res.json({ 
                 token, 
                 is_premium: user.is_premium, 
                 premium_until: user.premium_until,
+                cancel_at_period_end: user.cancel_at_period_end,
                 member_since: formattedDate 
             });
         } else { 
@@ -139,7 +175,7 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// AUTH MIDDLEWARE (Für Preisabfragen der Extension)
+// AUTH MIDDLEWARE
 async function authenticatePremiumUser(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -223,7 +259,6 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
 // 4. STRIPE CHECKOUT & PORTAL
 // =========================================================
 
-// Checkout Session erstellen
 app.post("/create-checkout-session", async (req, res) => {
     try {
         const { token } = req.body;
@@ -243,7 +278,6 @@ app.post("/create-checkout-session", async (req, res) => {
     }
 });
 
-// NEU: Stripe Customer Portal (Abo verwalten)
 app.post("/create-portal-session", async (req, res) => {
     try {
         const { token } = req.body;
