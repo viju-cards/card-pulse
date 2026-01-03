@@ -45,7 +45,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MANUELLES CORS
+// CORS Setup
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*'); 
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -55,53 +55,13 @@ app.use((req, res, next) => {
 });
 
 // =========================================================
-// 2. AUTHENTIFIZIERUNG & REGISTRIERUNG
+// 2. AUTHENTIFIZIERUNG MIDDLEWARE
 // =========================================================
 
-app.post("/register", async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-        if (existingUser.rows.length > 0) {
-            return res.status(400).json({ error: "Benutzername/E-Mail bereits vergeben." });
-        }
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(password, salt);
-        await pool.query(
-            "INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, $3, NOW())",
-            [email, passwordHash, false]
-        );
-        res.json({ success: true, message: "Konto erfolgreich erstellt!" });
-    } catch (err) {
-        res.status(500).json({ error: "Serverfehler bei der Registrierung." });
-    }
-});
-
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        const user = result.rows[0];
-        if (!user) return res.status(401).json({ error: "Kein Account gefunden." });
-
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (isMatch) {
-            const formattedDate = user.created_at ? new Date(user.created_at).toLocaleDateString('de-DE') : '--';
-            const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
-            res.json({ 
-                token, 
-                is_premium: user.is_premium, 
-                premium_until: user.premium_until,
-                member_since: formattedDate 
-            });
-        } else { 
-            res.status(401).json({ error: "Das Passwort ist nicht korrekt." }); 
-        }
-    } catch (e) { res.status(500).json({ error: "Serverfehler." }); }
-});
-
 async function authenticateUser(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1] || req.body.token;
+    const authHeader = req.headers['authorization'];
+    const token = (authHeader && authHeader.split(' ')[1]) || req.body.token;
+    
     if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -113,41 +73,79 @@ async function authenticateUser(req, res, next) {
 }
 
 // =========================================================
-// 3. PREIS LOGIK
+// 3. AUTH ROUTEN
+// =========================================================
+
+app.post("/register", async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ error: "Benutzername bereits vergeben." });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, salt);
+        await pool.query(
+            "INSERT INTO users (email, password_hash, is_premium, created_at) VALUES ($1, $2, $3, NOW())",
+            [email, passwordHash, false]
+        );
+        res.json({ success: true, message: "Konto erstellt!" });
+    } catch (err) { res.status(500).json({ error: "Fehler bei Registrierung." }); }
+});
+
+app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        const user = result.rows[0];
+        if (!user) return res.status(401).json({ error: "Account nicht gefunden." });
+
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (isMatch) {
+            const formattedDate = user.created_at ? new Date(user.created_at).toLocaleDateString('de-DE') : '--';
+            const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '365d' });
+            res.json({ 
+                token, 
+                is_premium: user.is_premium, 
+                premium_until: user.premium_until,
+                member_since: formattedDate 
+            });
+        } else { res.status(401).json({ error: "Passwort falsch." }); }
+    } catch (e) { res.status(500).json({ error: "Serverfehler." }); }
+});
+
+// Status-Check für das Dashboard beim Laden der index.html
+app.post("/login_check", authenticateUser, async (req, res) => {
+    res.json({ 
+        email: req.user.email,
+        is_premium: req.user.is_premium, 
+        premium_until: req.user.premium_until 
+    });
+});
+
+// =========================================================
+// 4. PREIS ABFRAGE (Extension)
 // =========================================================
 
 function mapAndFilterPrices(data) {
     const cardData = data.data?.[0]; 
     if (!cardData?.variants) return {};
-    let all = [];
-    let low = null;
-    for (const v of cardData.variants) {
-        if (typeof v.price === 'number') {
-            all.push(v.price);
-            if (low === null || v.price < low) low = v.price;
-        }
-    }
+    let all = cardData.variants.map(v => v.price).filter(p => typeof p === 'number');
     return {
-        LOW: low ? low.toFixed(2) : '--',
+        LOW: all.length ? Math.min(...all).toFixed(2) : '--',
         HIGH: all.length ? Math.max(...all).toFixed(2) : '--',
         MARKET: all.length ? all[0].toFixed(2) : '--'
     };
 }
 
-app.get("/prices", async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
+app.get("/prices", authenticateUser, async (req, res) => {
+    const user = req.user;
+    if (!user.is_premium || new Date(user.premium_until) < new Date()) {
+        return res.status(403).json({ error: "PAYMENT_REQUIRED" });
+    }
 
+    const { set, cardNumber } = req.query;
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = (await pool.query("SELECT is_premium, premium_until FROM users WHERE id = $1", [decoded.id])).rows[0];
-        
-        if (!user?.is_premium || new Date(user.premium_until) < new Date()) {
-            return res.status(403).json({ error: "PAYMENT_REQUIRED" });
-        }
-
-        const { set, cardNumber } = req.query;
         const dbRes = await pool.query("SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2", [set, cardNumber.padStart(3, '0')]);
         const tcgId = dbRes.rows[0]?.tcg_player_id;
         if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
@@ -159,7 +157,7 @@ app.get("/prices", async (req, res) => {
 });
 
 // =========================================================
-// 4. STRIPE SESSIONS (Checkout & Portal)
+// 5. STRIPE
 // =========================================================
 
 app.post("/create-checkout-session", authenticateUser, async (req, res) => {
@@ -177,11 +175,10 @@ app.post("/create-checkout-session", authenticateUser, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// NEU: Stripe Customer Portal für die Abo-Verwaltung
 app.post("/create-portal-session", authenticateUser, async (req, res) => {
     try {
         if (!req.user.stripe_customer_id) {
-            return res.status(400).json({ error: "Keine aktive Stripe-Kunden-ID gefunden." });
+            return res.status(400).json({ error: "Keine Stripe-ID gefunden." });
         }
         const session = await stripe.billingPortal.sessions.create({
             customer: req.user.stripe_customer_id,
