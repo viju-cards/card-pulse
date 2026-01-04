@@ -88,19 +88,8 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
 app.use(express.json());
 
 app.use((req, res, next) => {
-    const allowedOrigins = [
-        'https://poke-scout.com', 
-        'https://www.poke-scout.com', 
-        'https://pokecardscout-api.onrender.com'
-    ];
-    const origin = req.headers.origin;
-    
-    if (allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-    } else {
-        res.header('Access-Control-Allow-Origin', '*'); 
-    }
-    
+    // Erlaube explizit deine Domain
+    res.header('Access-Control-Allow-Origin', 'https://poke-scout.com');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
