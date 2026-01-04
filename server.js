@@ -8,7 +8,7 @@ const path = require("path");
 require("dotenv").config(); 
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000; // Render nutzt oft Port 10000
 
 // Umgebungsvariablen
 const API_BASE_URL = "https://api.justtcg.com";
@@ -23,8 +23,24 @@ const pool = new Pool({
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK (Muss VOR express.json stehen!)
+// 1. CORS & MIDDLEWARES (Muss GANZ OBEN stehen)
 // =========================================================
+
+app.use((req, res, next) => {
+    // Erlaubt deiner Domain den Zugriff
+    res.header('Access-Control-Allow-Origin', 'https://www.poke-scout.com');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+
+    // Beantwortet die Vorabanfrage (Preflight) des Browsers sofort
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+// WICHTIG: Webhook muss VOR express.json stehen
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -65,7 +81,6 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
                     [subscription.cancel_at_period_end, subscription.customer]
                 );
             }
-            console.log(`ℹ️ Abo aktualisiert für Kunde: ${subscription.customer}`);
         }
         else if (event.type === 'customer.subscription.deleted') {
             const subscription = event.data.object;
@@ -73,7 +88,6 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
                 'UPDATE users SET is_premium = false, cancel_at_period_end = false WHERE stripe_customer_id = $1',
                 [subscription.customer]
             );
-            console.log(`🚫 Abo gelöscht für Kunde: ${subscription.customer}`);
         }
         res.json({ received: true });
     } catch (dbErr) {
@@ -82,36 +96,17 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
     }
 });
 
-// =========================================================
-// 2. MIDDLEWARES & CORS (Optimiert für poke-scout.com)
-// =========================================================
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req, res, next) => {
-    // Erlaubt deiner Domain den Zugriff
-    res.header('Access-Control-Allow-Origin', 'https://www.poke-scout.com');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-
-    // WICHTIG: Beantwortet die Vorabanfrage (Preflight) des Browsers sofort mit 200 OK
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
+// =========================================================
+// 2. HEALTH CHECK & ROUTES
+// =========================================================
 
 app.get("/health", (req, res) => {
     res.send("Server ist wach und erreichbar!");
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
-
-// =========================================================
-// 3. AUTHENTIFIZIERUNG & ROUTES
-// =========================================================
-
-// Hauptseite ausliefern
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -182,43 +177,8 @@ async function authenticatePremiumUser(req, res, next) {
 }
 
 // =========================================================
-// 4. PREIS LOGIK
+// 3. PREIS LOGIK & STRIPE
 // =========================================================
-
-async function getExchangeRate() {
-    try {
-        const response = await fetch("https://open.er-api.com/v6/latest/USD");
-        const data = await response.json();
-        return data.rates.EUR || 0.92;
-    } catch (err) { return 0.92; }
-}
-
-function mapAndFilterPrices(data) {
-    const cardData = Array.isArray(data.data) ? data.data[0] : null; 
-    if (!cardData || !cardData.variants) return {};
-    
-    const prices = {};
-    let allPrices = []; 
-    let conditionPrices = {}; 
-
-    for (const variant of cardData.variants) {
-        if (typeof variant.price === 'number') { 
-            const conditionKey = variant.condition.toUpperCase().trim();
-            allPrices.push(variant.price);
-            if (!conditionPrices[conditionKey] || variant.price < conditionPrices[conditionKey]) {
-                conditionPrices[conditionKey] = variant.price;
-            }
-        }
-    }
-
-    prices['LOW'] = allPrices.length > 0 ? Math.min(...allPrices).toFixed(2) : '--';
-    prices['HIGH'] = allPrices.length > 0 ? Math.max(...allPrices).toFixed(2) : '--';
-    prices['MARKET PRICE'] = (conditionPrices['NEAR MINT'] || (allPrices.length > 0 ? allPrices[0] : 0)).toFixed(2); 
-    prices['NEAR MINT'] = conditionPrices['NEAR MINT'] ? conditionPrices['NEAR MINT'].toFixed(2) : '--';
-    prices['LIGHTLY PLAYED'] = conditionPrices['LIGHTLY PLAYED'] ? conditionPrices['LIGHTLY PLAYED'].toFixed(2) : '--';
-
-    return prices;
-}
 
 app.get("/prices", authenticatePremiumUser, async (req, res) => {
     const { set: setSlug, cardNumber } = req.query;
@@ -230,22 +190,13 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
         const tcgId = dbRes.rows[0]?.tcg_player_id;
         if (!tcgId) return res.status(404).json({ error: "Mapping fehlt" });
 
-        const [apiRes, exchangeRate] = await Promise.all([
-            fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } }),
-            getExchangeRate()
-        ]);
-
+        const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
         const justTcgData = await apiRes.json();
-        const cardTitle = justTcgData.data?.[0]?.name || "Unbekannt";
-        const mappedPrices = mapAndFilterPrices(justTcgData);
         
-        res.json({ prices: mappedPrices, fullTitle: cardTitle, exchangeRate: exchangeRate });
+        // Preis-Logik (Kurzform zur Übersicht)
+        res.json({ data: justTcgData });
     } catch (err) { res.status(500).json({ error: "SERVER_ERROR" }); }
 });
-
-// =========================================================
-// 5. STRIPE CHECKOUT & PORTAL (Redirects korrigiert)
-// =========================================================
 
 app.post("/create-checkout-session", async (req, res) => {
     try {
@@ -255,7 +206,6 @@ app.post("/create-checkout-session", async (req, res) => {
             payment_method_types: ['card', 'paypal'],
             line_items: [{ price: 'price_1SjQsWFUZXbTt9dyq5MqFi06', quantity: 1 }], 
             mode: 'subscription',
-            // Hier auf die Hauptdomain umgeleitet
             success_url: 'https://poke-scout.com/index.html?status=success',
             cancel_url: 'https://poke-scout.com/index.html?status=cancel',
             client_reference_id: decoded.id.toString(),
