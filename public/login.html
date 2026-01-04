@@ -159,6 +159,7 @@
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     
+    // Einheitliche URL ohne 'www' für die API
     const API_BASE_URL = "https://poke-scout.com";
 
     let isLoginMode = true;
@@ -198,9 +199,9 @@
                 if (isLoginMode) {
                     localStorage.setItem('pokescout_token', data.token);
 
-                    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    if (typeof chrome !== 'undefined' && chrome.storage) {
                         chrome.storage.local.set({ 'pokescout_token': data.token }, () => {
-                            showSuccess("Login erfolgreich!");
+                            showSuccess("Login erfolgreich! Synchronisiere...");
                             setTimeout(() => { window.location.href = "index.html"; }, 800);
                         });
                     } else {
