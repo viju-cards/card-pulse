@@ -100,6 +100,10 @@ app.use((req, res, next) => {
     next();
 });
 
+app.get("/health", (req, res) => {
+    res.send("Server ist wach und erreichbar!");
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // =========================================================
