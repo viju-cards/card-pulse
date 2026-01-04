@@ -159,8 +159,9 @@
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     
-    // Einheitliche URL ohne 'www' für die API
     const API_BASE_URL = "https://pokescout.onrender.com";
+    // WICHTIG: Ersetze dies durch deine reale Extension ID!
+    const EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
 
     let isLoginMode = true;
 
@@ -197,17 +198,23 @@
 
             if (response.ok) {
                 if (isLoginMode) {
+                    // 1. Speichern im lokalen Browser-Speicher der Website
                     localStorage.setItem('pokescout_token', data.token);
 
-                    if (typeof chrome !== 'undefined' && chrome.storage) {
-                        chrome.storage.local.set({ 'pokescout_token': data.token }, () => {
-                            showSuccess("Login erfolgreich! Synchronisiere...");
-                            setTimeout(() => { window.location.href = "index.html"; }, 800);
+                    // 2. TOKEN-SHARING AN DIE EXTENSION FUNKEN
+                    // Das sorgt dafür, dass die Extension auf Cardmarket sofort eingeloggt ist
+                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                        chrome.runtime.sendMessage(EXTENSION_ID, { 
+                            type: "LOGIN_SUCCESS", 
+                            token: data.token 
+                        }, (response) => {
+                            console.log("Token erfolgreich an Extension übertragen");
                         });
-                    } else {
-                        showSuccess("Login erfolgreich!");
-                        setTimeout(() => { window.location.href = "index.html"; }, 800);
                     }
+
+                    showSuccess("Login erfolgreich! Synchronisiere...");
+                    setTimeout(() => { window.location.href = "index.html"; }, 800);
+                    
                 } else {
                     showSuccess("Konto erstellt! Du kannst dich jetzt einloggen.");
                     btn.disabled = false;
