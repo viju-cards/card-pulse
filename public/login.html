@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéScout Pro - Login</title>
     <link rel="icon" type="image/png" href="/favicon1.png">
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         :root {
             --poke-blue: #00adbd;
@@ -161,7 +159,6 @@
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     
-    // Neue API URL
     const API_BASE_URL = "https://poke-scout.com";
 
     let isLoginMode = true;
@@ -199,18 +196,16 @@
 
             if (response.ok) {
                 if (isLoginMode) {
-                    // 1. Für Website speichern
                     localStorage.setItem('pokescout_token', data.token);
 
-                    // 2. WICHTIG: Für Extension synchronisieren
-                    if (typeof chrome !== 'undefined' && chrome.storage) {
+                    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
                         chrome.storage.local.set({ 'pokescout_token': data.token }, () => {
-                            showSuccess("Login erfolgreich! Synchronisiere...");
-                            setTimeout(() => { window.location.href = "/index.html"; }, 800);
+                            showSuccess("Login erfolgreich!");
+                            setTimeout(() => { window.location.href = "index.html"; }, 800);
                         });
                     } else {
                         showSuccess("Login erfolgreich!");
-                        setTimeout(() => { window.location.href = "/index.html"; }, 800);
+                        setTimeout(() => { window.location.href = "index.html"; }, 800);
                     }
                 } else {
                     showSuccess("Konto erstellt! Du kannst dich jetzt einloggen.");
