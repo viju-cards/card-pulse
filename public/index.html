@@ -157,37 +157,33 @@
 
 <script>
     const token = localStorage.getItem('pokescout_token');
+    // Nutze direkt die zertifizierte Domain ohne 'www', falls die API dort läuft
     const apiBase = 'https://poke-scout.com';
     const POKESCOUT_EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
 
     const premiumWelcomeText = `
         Mit dem Premium-Abo siehst du die TCGplayer-Preise direkt auf cardmarket - ganz einfach über unsere Browser-Extension.<br><br>
-        Besuche unsere <a href="sets.html" class="set-link">Set-Übersicht</a> für alle unterstützten Sets.<br><br>
-        Viel Spaß beim Tracken auf <a href="https://www.cardmarket.com/de/Pokemon" target="_blank" class="set-link">cardmarket!</a>
+        Besuche unsere <a href="sets.html" class="set-link">Set-Übersicht</a> für alle bereits unterstützten Sets.<br><br>
+        Viel Spaß beim Tracken auf <a href="https://www.cardmarket.com/de/Pokemon" class="set-link">cardmarket!</a>
     `;
 
     if (!token) window.location.href = "login.html";
 
     function syncWithExtension(t) {
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-            chrome.storage.local.set({ 'pokescout_token': t });
-        }
-        
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
             chrome.runtime.sendMessage(POKESCOUT_EXTENSION_ID, {
                 type: "LOGIN_SUCCESS",
                 token: t
             }, (response) => {
-                if (chrome.runtime.lastError) console.log("Extension nicht aktiv.");
+                console.log("Extension Sync-Versuch...");
             });
         }
     }
 
     async function init() {
-        if (!token) return;
         try {
             const res = await fetch(`${apiBase}/login_check`, {
-                method: 'POST',
+                method: 'POST', // Das ist korrekt, GET wird abgelehnt
                 headers: { 
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json' 
@@ -198,14 +194,17 @@
                 const data = await res.json();
                 document.getElementById('welcome-title').innerText = "Schön, dass du da bist!";
                 document.getElementById('welcome-text').innerHTML = premiumWelcomeText;
+                
                 renderDashboard(data);
                 syncWithExtension(token);
-            } else {
+            } else if (res.status === 401 || res.status === 403) {
                 logout();
+            } else {
+                throw new Error("Server antwortet nicht korrekt");
             }
         } catch (e) {
             document.getElementById('status-badge').innerText = "Server schläft...";
-            setTimeout(init, 4000);
+            setTimeout(init, 5000);
         }
     }
 
@@ -220,10 +219,10 @@
             
             area.innerHTML = `
                 <div class="info-box">
-                    ${data.cancel_at_period_end ? 
-                        `<div class="cancel-warning">Abo gekündigt, endet am ${dateStr}</div>` : 
-                        `<div class="expiry-text">Nächste Abrechnung: <b>${dateStr}</b></div>`
-                    }
+                    ${data.cancel_at_period_end ? `
+                        <div class="cancel-warning">Abo gekündigt, endet am ${dateStr}</div>` : `
+                        <div class="expiry-text">Nächste Abrechnung: <b>${dateStr}</b></div>
+                    `}
                     <button class="btn-main btn-manage" onclick="manage()">Abo verwalten</button>
                 </div>`;
         } else {
@@ -261,10 +260,7 @@
     }
 
     function logout() { 
-        localStorage.removeItem('pokescout_token');
-        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-            chrome.storage.local.remove('pokescout_token');
-        }
+        localStorage.clear(); 
         window.location.href = "login.html"; 
     }
     
