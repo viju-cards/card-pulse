@@ -4,15 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PokéScout Pro - Login</title>
-    <link rel="icon" type="image/png" href="/favicon1.png">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --poke-blue: #20558a;
-            --bg-beige: #f1efe7; 
-            --card-shadow: 0 15px 35px rgba(0,0,0,0.06);
+            --poke-blue: #00adbd;
+            --bg-beige: #f8f9fa; 
+            --card-shadow: 0 20px 40px rgba(0,0,0,0.05);
             --text-dark: #121826;
             --text-muted: #64748b;
             --font-head: 'Outfit', sans-serif;
@@ -37,7 +39,8 @@
             box-shadow: var(--card-shadow); 
             width: 100%; 
             max-width: 400px; 
-            text-align: center; 
+            text-align: center;
+            border: 1px solid #f0f0f0;
         }
 
         .logo-container { margin-bottom: 25px; }
@@ -49,7 +52,7 @@
             margin: 0 0 25px 0; 
             font-size: 26px; 
             font-weight: 800;
-            letter-spacing: -0.5px;
+            letter-spacing: -1px;
         }
 
         input { 
@@ -62,14 +65,14 @@
             font-size: 15px; 
             font-family: var(--font-body);
             background: #f8fafc;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: all 0.2s ease; 
         }
 
         input:focus { 
             border-color: var(--poke-blue); 
             background: white;
             outline: none; 
-            box-shadow: 0 0 0 4px rgba(32, 85, 138, 0.08);
+            box-shadow: 0 0 0 4px rgba(0, 173, 189, 0.1);
         }
 
         button { 
@@ -85,21 +88,30 @@
             font-size: 16px; 
             margin-top: 15px; 
             transition: all 0.2s; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        button:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
-        button:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+        button:hover { opacity: 0.85; transform: translateY(-1px); }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; }
 
         .toggle-link { 
-            margin-top: 30px; 
+            margin-top: 25px; 
             font-size: 14px; 
             color: var(--text-muted); 
             cursor: pointer; 
         }
 
-        .toggle-link b { color: var(--poke-blue); text-decoration: none; font-weight: 700; }
-        .toggle-link b:hover { text-decoration: underline; }
+        .toggle-link b { color: var(--poke-blue); font-weight: 700; }
+        
+        .forgot-password {
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        
+        .forgot-password a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+        .forgot-password a:hover { text-decoration: underline; }
 
         #message { 
             margin-top: 20px; 
@@ -108,7 +120,6 @@
             font-size: 13px; 
             display: none; 
             font-weight: 600;
-            line-height: 1.4; 
         }
 
         .error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; display: block !important; }
@@ -132,6 +143,10 @@
     
     <div id="message"></div>
     
+    <div class="forgot-password">
+        <a href="mailto:support@poke-scout.com">Passwort vergessen?</a>
+    </div>
+
     <div class="toggle-link" id="toggle-auth">
         Noch kein Account? <b>Jetzt registrieren</b>
     </div>
@@ -146,6 +161,9 @@
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     
+    // Neue API URL
+    const API_BASE_URL = "https://poke-scout.com";
+
     let isLoginMode = true;
 
     toggle.addEventListener('click', () => {
@@ -157,9 +175,6 @@
             : "Bereits ein Konto? <b>Zum Login</b>";
         
         message.style.display = 'none';
-        message.innerText = '';
-        message.className = '';
-        btn.disabled = false;
         passwordInput.value = '';
     });
 
@@ -171,10 +186,10 @@
 
         try {
             btn.disabled = true;
-            btn.innerText = "Verarbeite...";
+            btn.innerText = "Wird verarbeitet...";
             message.style.display = 'none';
 
-            const response = await fetch(`https://pokecardscout-api.onrender.com${endpoint}`, {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -184,31 +199,50 @@
 
             if (response.ok) {
                 if (isLoginMode) {
-                    localStorage.setItem('poketool_token', data.token);
-                    message.className = "success";
-                    message.innerText = "Erfolgreich eingeloggt!";
-                    setTimeout(() => { window.location.href = "index.html"; }, 800);
+                    // 1. Für Website speichern
+                    localStorage.setItem('pokescout_token', data.token);
+
+                    // 2. WICHTIG: Für Extension synchronisieren
+                    if (typeof chrome !== 'undefined' && chrome.storage) {
+                        chrome.storage.local.set({ 'pokescout_token': data.token }, () => {
+                            showSuccess("Login erfolgreich! Synchronisiere...");
+                            setTimeout(() => { window.location.href = "/dashboard"; }, 800);
+                        });
+                    } else {
+                        showSuccess("Login erfolgreich!");
+                        setTimeout(() => { window.location.href = "/dashboard"; }, 800);
+                    }
                 } else {
-                    message.className = "success";
-                    message.innerText = "Konto erstellt! Bitte logge dich jetzt ein.";
+                    showSuccess("Konto erstellt! Du kannst dich jetzt einloggen.");
                     btn.disabled = false;
                     btn.innerText = "Konto erstellen";
                     passwordInput.value = '';
                     setTimeout(() => { if (!isLoginMode) toggle.click(); }, 2000);
                 }
             } else {
-                message.className = "error";
-                message.innerText = data.error || "Ein Fehler ist aufgetreten.";
-                btn.disabled = false;
-                btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
+                showError(data.error || "Fehler beim Authentifizieren.");
             }
         } catch (err) {
-            message.className = "error";
-            message.innerText = "Server nicht erreichbar.";
-            btn.disabled = false;
-            btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
+            showError("Server momentan nicht erreichbar.");
+        } finally {
+            if (!isLoginMode) {
+                btn.disabled = false;
+                btn.innerText = "Konto erstellen";
+            }
         }
     });
+
+    function showError(txt) {
+        message.className = "error";
+        message.innerText = txt;
+        btn.disabled = false;
+        btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
+    }
+
+    function showSuccess(txt) {
+        message.className = "success";
+        message.innerText = txt;
+    }
 </script>
 </body>
 </html>
