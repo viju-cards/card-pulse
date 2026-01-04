@@ -88,12 +88,13 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
 app.use(express.json());
 
 app.use((req, res, next) => {
-    // Erlaube explizit deine Domain
-    res.header('Access-Control-Allow-Origin', 'https://poke-scout.com');
+    // Erlaubt deiner Domain den Zugriff
+    res.header('Access-Control-Allow-Origin', 'https://www.poke-scout.com');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
 
+    // WICHTIG: Beantwortet die Vorabanfrage (Preflight) des Browsers sofort mit 200 OK
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
