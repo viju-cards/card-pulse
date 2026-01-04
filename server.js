@@ -23,7 +23,7 @@ const pool = new Pool({
 });
 
 // =========================================================
-// 1. STRIPE WEBHOOK (Muss vor express.json() stehen!)
+// 1. STRIPE WEBHOOK (Muss VOR express.json stehen!)
 // =========================================================
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -83,22 +83,44 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) =
 });
 
 // =========================================================
-// 2. MIDDLEWARES & CORS
+// 2. MIDDLEWARES & CORS (Optimiert für poke-scout.com)
 // =========================================================
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*'); 
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); 
-    if (req.method === 'OPTIONS') return res.sendStatus(200);
+    const allowedOrigins = [
+        'https://poke-scout.com', 
+        'https://www.poke-scout.com', 
+        'https://pokecardscout-api.onrender.com'
+    ];
+    const origin = req.headers.origin;
+    
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    } else {
+        res.header('Access-Control-Allow-Origin', '*'); 
+    }
+    
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
     next();
 });
 
+app.use(express.static(path.join(__dirname, 'public')));
+
 // =========================================================
-// 3. AUTHENTIFIZIERUNG
+// 3. AUTHENTIFIZIERUNG & ROUTES
 // =========================================================
+
+// Hauptseite ausliefern
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.post("/login_check", async (req, res) => {
     const authHeader = req.headers['authorization'];
@@ -150,6 +172,7 @@ app.post("/login", async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Serverfehler." }); }
 });
 
+// Middleware für Premium-Check
 async function authenticatePremiumUser(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -165,7 +188,7 @@ async function authenticatePremiumUser(req, res, next) {
 }
 
 // =========================================================
-// 4. PREIS LOGIK & WECHSELKURS
+// 4. PREIS LOGIK
 // =========================================================
 
 async function getExchangeRate() {
@@ -173,9 +196,7 @@ async function getExchangeRate() {
         const response = await fetch("https://open.er-api.com/v6/latest/USD");
         const data = await response.json();
         return data.rates.EUR || 0.92;
-    } catch (err) {
-        return 0.92;
-    }
+    } catch (err) { return 0.92; }
 }
 
 function mapAndFilterPrices(data) {
@@ -201,10 +222,6 @@ function mapAndFilterPrices(data) {
     prices['MARKET PRICE'] = (conditionPrices['NEAR MINT'] || (allPrices.length > 0 ? allPrices[0] : 0)).toFixed(2); 
     prices['NEAR MINT'] = conditionPrices['NEAR MINT'] ? conditionPrices['NEAR MINT'].toFixed(2) : '--';
     prices['LIGHTLY PLAYED'] = conditionPrices['LIGHTLY PLAYED'] ? conditionPrices['LIGHTLY PLAYED'].toFixed(2) : '--';
-    prices['MODERATELY PLAYED'] = conditionPrices['MODERATELY PLAYED'] ? conditionPrices['MODERATELY PLAYED'].toFixed(2) : '--';
-    prices['HEAVILY PLAYED'] = conditionPrices['HEAVILY PLAYED'] ? conditionPrices['HEAVILY PLAYED'].toFixed(2) : '--';
-    prices['DAMAGED'] = (conditionPrices['DAMAGED'] || conditionPrices['POOR']) ? 
-        (conditionPrices['DAMAGED'] || conditionPrices['POOR']).toFixed(2) : '--';
 
     return prices;
 }
@@ -233,7 +250,7 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
 });
 
 // =========================================================
-// 5. STRIPE CHECKOUT & PORTAL
+// 5. STRIPE CHECKOUT & PORTAL (Redirects korrigiert)
 // =========================================================
 
 app.post("/create-checkout-session", async (req, res) => {
@@ -244,8 +261,9 @@ app.post("/create-checkout-session", async (req, res) => {
             payment_method_types: ['card', 'paypal'],
             line_items: [{ price: 'price_1SjQsWFUZXbTt9dyq5MqFi06', quantity: 1 }], 
             mode: 'subscription',
-            success_url: 'https://pokecardscout-api.onrender.com?status=success',
-            cancel_url: 'https://pokecardscout-api.onrender.com?status=cancel',
+            // Hier auf die Hauptdomain umgeleitet
+            success_url: 'https://poke-scout.com/index.html?status=success',
+            cancel_url: 'https://poke-scout.com/index.html?status=cancel',
             client_reference_id: decoded.id.toString(),
         });
         res.json({ url: session.url });
@@ -261,7 +279,7 @@ app.post("/create-portal-session", async (req, res) => {
 
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: user.stripe_customer_id,
-            return_url: 'https://pokecardscout-api.onrender.com',
+            return_url: 'https://poke-scout.com/index.html',
         });
         res.json({ url: portalSession.url });
     } catch (e) { res.status(500).json({ error: e.message }); }
