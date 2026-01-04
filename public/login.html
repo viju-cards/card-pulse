@@ -206,11 +206,11 @@
                     if (typeof chrome !== 'undefined' && chrome.storage) {
                         chrome.storage.local.set({ 'pokescout_token': data.token }, () => {
                             showSuccess("Login erfolgreich! Synchronisiere...");
-                            setTimeout(() => { window.location.href = "/index"; }, 800);
+                            setTimeout(() => { window.location.href = "/index.html"; }, 800);
                         });
                     } else {
                         showSuccess("Login erfolgreich!");
-                        setTimeout(() => { window.location.href = "/index"; }, 800);
+                        setTimeout(() => { window.location.href = "/index.html"; }, 800);
                     }
                 } else {
                     showSuccess("Konto erstellt! Du kannst dich jetzt einloggen.");
