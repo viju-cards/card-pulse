@@ -8,7 +8,7 @@ const path = require("path");
 require("dotenv").config(); 
 
 const app = express();
-const PORT = process.env.PORT || 10000; // Render nutzt oft Port 10000
+const PORT = process.env.PORT || 10000; 
 
 // Umgebungsvariablen
 const API_BASE_URL = "https://api.justtcg.com";
@@ -27,8 +27,21 @@ const pool = new Pool({
 // =========================================================
 
 app.use((req, res, next) => {
-    // Erlaubt deiner Domain den Zugriff
-    res.header('Access-Control-Allow-Origin', 'https://www.poke-scout.com');
+    const origin = req.headers.origin;
+    // Erlaubt deine Domains und Cardmarket für die Extension
+    const allowedOrigins = [
+        'https://www.poke-scout.com', 
+        'https://poke-scout.com', 
+        'https://www.cardmarket.com'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    } else {
+        // Fallback für Anfragen ohne Origin-Header (z.B. einige Extension-Anfragen)
+        res.header('Access-Control-Allow-Origin', '*'); 
+    }
+
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -40,7 +53,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// WICHTIG: Webhook muss VOR express.json stehen
+// WICHTIG: Stripe Webhook muss VOR express.json stehen
 app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -193,7 +206,6 @@ app.get("/prices", authenticatePremiumUser, async (req, res) => {
         const apiRes = await fetch(`${API_BASE_URL}/v1/cards?tcgplayerId=${tcgId}`, { headers: { "X-API-KEY": API_KEY } });
         const justTcgData = await apiRes.json();
         
-        // Preis-Logik (Kurzform zur Übersicht)
         res.json({ data: justTcgData });
     } catch (err) { res.status(500).json({ error: "SERVER_ERROR" }); }
 });
