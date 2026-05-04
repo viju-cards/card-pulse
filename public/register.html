@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registrieren – CardPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#07070d; --surface:#0f0f1a; --border:rgba(108,99,255,0.15);
+    --accent:#6c63ff; --accent-dim:rgba(108,99,255,0.12);
+    --text:#e8e8f0; --muted:#6b6b80; --error:#ef4444; --green:#22c55e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+  nav { display:flex; justify-content:space-between; align-items:center; padding:24px 48px; border-bottom:1px solid var(--border); }
+  .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; text-decoration:none; color:#fff; }
+  .logo span { color:var(--accent); }
+  .main { flex:1; display:flex; align-items:center; justify-content:center; padding:40px 24px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:48px; width:100%; max-width:420px; }
+  h1 { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:8px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:36px; }
+  .field { margin-bottom:18px; }
+  label { display:block; font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px; }
+  input { width:100%; padding:14px 16px; background:#0a0a15; border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; transition:.2s; outline:none; }
+  input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(108,99,255,0.12); }
+  .btn { width:100%; padding:15px; background:var(--accent); border:none; border-radius:12px; color:#fff; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500; cursor:pointer; transition:.2s; margin-top:8px; }
+  .btn:hover { opacity:.85; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .msg { padding:12px 16px; border-radius:10px; font-size:13px; margin-top:16px; display:none; }
+  .msg.error { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:var(--error); display:block; }
+  .msg.success { background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); color:var(--green); display:block; }
+  .divider { text-align:center; color:var(--muted); font-size:13px; margin:24px 0; }
+  .link { color:var(--accent); text-decoration:none; font-weight:500; }
+  .link:hover { opacity:.8; }
+  .hint { font-size:12px; color:var(--muted); margin-top:6px; }
+  .loading { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; margin-right:8px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .perks { display:flex; flex-direction:column; gap:8px; margin-bottom:32px; }
+  .perk { display:flex; gap:10px; align-items:center; font-size:13px; color:var(--muted); }
+  .perk::before { content:'✓'; color:var(--green); font-weight:700; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">card<span>pulse</span></a>
+</nav>
+
+<div class="main">
+  <div class="card">
+    <h1>Konto erstellen</h1>
+    <p class="subtitle">Kostenlos starten – kein Abo nötig.</p>
+
+    <div class="perks">
+      <div class="perk">Sofortiger Zugang zur Extension</div>
+      <div class="perk">Kein Abo erforderlich</div>
+      <div class="perk">Jederzeit upgraden oder kündigen</div>
+    </div>
+
+    <div class="field">
+      <label for="email">E-Mail</label>
+      <input type="email" id="email" placeholder="deine@email.de" autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="password">Passwort</label>
+      <input type="password" id="password" placeholder="Mindestens 8 Zeichen" autocomplete="new-password">
+      <p class="hint">Mindestens 8 Zeichen</p>
+    </div>
+    <div class="field">
+      <label for="password2">Passwort wiederholen</label>
+      <input type="password" id="password2" placeholder="••••••••" autocomplete="new-password">
+    </div>
+
+    <button class="btn" id="registerBtn">Konto erstellen</button>
+    <div class="msg" id="msg"></div>
+
+    <div class="divider">Bereits ein Konto? <a href="/login.html" class="link">Anmelden</a></div>
+  </div>
+</div>
+
+<script>
+const API = '';
+
+document.getElementById('registerBtn').addEventListener('click', register);
+document.getElementById('password2').addEventListener('keydown', e => { if(e.key === 'Enter') register(); });
+
+async function register() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+  const btn = document.getElementById('registerBtn');
+
+  if (!email || !password || !password2) {
+    showMsg('Bitte alle Felder ausfüllen.', 'error'); return;
+  }
+  if (password.length < 8) {
+    showMsg('Passwort muss mindestens 8 Zeichen haben.', 'error'); return;
+  }
+  if (password !== password2) {
+    showMsg('Passwörter stimmen nicht überein.', 'error'); return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span>Konto erstellen...';
+
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMsg(data.error || 'Registrierung fehlgeschlagen.', 'error'); return;
+    }
+
+    localStorage.setItem('cp_token', data.token);
+    localStorage.setItem('cp_user', JSON.stringify(data.user));
+
+    // Token an Extension senden
+    try {
+      const EXT_ID = 'DEINE_EXTENSION_ID';
+      chrome.runtime.sendMessage(EXT_ID, { type: 'LOGIN_SUCCESS', token: data.token });
+    } catch(e) {}
+
+    showMsg('Konto erstellt! Weiterleitung...', 'success');
+    setTimeout(() => window.location.href = '/dashboard.html', 1000);
+
+  } catch(err) {
+    showMsg('Verbindungsfehler. Bitte versuche es erneut.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Konto erstellen';
+  }
+}
+
+function showMsg(text, type) {
+  const msg = document.getElementById('msg');
+  msg.textContent = text;
+  msg.className = `msg ${type}`;
+}
+
+if (localStorage.getItem('cp_token')) window.location.href = '/dashboard.html';
+</script>
+</body>
+</html>

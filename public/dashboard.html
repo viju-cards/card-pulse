@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard – CardPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#07070d; --surface:#0f0f1a; --border:rgba(108,99,255,0.15);
+    --accent:#6c63ff; --accent-dim:rgba(108,99,255,0.12);
+    --text:#e8e8f0; --muted:#6b6b80; --green:#22c55e; --red:#ef4444;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+  nav { display:flex; justify-content:space-between; align-items:center; padding:20px 48px; border-bottom:1px solid var(--border); }
+  .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; text-decoration:none; color:#fff; }
+  .logo span { color:var(--accent); }
+  .nav-right { display:flex; gap:12px; align-items:center; }
+  .user-email { font-size:13px; color:var(--muted); }
+  .btn-sm { padding:8px 16px; border-radius:8px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; border:1px solid var(--border); background:transparent; color:var(--muted); transition:.2s; text-decoration:none; }
+  .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
+  .main { max-width:900px; margin:0 auto; padding:48px 24px; }
+  .page-title { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; margin-bottom:8px; }
+  .page-sub { color:var(--muted); font-size:14px; margin-bottom:48px; }
+
+  /* STATUS CARD */
+  .status-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:32px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px; }
+  .status-card.premium { border-color:var(--accent); background:linear-gradient(135deg,rgba(108,99,255,0.08),var(--surface)); }
+  .status-left h2 { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; margin-bottom:6px; }
+  .status-left p { font-size:14px; color:var(--muted); }
+  .plan-badge { display:inline-flex; padding:6px 14px; border-radius:99px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+  .plan-badge.premium { background:var(--accent); color:#fff; }
+  .plan-badge.free { background:rgba(255,255,255,0.08); color:var(--muted); }
+  .btn-primary { padding:12px 24px; background:var(--accent); border:none; border-radius:12px; color:#fff; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:.2s; text-decoration:none; display:inline-block; }
+  .btn-primary:hover { opacity:.85; }
+  .btn-outline { padding:12px 24px; background:transparent; border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; cursor:pointer; transition:.2s; }
+  .btn-outline:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* INFO GRID */
+  .info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:32px; }
+  .info-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; }
+  .info-label { font-size:12px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .info-value { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; }
+  .info-value.green { color:var(--green); }
+  .info-value.muted { color:var(--muted); font-size:14px; font-family:'DM Sans',sans-serif; font-weight:400; }
+
+  /* EXTENSION BOX */
+  .ext-box { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:32px; margin-bottom:24px; }
+  .ext-box h3 { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; margin-bottom:8px; }
+  .ext-box p { font-size:14px; color:var(--muted); margin-bottom:20px; line-height:1.6; }
+  .steps { display:flex; flex-direction:column; gap:12px; }
+  .step { display:flex; gap:16px; align-items:flex-start; }
+  .step-num { width:28px; height:28px; border-radius:99px; background:var(--accent-dim); border:1px solid var(--border); color:var(--accent); font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-text { font-size:14px; color:var(--muted); padding-top:4px; line-height:1.5; }
+  .step-text a { color:var(--accent); text-decoration:none; }
+  code { font-family:'DM Mono',monospace; background:rgba(108,99,255,0.1); padding:2px 6px; border-radius:4px; font-size:12px; color:var(--accent); }
+
+  /* DANGER ZONE */
+  .danger-box { background:rgba(239,68,68,0.04); border:1px solid rgba(239,68,68,0.15); border-radius:16px; padding:24px; }
+  .danger-box h3 { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--red); margin-bottom:8px; }
+  .danger-box p { font-size:14px; color:var(--muted); margin-bottom:16px; }
+  .btn-danger { padding:10px 20px; background:transparent; border:1px solid rgba(239,68,68,0.3); border-radius:10px; color:var(--red); font-family:'DM Sans',sans-serif; font-size:14px; cursor:pointer; transition:.2s; }
+  .btn-danger:hover { background:rgba(239,68,68,0.1); }
+
+  .loading-state { text-align:center; padding:80px; color:var(--muted); }
+  .spin { display:inline-block; width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .6s linear infinite; margin-bottom:16px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">card<span>pulse</span></a>
+  <div class="nav-right">
+    <span class="user-email" id="userEmail">–</span>
+    <a href="/sets.html" class="btn-sm">Sets</a>
+    <button class="btn-sm" id="logoutBtn">Abmelden</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div id="loadingState" class="loading-state">
+    <div class="spin"></div><br>Lade Dashboard...
+  </div>
+
+  <div id="content" style="display:none">
+    <div class="page-title">Dashboard</div>
+    <p class="page-sub">Verwalte dein Konto und Abonnement.</p>
+
+    <!-- Status -->
+    <div class="status-card" id="statusCard">
+      <div class="status-left">
+        <h2 id="planTitle">Free Plan</h2>
+        <p id="planDesc">Upgrade für TCGPlayer Preise auf Cardmarket.</p>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <span class="plan-badge free" id="planBadge">Free</span>
+        <button class="btn-primary" id="actionBtn">Jetzt upgraden</button>
+      </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">E-Mail</div>
+        <div class="info-value muted" id="infoEmail">–</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Plan</div>
+        <div class="info-value" id="infoPlan">Free</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Gültig bis</div>
+        <div class="info-value muted" id="infoUntil">–</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Status</div>
+        <div class="info-value green" id="infoStatus">Aktiv</div>
+      </div>
+    </div>
+
+    <!-- Extension -->
+    <div class="ext-box">
+      <h3>🧩 Browser Extension einrichten</h3>
+      <p>So installierst du die CardPulse Extension und verbindest sie mit deinem Konto:</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Öffne den <a href="https://chromewebstore.google.com" target="_blank">Chrome Web Store</a> und suche nach <strong>CardPulse</strong> – oder klicke direkt auf den Installationslink.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Installiere die Extension und klicke auf das CardPulse-Icon in deiner Browserleiste.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Du bist bereits eingeloggt – dein Token wird automatisch an die Extension weitergegeben. Öffne einfach eine Karte auf <a href="https://www.cardmarket.com" target="_blank">Cardmarket</a>.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="danger-box">
+      <h3>Gefahrenzone</h3>
+      <p>Hier kannst du dich auf allen Geräten abmelden.</p>
+      <button class="btn-danger" id="logoutAllBtn">Überall abmelden</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+const EXT_ID = 'DEINE_EXTENSION_ID';
+
+async function init() {
+  const token = localStorage.getItem('cp_token');
+  if (!token) { window.location.href = '/login.html'; return; }
+
+  try {
+    const res = await fetch(`${API}/auth/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (res.status === 401) { logout(); return; }
+
+    const data = await res.json();
+    const user = data.user;
+
+    // Token an Extension weitergeben
+    try { chrome.runtime.sendMessage(EXT_ID, { type: 'LOGIN_SUCCESS', token }); } catch(e) {}
+
+    renderDashboard(user);
+
+  } catch(err) {
+    // Offline – aus Cache laden
+    const cached = localStorage.getItem('cp_user');
+    if (cached) renderDashboard(JSON.parse(cached));
+    else { window.location.href = '/login.html'; }
+  }
+}
+
+function renderDashboard(user) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+  document.getElementById('userEmail').textContent = user.email;
+  document.getElementById('infoEmail').textContent = user.email;
+
+  if (user.is_premium) {
+    const card = document.getElementById('statusCard');
+    card.classList.add('premium');
+    document.getElementById('planTitle').textContent = 'Premium Plan aktiv';
+    document.getElementById('planDesc').textContent = user.cancel_at_period_end
+      ? 'Dein Abo läuft am Ende des Zeitraums aus.'
+      : 'TCGPlayer Preise auf allen unterstützten Sets.';
+    document.getElementById('planBadge').textContent = 'Premium';
+    document.getElementById('planBadge').className = 'plan-badge premium';
+    document.getElementById('actionBtn').textContent = 'Abo verwalten';
+    document.getElementById('actionBtn').onclick = openPortal;
+    document.getElementById('infoPlan').textContent = 'Premium';
+    document.getElementById('infoPlan').style.color = 'var(--accent)';
+
+    if (user.premium_until) {
+      const d = new Date(user.premium_until);
+      document.getElementById('infoUntil').textContent = d.toLocaleDateString('de-DE');
+    }
+    if (user.cancel_at_period_end) {
+      document.getElementById('infoStatus').textContent = 'Gekündigt';
+      document.getElementById('infoStatus').style.color = 'var(--red)';
+    }
+  } else {
+    document.getElementById('actionBtn').onclick = startCheckout;
+  }
+
+  localStorage.setItem('cp_user', JSON.stringify(user));
+}
+
+async function startCheckout() {
+  const token = localStorage.getItem('cp_token');
+  const btn = document.getElementById('actionBtn');
+  btn.textContent = 'Weiterleitung...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/stripe/checkout`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+  } catch(e) {
+    btn.textContent = 'Jetzt upgraden';
+    btn.disabled = false;
+  }
+}
+
+async function openPortal() {
+  const token = localStorage.getItem('cp_token');
+  const btn = document.getElementById('actionBtn');
+  btn.textContent = 'Öffne Portal...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/stripe/portal`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+  } catch(e) {
+    btn.textContent = 'Abo verwalten';
+    btn.disabled = false;
+  }
+}
+
+function logout() {
+  localStorage.removeItem('cp_token');
+  localStorage.removeItem('cp_user');
+  try { chrome.runtime.sendMessage(EXT_ID, { type: 'LOGOUT' }); } catch(e) {}
+  window.location.href = '/login.html';
+}
+
+document.getElementById('logoutBtn').onclick = logout;
+document.getElementById('logoutAllBtn').onclick = logout;
+
+// URL-Parameter nach Stripe Redirect prüfen
+const params = new URLSearchParams(window.location.search);
+if (params.get('success') === 'true') {
+  history.replaceState({}, '', '/dashboard.html');
+}
+
+init();
+</script>
+</body>
+</html>
