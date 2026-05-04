@@ -1,251 +1,138 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PokéScout Pro - Login</title>
-    <link rel="icon" type="image/png" href="/favicon1.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --poke-blue: #00adbd;
-            --bg-beige: #f8f9fa; 
-            --card-shadow: 0 20px 40px rgba(0,0,0,0.05);
-            --text-dark: #121826;
-            --text-muted: #64748b;
-            --font-head: 'Outfit', sans-serif;
-            --font-body: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        body { 
-            font-family: var(--font-body); 
-            background-color: var(--bg-beige); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            min-height: 100vh;
-            margin: 0; 
-            padding: 20px;
-        }
-
-        .card { 
-            background: white; 
-            padding: 45px 35px; 
-            border-radius: 28px; 
-            box-shadow: var(--card-shadow); 
-            width: 100%; 
-            max-width: 400px; 
-            text-align: center;
-            border: 1px solid #f0f0f0;
-        }
-
-        .logo-container { margin-bottom: 25px; }
-        .logo-container img { width: 160px; height: auto; }
-
-        h2 { 
-            font-family: var(--font-head);
-            color: var(--text-dark); 
-            margin: 0 0 25px 0; 
-            font-size: 26px; 
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-
-        input { 
-            width: 100%; 
-            padding: 16px; 
-            margin: 10px 0; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 14px; 
-            box-sizing: border-box; 
-            font-size: 15px; 
-            font-family: var(--font-body);
-            background: #f8fafc;
-            transition: all 0.2s ease; 
-        }
-
-        input:focus { 
-            border-color: var(--poke-blue); 
-            background: white;
-            outline: none; 
-            box-shadow: 0 0 0 4px rgba(0, 173, 189, 0.1);
-        }
-
-        button { 
-            width: 100%; 
-            padding: 16px; 
-            background: #000000; 
-            color: white; 
-            border: none; 
-            border-radius: 14px; 
-            cursor: pointer; 
-            font-family: var(--font-body);
-            font-weight: 700; 
-            font-size: 16px; 
-            margin-top: 15px; 
-            transition: all 0.2s; 
-        }
-
-        button:hover { opacity: 0.85; transform: translateY(-1px); }
-        button:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-        .toggle-link { 
-            margin-top: 25px; 
-            font-size: 14px; 
-            color: var(--text-muted); 
-            cursor: pointer; 
-        }
-
-        .toggle-link b { color: var(--poke-blue); font-weight: 700; }
-        
-        .forgot-password {
-            margin-top: 15px;
-            font-size: 13px;
-        }
-        
-        .forgot-password a {
-            color: var(--text-muted);
-            text-decoration: none;
-        }
-        .forgot-password a:hover { text-decoration: underline; }
-
-        #message { 
-            margin-top: 20px; 
-            padding: 14px; 
-            border-radius: 12px; 
-            font-size: 13px; 
-            display: none; 
-            font-weight: 600;
-        }
-
-        .error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; display: block !important; }
-        .success { background: #eefaf2; color: #16a34a; border: 1px solid #86efac; display: block !important; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anmelden – CardPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07070d; --surface: #0f0f1a; --border: rgba(108,99,255,0.15);
+    --accent: #6c63ff; --accent-dim: rgba(108,99,255,0.12);
+    --text: #e8e8f0; --muted: #6b6b80; --error: #ef4444; --green: #22c55e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+  nav { display:flex; justify-content:space-between; align-items:center; padding:24px 48px; border-bottom:1px solid var(--border); }
+  .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; text-decoration:none; color:#fff; }
+  .logo span { color:var(--accent); }
+  .main { flex:1; display:flex; align-items:center; justify-content:center; padding:40px 24px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:48px; width:100%; max-width:420px; }
+  h1 { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:8px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:36px; }
+  .field { margin-bottom:18px; }
+  label { display:block; font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px; }
+  input { width:100%; padding:14px 16px; background:#0a0a15; border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; transition:.2s; outline:none; }
+  input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(108,99,255,0.12); }
+  .btn { width:100%; padding:15px; background:var(--accent); border:none; border-radius:12px; color:#fff; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500; cursor:pointer; transition:.2s; margin-top:8px; }
+  .btn:hover { opacity:.85; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .msg { padding:12px 16px; border-radius:10px; font-size:13px; margin-top:16px; display:none; }
+  .msg.error { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:var(--error); display:block; }
+  .msg.success { background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); color:var(--green); display:block; }
+  .divider { text-align:center; color:var(--muted); font-size:13px; margin:24px 0; }
+  .link { color:var(--accent); text-decoration:none; font-weight:500; }
+  .link:hover { opacity:.8; }
+  .loading { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; margin-right:8px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
 </head>
 <body>
 
-<div class="card">
-    <div class="logo-container">
-        <img src="logo.png" alt="PokéScout">
+<nav>
+  <a href="/" class="logo">card<span>pulse</span></a>
+</nav>
+
+<div class="main">
+  <div class="card">
+    <h1>Willkommen zurück</h1>
+    <p class="subtitle">Melde dich an, um deine Preise zu sehen.</p>
+
+    <div class="field">
+      <label for="email">E-Mail</label>
+      <input type="email" id="email" placeholder="deine@email.de" autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="password">Passwort</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
     </div>
 
-    <h2 id="form-title">Anmelden</h2>
+    <button class="btn" id="loginBtn">Anmelden</button>
+    <div class="msg" id="msg"></div>
 
-    <form id="auth-form">
-        <input type="email" id="email" placeholder="E-Mail Adresse" required>
-        <input type="password" id="password" placeholder="Passwort" required>
-        <button type="submit" id="submit-btn">Login</button>
-    </form>
-    
-    <div id="message"></div>
-    
-    <div class="forgot-password">
-        <a href="mailto:support@poke-scout.com">Passwort vergessen?</a>
-    </div>
-
-    <div class="toggle-link" id="toggle-auth">
-        Noch kein Account? <b>Jetzt registrieren</b>
-    </div>
+    <div class="divider">Noch kein Konto? <a href="/register.html" class="link">Jetzt registrieren</a></div>
+  </div>
 </div>
 
 <script>
-    const form = document.getElementById('auth-form');
-    const title = document.getElementById('form-title');
-    const btn = document.getElementById('submit-btn');
-    const toggle = document.getElementById('toggle-auth');
-    const message = document.getElementById('message');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    
-    const API_BASE_URL = "https://pokescout.onrender.com";
-    // WICHTIG: Ersetze dies durch deine reale Extension ID!
-    const EXTENSION_ID = "fbckcnpmomkfbggocjjibnjgebjkkocl";
+const API = '';
 
-    let isLoginMode = true;
+document.getElementById('loginBtn').addEventListener('click', login);
+document.getElementById('password').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
 
-    toggle.addEventListener('click', () => {
-        isLoginMode = !isLoginMode;
-        title.innerText = isLoginMode ? "Anmelden" : "Registrieren";
-        btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
-        toggle.innerHTML = isLoginMode 
-            ? "Noch kein Account? <b>Jetzt registrieren</b>" 
-            : "Bereits ein Konto? <b>Zum Login</b>";
-        
-        message.style.display = 'none';
-        passwordInput.value = '';
+async function login() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('loginBtn');
+  const msg = document.getElementById('msg');
+
+  msg.className = 'msg';
+  msg.textContent = '';
+
+  if (!email || !password) {
+    showMsg('Bitte E-Mail und Passwort eingeben.', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span>Anmelden...';
+
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
     });
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        const endpoint = isLoginMode ? '/login' : '/register';
+    const data = await res.json();
 
-        try {
-            btn.disabled = true;
-            btn.innerText = "Wird verarbeitet...";
-            message.style.display = 'none';
-
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                if (isLoginMode) {
-                    // 1. Speichern im lokalen Browser-Speicher der Website
-                    localStorage.setItem('pokescout_token', data.token);
-
-                    // 2. TOKEN-SHARING AN DIE EXTENSION FUNKEN
-                    // Das sorgt dafür, dass die Extension auf Cardmarket sofort eingeloggt ist
-                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-                        chrome.runtime.sendMessage(EXTENSION_ID, { 
-                            type: "LOGIN_SUCCESS", 
-                            token: data.token 
-                        }, (response) => {
-                            console.log("Token erfolgreich an Extension übertragen");
-                        });
-                    }
-
-                    showSuccess("Login erfolgreich! Synchronisiere...");
-                    setTimeout(() => { window.location.href = "index.html"; }, 800);
-                    
-                } else {
-                    showSuccess("Konto erstellt! Du kannst dich jetzt einloggen.");
-                    btn.disabled = false;
-                    btn.innerText = "Konto erstellen";
-                    passwordInput.value = '';
-                    setTimeout(() => { if (!isLoginMode) toggle.click(); }, 2000);
-                }
-            } else {
-                showError(data.error || "Fehler beim Authentifizieren.");
-            }
-        } catch (err) {
-            showError("Server momentan nicht erreichbar.");
-        } finally {
-            if (!isLoginMode) {
-                btn.disabled = false;
-                btn.innerText = "Konto erstellen";
-            }
-        }
-    });
-
-    function showError(txt) {
-        message.className = "error";
-        message.innerText = txt;
-        btn.disabled = false;
-        btn.innerText = isLoginMode ? "Login" : "Konto erstellen";
+    if (!res.ok) {
+      showMsg(data.error || 'Anmeldung fehlgeschlagen.', 'error');
+      return;
     }
 
-    function showSuccess(txt) {
-        message.className = "success";
-        message.innerText = txt;
-    }
+    // Token speichern
+    localStorage.setItem('cp_token', data.token);
+    localStorage.setItem('cp_user', JSON.stringify(data.user));
+
+    // Token an Extension senden (falls installiert)
+    try {
+      const EXT_ID = 'DEINE_EXTENSION_ID'; // wird später durch echte ID ersetzt
+      chrome.runtime.sendMessage(EXT_ID, { type: 'LOGIN_SUCCESS', token: data.token });
+    } catch(e) { /* Extension nicht installiert – kein Problem */ }
+
+    showMsg('Erfolgreich angemeldet! Weiterleitung...', 'success');
+    setTimeout(() => window.location.href = '/dashboard.html', 1000);
+
+  } catch(err) {
+    showMsg('Verbindungsfehler. Bitte versuche es erneut.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Anmelden';
+  }
+}
+
+function showMsg(text, type) {
+  const msg = document.getElementById('msg');
+  msg.textContent = text;
+  msg.className = `msg ${type}`;
+}
+
+// Bereits eingeloggt?
+if (localStorage.getItem('cp_token')) {
+  window.location.href = '/dashboard.html';
+}
 </script>
 </body>
 </html>
