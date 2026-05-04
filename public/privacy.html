@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenschutzerklärung – CardPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#07070d; --surface:#0f0f1a; --border:rgba(108,99,255,0.15); --accent:#6c63ff; --text:#e8e8f0; --muted:#6b6b80; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; }
+  nav { display:flex; justify-content:space-between; align-items:center; padding:24px 48px; border-bottom:1px solid var(--border); }
+  .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; text-decoration:none; color:#fff; }
+  .logo span { color:var(--accent); }
+  .main { max-width:720px; margin:0 auto; padding:64px 24px; }
+  h1 { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; margin-bottom:8px; }
+  .updated { font-size:13px; color:var(--muted); margin-bottom:48px; }
+  h2 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin:36px 0 12px; color:var(--accent); }
+  p { font-size:15px; color:var(--muted); line-height:1.8; margin-bottom:12px; }
+  ul { padding-left:20px; margin-bottom:12px; }
+  li { font-size:15px; color:var(--muted); line-height:1.8; margin-bottom:6px; }
+  a { color:var(--accent); text-decoration:none; }
+  .highlight { background:rgba(108,99,255,0.08); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin:24px 0; }
+  .highlight p { margin:0; }
+  footer { border-top:1px solid var(--border); padding:32px 48px; text-align:center; }
+  footer p { font-size:13px; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">card<span>pulse</span></a>
+</nav>
+
+<div class="main">
+  <h1>Datenschutzerklärung</h1>
+  <p class="updated">Zuletzt aktualisiert: Mai 2026</p>
+
+  <div class="highlight">
+    <p>CardPulse erhebt keine persönlichen Daten, die über die notwendige Funktionsweise des Dienstes hinausgehen. Wir verkaufen keine Daten an Dritte.</p>
+  </div>
+
+  <h2>1. Wer wir sind</h2>
+  <p>CardPulse ist ein Dienst, der TCGPlayer-Preise auf Cardmarket.com anzeigt. Erreichbar unter <a href="https://www.card-pulse.com">card-pulse.com</a>.</p>
+
+  <h2>2. Welche Daten wir erheben</h2>
+  <p>Wir erheben ausschließlich die folgenden Daten, die für den Betrieb des Dienstes erforderlich sind:</p>
+  <ul>
+    <li><strong>E-Mail-Adresse</strong> – zur Erstellung und Verwaltung deines Kontos</li>
+    <li><strong>Passwort (gehasht)</strong> – zur sicheren Authentifizierung (nicht im Klartext gespeichert)</li>
+    <li><strong>Zahlungsdaten</strong> – werden ausschließlich von Stripe verarbeitet; wir speichern keine Kreditkartendaten</li>
+    <li><strong>Stripe Customer ID</strong> – zur Verknüpfung deines Kontos mit deinem Abonnement</li>
+    <li><strong>Abo-Status & Laufzeit</strong> – zur Prüfung ob dein Konto Premium-Zugang hat</li>
+  </ul>
+
+  <h2>3. Was wir nicht erheben</h2>
+  <ul>
+    <li>Wir verfolgen nicht, welche Karten du auf Cardmarket ansiehst</li>
+    <li>Wir speichern keine Suchanfragen oder Browserdaten</li>
+    <li>Wir verwenden keine Werbe-Tracker oder Analytics-Dienste von Drittanbietern</li>
+    <li>Wir geben keine Daten an Dritte weiter, außer an Stripe für die Zahlungsabwicklung</li>
+  </ul>
+
+  <h2>4. Wie die Browser Extension funktioniert</h2>
+  <p>Die CardPulse Browser Extension:</p>
+  <ul>
+    <li>Liest den Seitentitel auf Cardmarket.com, um Set-Kürzel und Kartennummer zu erkennen</li>
+    <li>Sendet nur diese anonymen Kartendaten (z.B. "sv08 / 067") an unseren Server</li>
+    <li>Speichert deinen JWT-Token lokal im Chrome Extension Storage</li>
+    <li>Greift auf keine anderen Tabs, Cookies oder persönliche Browserdaten zu</li>
+  </ul>
+
+  <h2>5. Cookies & lokaler Speicher</h2>
+  <p>Die Webseite speichert deinen Login-Token im <code>localStorage</code> deines Browsers, um dich angemeldet zu halten. Du kannst dich jederzeit abmelden, was den Token löscht.</p>
+
+  <h2>6. Drittanbieter</h2>
+  <ul>
+    <li><strong>Stripe</strong> – Zahlungsabwicklung. Datenschutzerklärung: <a href="https://stripe.com/de/privacy" target="_blank">stripe.com/de/privacy</a></li>
+    <li><strong>Neon (PostgreSQL)</strong> – Datenbankhosting in der EU</li>
+    <li><strong>Render</strong> – Server-Hosting</li>
+    <li><strong>JustTCG API</strong> – Preisdatenquelle (wir senden nur die Karten-ID, keine personenbezogenen Daten)</li>
+  </ul>
+
+  <h2>7. Datensicherheit</h2>
+  <p>Alle Verbindungen zwischen Extension, Webseite und Server sind SSL/TLS-verschlüsselt (HTTPS). Passwörter werden mit bcrypt gehasht und niemals im Klartext gespeichert. JWT-Tokens laufen nach 30 Tagen ab.</p>
+
+  <h2>8. Deine Rechte (DSGVO)</h2>
+  <p>Du hast das Recht auf:</p>
+  <ul>
+    <li>Auskunft über deine gespeicherten Daten</li>
+    <li>Berichtigung falscher Daten</li>
+    <li>Löschung deines Kontos und aller damit verbundenen Daten</li>
+    <li>Datenportabilität</li>
+  </ul>
+  <p>Für alle Anfragen: <a href="mailto:privacy@card-pulse.com">privacy@card-pulse.com</a></p>
+
+  <h2>9. Änderungen dieser Erklärung</h2>
+  <p>Wir können diese Datenschutzerklärung gelegentlich aktualisieren. Bei wesentlichen Änderungen informieren wir dich per E-Mail. Das Datum der letzten Aktualisierung steht immer oben auf dieser Seite.</p>
+
+  <h2>10. Kontakt</h2>
+  <p>Bei Fragen zum Datenschutz: <a href="mailto:privacy@card-pulse.com">privacy@card-pulse.com</a></p>
+</div>
+
+<footer>
+  <p>© 2026 CardPulse · <a href="/">Startseite</a> · <a href="/privacy.html">Datenschutz</a></p>
+</footer>
+
+</body>
+</html>
