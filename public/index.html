@@ -1,281 +1,61 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CardPulse – TCGPlayer Preise auf Cardmarket</title>
+<title>CardPulse – Coming Soon</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #07070d;
-    --surface: #0f0f1a;
-    --border: rgba(108,99,255,0.15);
-    --accent: #6c63ff;
-    --accent-dim: rgba(108,99,255,0.12);
-    --text: #e8e8f0;
-    --muted: #6b6b80;
-    --green: #22c55e;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
-
-  /* NAV */
-  nav { display:flex; justify-content:space-between; align-items:center; padding:24px 48px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(7,7,13,0.9); backdrop-filter:blur(16px); z-index:100; }
-  .logo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:#fff; }
-  .logo span { color:var(--accent); }
-  .nav-links { display:flex; gap:8px; align-items:center; }
-  .btn-ghost { padding:10px 20px; border-radius:10px; border:1px solid var(--border); background:transparent; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; cursor:pointer; text-decoration:none; transition:.2s; }
-  .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
-  .btn-primary { padding:10px 22px; border-radius:10px; background:var(--accent); border:none; color:#fff; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; text-decoration:none; transition:.2s; }
-  .btn-primary:hover { opacity:.85; }
-
-  /* HERO */
-  .hero { text-align:center; padding:120px 24px 80px; position:relative; }
-  .hero::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:600px; height:400px; background:radial-gradient(ellipse,rgba(108,99,255,0.18) 0%,transparent 70%); pointer-events:none; }
-  .badge { display:inline-flex; align-items:center; gap:8px; padding:8px 18px; border-radius:99px; border:1px solid var(--border); background:var(--accent-dim); color:var(--accent); font-size:13px; font-weight:500; margin-bottom:32px; }
-  .badge-dot { width:7px; height:7px; border-radius:50%; background:var(--accent); animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-  h1 { font-family:'Syne',sans-serif; font-size:clamp(42px,6vw,80px); font-weight:800; line-height:1.05; letter-spacing:-2px; margin-bottom:24px; }
-  h1 em { color:var(--accent); font-style:normal; }
-  .hero-sub { font-size:18px; color:var(--muted); max-width:480px; margin:0 auto 48px; line-height:1.6; font-weight:300; }
-  .hero-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-  .btn-large { padding:16px 36px; font-size:16px; border-radius:14px; font-weight:500; }
-
-  /* PREVIEW */
-  .preview { margin:80px auto; max-width:900px; padding:0 24px; }
-  .preview-card { background:var(--surface); border:1px solid var(--border); border-radius:24px; overflow:hidden; box-shadow:0 40px 80px rgba(0,0,0,0.5); }
-  .preview-bar { background:#0a0a15; padding:14px 20px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
-  .dot { width:12px; height:12px; border-radius:50%; }
-  .preview-url { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); margin-left:8px; }
-  .preview-inner { display:flex; gap:0; }
-  .preview-site { flex:1; padding:40px; border-right:1px solid var(--border); }
-  .preview-site h3 { font-family:'Syne',sans-serif; font-size:14px; color:var(--muted); margin-bottom:20px; text-transform:uppercase; letter-spacing:1px; }
-  .card-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
-  .card-name { font-size:14px; color:var(--text); }
-  .card-price { font-family:'DM Mono',monospace; font-size:14px; color:var(--muted); }
-  .overlay-preview { width:240px; padding:24px; }
-  .overlay-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; margin-bottom:4px; }
-  .overlay-title span { color:var(--accent); }
-  .premium-badge { background:var(--accent); color:#fff; font-size:9px; font-weight:800; padding:3px 8px; border-radius:99px; text-transform:uppercase; }
-  .market-box { background:var(--accent-dim); border:1.5px solid var(--accent); border-radius:12px; padding:14px; text-align:center; margin:16px 0; }
-  .market-label { font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:1px; }
-  .market-price { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; color:#fff; }
-  .market-eur { font-size:14px; color:var(--accent); font-weight:600; }
-  .cond-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:12px; }
-  .cond-nm { color:var(--green); font-weight:700; }
-  .cond-price { font-family:'DM Mono',monospace; color:var(--text); }
-
-  /* FEATURES */
-  .features { padding:80px 24px; max-width:1100px; margin:0 auto; }
-  .section-label { font-size:12px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:2px; margin-bottom:16px; }
-  .features h2 { font-family:'Syne',sans-serif; font-size:clamp(28px,4vw,48px); font-weight:800; letter-spacing:-1px; margin-bottom:64px; }
-  .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:2px; background:var(--border); border-radius:20px; overflow:hidden; }
-  .feature { background:var(--surface); padding:36px; transition:.2s; }
-  .feature:hover { background:#131325; }
-  .feature-icon { font-size:28px; margin-bottom:16px; }
-  .feature h3 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:10px; }
-  .feature p { font-size:14px; color:var(--muted); line-height:1.6; }
-
-  /* PRICING */
-  .pricing { padding:80px 24px; max-width:800px; margin:0 auto; text-align:center; }
-  .pricing h2 { font-family:'Syne',sans-serif; font-size:clamp(28px,4vw,48px); font-weight:800; letter-spacing:-1px; margin-bottom:16px; }
-  .pricing-sub { color:var(--muted); margin-bottom:48px; }
-  .pricing-cards { display:grid; grid-template-columns:1fr 1fr; gap:16px; text-align:left; }
-  .price-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:32px; }
-  .price-card.featured { border-color:var(--accent); background:linear-gradient(135deg,rgba(108,99,255,0.08),var(--surface)); }
-  .price-tier { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:12px; }
-  .price-card.featured .price-tier { color:var(--accent); }
-  .price-amount { font-family:'Syne',sans-serif; font-size:40px; font-weight:800; margin-bottom:4px; }
-  .price-per { font-size:13px; color:var(--muted); margin-bottom:24px; }
-  .price-features { list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:28px; }
-  .price-features li { font-size:14px; color:var(--muted); display:flex; gap:10px; }
-  .price-features li::before { content:'✓'; color:var(--green); font-weight:700; flex-shrink:0; }
-  .price-features li.dim { opacity:.4; }
-  .price-features li.dim::before { content:'✗'; color:var(--muted); }
-  .btn-full { width:100%; text-align:center; display:block; padding:14px; border-radius:12px; font-weight:500; }
-
-  /* SETS PREVIEW */
-  .sets-section { padding:80px 24px; max-width:1100px; margin:0 auto; }
-  .sets-section h2 { font-family:'Syne',sans-serif; font-size:clamp(28px,4vw,48px); font-weight:800; letter-spacing:-1px; margin-bottom:16px; }
-  .sets-sub { color:var(--muted); margin-bottom:48px; }
-  .sets-grid { display:flex; flex-wrap:wrap; gap:10px; }
-  .set-pill { padding:8px 16px; border-radius:99px; border:1px solid var(--border); font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); transition:.2s; }
-  .set-pill:hover { border-color:var(--accent); color:var(--accent); }
-  .sets-more { margin-top:24px; font-size:14px; color:var(--muted); }
-  .sets-more a { color:var(--accent); text-decoration:none; }
-
-  /* FOOTER */
-  footer { border-top:1px solid var(--border); padding:40px 48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
-  .footer-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; }
-  .footer-logo span { color:var(--accent); }
-  footer p { font-size:13px; color:var(--muted); }
-  footer a { color:var(--muted); text-decoration:none; font-size:13px; }
-  footer a:hover { color:var(--accent); }
-  .footer-links { display:flex; gap:24px; }
+  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--accent-dim:rgba(108,99,255,0.12);--text:#e8e8f0;--muted:#6b6b80}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  body::before{content:'';position:fixed;top:50%;left:50%;transform:translate(-50%,-60%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(108,99,255,0.12) 0%,transparent 70%);pointer-events:none}
+  .container{text-align:center;padding:40px 24px;max-width:520px;position:relative;z-index:1}
+  .logo{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;margin-bottom:48px;display:block}
+  .logo span{color:var(--accent)}
+  .icon-wrap{width:80px;height:80px;border-radius:22px;background:var(--accent-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 32px}
+  .pulse-icon{width:40px;height:40px}
+  .pulse-icon svg{width:40px;height:40px}
+  .pulse-line{stroke-dasharray:120;stroke-dashoffset:120;animation:draw 2s ease infinite}
+  @keyframes draw{0%{stroke-dashoffset:120;opacity:.3}50%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-120;opacity:.3}}
+  h1{font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,42px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:16px}
+  h1 em{color:var(--accent);font-style:normal}
+  .sub{font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:40px;font-weight:300}
+  .status-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:48px}
+  .pill{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:99px;background:var(--surface);border:1px solid var(--border);font-size:13px;color:var(--muted)}
+  .pill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .green{background:#22c55e}
+  .yellow{background:#f59e0b;animation:blink 1.5s ease infinite}
+  .gray{background:#4b5563}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+  .pill.done{border-color:rgba(34,197,94,0.3)}
+  .pill.active{border-color:rgba(245,158,11,0.3)}
+  .note{font-size:12px;color:var(--muted);opacity:.5;font-family:'DM Mono',monospace;letter-spacing:.5px}
 </style>
 </head>
 <body>
-
-<nav>
-  <div class="logo">card<span>pulse</span></div>
-  <div class="nav-links">
-    <a href="/sets.html" class="btn-ghost">Unterstützte Sets</a>
-    <a href="/login.html" class="btn-ghost">Anmelden</a>
-    <a href="/register.html" class="btn-primary">Kostenlos starten</a>
-  </div>
-</nav>
-
-<section class="hero">
-  <div class="badge"><span class="badge-dot"></span> Jetzt für Chrome verfügbar</div>
-  <h1>TCGPlayer-Preise<br>direkt auf <em>Cardmarket</em></h1>
-  <p class="hero-sub">CardPulse zeigt dir aktuelle US-Marktpreise in Echtzeit, während du auf Cardmarket surfst – ohne Tab-Wechsel.</p>
-  <div class="hero-actions">
-    <a href="/register.html" class="btn-primary btn-large">Jetzt starten – kostenlos</a>
-    <a href="/sets.html" class="btn-ghost btn-large">Alle Sets ansehen</a>
-  </div>
-</section>
-
-<div class="preview">
-  <div class="preview-card">
-    <div class="preview-bar">
-      <div class="dot" style="background:#ff5f57"></div>
-      <div class="dot" style="background:#febc2e"></div>
-      <div class="dot" style="background:#28c840"></div>
-      <span class="preview-url">cardmarket.com/en/Pokemon/Products/Singles/Surging-Sparks/Pikachu-ex</span>
-    </div>
-    <div class="preview-inner">
-      <div class="preview-site">
-        <h3>Cardmarket Artikel</h3>
-        <div class="card-row"><span class="card-name">Pikachu ex (SSP 067)</span><span class="card-price">€ 4,50</span></div>
-        <div class="card-row"><span class="card-name">NM · Englisch</span><span class="card-price">von 3 Verkäufern</span></div>
-        <div class="card-row"><span class="card-name">Trending</span><span class="card-price" style="color:#22c55e">↑ €4,80</span></div>
-      </div>
-      <div class="overlay-preview">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div class="overlay-title">card<span>pulse</span></div>
-          <div class="premium-badge">Premium</div>
-        </div>
-        <div class="market-box">
-          <div class="market-label">Market Price</div>
-          <div class="market-price">$5.12</div>
-          <div class="market-eur">€4.71</div>
-        </div>
-        <div class="cond-row"><span class="cond-nm">NM</span><span class="cond-price">$5.12</span></div>
-        <div class="cond-row"><span style="color:#98c02d;font-weight:700">LP</span><span class="cond-price">$4.10</span></div>
-        <div class="cond-row"><span style="color:#f7c412;font-weight:700">MP</span><span class="cond-price">$3.20</span></div>
-        <div class="cond-row"><span style="color:#f57f17;font-weight:700">HP</span><span class="cond-price">$2.15</span></div>
-        <div class="cond-row"><span style="color:#d32f2f;font-weight:700">D</span><span class="cond-price">$1.00</span></div>
-      </div>
+<div class="container">
+  <span class="logo">card<span>pulse</span></span>
+  <div class="icon-wrap">
+    <div class="pulse-icon">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30 8 A14 14 0 1 0 30 32" stroke="#6c63ff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+        <polyline class="pulse-line" points="6,20 11,20 14,12 19,28 23,16 28,20 34,20" stroke="#6c63ff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
   </div>
+  <h1>We're getting<br>ready to <em>launch.</em></h1>
+  <p class="sub">CardPulse is almost here — TCGPlayer prices directly on Cardmarket, for the whole of Europe.</p>
+  <div class="status-row">
+    <div class="pill done"><span class="pill-dot green"></span> Backend & API</div>
+    <div class="pill done"><span class="pill-dot green"></span> Database</div>
+    <div class="pill active"><span class="pill-dot yellow"></span> Website going live</div>
+    <div class="pill active"><span class="pill-dot yellow"></span> Chrome Extension</div>
+    <div class="pill"><span class="pill-dot gray"></span> Public launch</div>
+  </div>
+  <p class="note">card-pulse.com &nbsp;·&nbsp; coming soon</p>
 </div>
-
-<section class="features">
-  <div class="section-label">Features</div>
-  <h2>Alles was du brauchst,<br>nichts was du nicht brauchst.</h2>
-  <div class="features-grid">
-    <div class="feature">
-      <div class="feature-icon">⚡</div>
-      <h3>Echtzeit-Preise</h3>
-      <p>TCGPlayer Marktpreise werden direkt beim Öffnen einer Cardmarket-Seite geladen – keine manuelle Suche.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">🎯</div>
-      <h3>Alle Konditionen</h3>
-      <p>Near Mint, Lightly Played, Moderately Played, Heavily Played und Damaged – alle Preise auf einen Blick.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">💶</div>
-      <h3>USD & EUR</h3>
-      <p>Preise werden automatisch in Euro umgerechnet, damit du direkt mit Cardmarket vergleichen kannst.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">🔒</div>
-      <h3>Sicher & privat</h3>
-      <p>Deine Daten bleiben deine Daten. Kein Tracking, keine Weitergabe. Nur du und deine Preise.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">📦</div>
-      <h3>80+ Sets</h3>
-      <p>Von Sword & Shield bis Destined Rivals – alle aktuellen und viele ältere Sets werden unterstützt.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">🔄</div>
-      <h3>Immer aktuell</h3>
-      <p>Neue Sets werden laufend hinzugefügt. Die Extension aktualisiert sich automatisch im Hintergrund.</p>
-    </div>
-  </div>
-</section>
-
-<section class="pricing">
-  <div class="section-label">Preise</div>
-  <h2>Einfach & transparent.</h2>
-  <p class="pricing-sub">Starte kostenlos, upgrade wenn du bereit bist.</p>
-  <div class="pricing-cards">
-    <div class="price-card">
-      <div class="price-tier">Free</div>
-      <div class="price-amount">€0</div>
-      <div class="price-per">für immer</div>
-      <ul class="price-features">
-        <li>Account erstellen</li>
-        <li>Extension installieren</li>
-        <li class="dim">TCGPlayer Preise</li>
-        <li class="dim">Alle Konditionen</li>
-        <li class="dim">EUR Umrechnung</li>
-      </ul>
-      <a href="/register.html" class="btn-ghost btn-full">Kostenlos starten</a>
-    </div>
-    <div class="price-card featured">
-      <div class="price-tier">Premium</div>
-      <div class="price-amount">€4,99</div>
-      <div class="price-per">pro Monat · jederzeit kündbar</div>
-      <ul class="price-features">
-        <li>Account erstellen</li>
-        <li>Extension installieren</li>
-        <li>TCGPlayer Preise</li>
-        <li>Alle Konditionen</li>
-        <li>EUR Umrechnung</li>
-      </ul>
-      <a href="/register.html" class="btn-primary btn-full">Jetzt upgraden</a>
-    </div>
-  </div>
-</section>
-
-<section class="sets-section">
-  <div class="section-label">Unterstützte Sets</div>
-  <h2>Bereits 80+ Sets<br>verfügbar.</h2>
-  <p class="sets-sub">Und es werden regelmäßig neue hinzugefügt.</p>
-  <div class="sets-grid">
-    <div class="set-pill">Surging Sparks</div>
-    <div class="set-pill">Stellar Crown</div>
-    <div class="set-pill">Prismatic Evolutions</div>
-    <div class="set-pill">Journey Together</div>
-    <div class="set-pill">Destined Rivals</div>
-    <div class="set-pill">Sword & Shield</div>
-    <div class="set-pill">Scarlet ex</div>
-    <div class="set-pill">Violet ex</div>
-    <div class="set-pill">Paldea Evolved</div>
-    <div class="set-pill">Obsidian Flames</div>
-    <div class="set-pill">Paradox Rift</div>
-    <div class="set-pill">Temporal Forces</div>
-    <div class="set-pill">Twilight Masquerade</div>
-    <div class="set-pill">Shrouded Fable</div>
-    <div class="set-pill">+ viele mehr</div>
-  </div>
-  <p class="sets-more">Alle Sets ansehen → <a href="/sets.html">Vollständige Liste</a></p>
-</section>
-
-<footer>
-  <div class="footer-logo">card<span>pulse</span></div>
-  <p>© 2026 CardPulse. Alle Rechte vorbehalten.</p>
-  <div class="footer-links">
-    <a href="/sets.html">Sets</a>
-    <a href="/login.html">Login</a>
-    <a href="/register.html">Registrieren</a>
-    <a href="/dashboard.html">Dashboard</a>
-  </div>
-</footer>
-
 </body>
 </html>
