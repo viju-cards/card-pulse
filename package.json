@@ -1,7 +1,7 @@
 {
   "name": "cardpulse-api",
   "version": "1.0.0",
-  "description": "Backend API for CardPulse Chrome Extension",
+  "description": "Backend API for CardPulse Browser Extension",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
