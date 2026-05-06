@@ -436,35 +436,32 @@ app.post("/suggest", async (req, res) => {
   }
   console.log(`[SUGGEST] URL: ${url} | Note: ${note || 'none'}`);
 
-  const smtpPort = parseInt(process.env.SMTP_PORT || '587');
-  const smtpSecure = smtpPort === 465;
-  console.log(`[SUGGEST] SMTP config: host=${process.env.SMTP_HOST} port=${smtpPort} secure=${smtpSecure} user=${process.env.SMTP_USER}`);
-
-  try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      tls: { rejectUnauthorized: false },
-    });
-
-    await transporter.verify();
-    console.log('[SUGGEST] SMTP Verbindung OK');
-
-    await transporter.sendMail({
-      from: `"CardPulse" <${process.env.SMTP_USER}>`,
-      to: process.env.SUGGEST_EMAIL || 'info@card-pulse.com',
-      subject: 'CardPulse – Fehlende Karte gemeldet',
-      text: `Cardmarket URL: ${url}\n\nZusätzliche Infos:\n${note || '(keine)'}\n\nGesendet über card-pulse.com/suggest`,
-    });
-    console.log('[SUGGEST] E-Mail gesendet.');
-  } catch (err) {
-    console.error('[SUGGEST] SMTP Fehler:', err.message);
-    console.error('[SUGGEST] SMTP Fehler Details:', err);
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'CardPulse <info@card-pulse.com>',
+          to: [process.env.SUGGEST_EMAIL || 'info@card-pulse.com'],
+          subject: 'CardPulse – Fehlende Karte gemeldet',
+          text: `Cardmarket URL: ${url}\n\nZusätzliche Infos:\n${note || '(keine)'}\n\nGesendet über card-pulse.com/suggest`,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log('[SUGGEST] E-Mail gesendet via Resend:', data.id);
+      } else {
+        console.error('[SUGGEST] Resend Fehler:', data);
+      }
+    } catch (err) {
+      console.error('[SUGGEST] Resend Fehler:', err.message);
+    }
+  } else {
+    console.warn('[SUGGEST] RESEND_API_KEY nicht gesetzt – E-Mail nicht gesendet.');
   }
   res.json({ success: true });
 });
