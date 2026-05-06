@@ -1,138 +1,102 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anmelden – CardPulse</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in – CardPulse</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #07070d; --surface: #0f0f1a; --border: rgba(108,99,255,0.15);
-    --accent: #6c63ff; --accent-dim: rgba(108,99,255,0.12);
-    --text: #e8e8f0; --muted: #6b6b80; --error: #ef4444; --green: #22c55e;
+  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--text:#e8e8f0;--muted:#6b6b80;--error:#ef4444;--green:#22c55e}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-bottom:1px solid var(--border)}
+  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;text-decoration:none;color:#fff}
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:8px;align-items:center}
+  .main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:48px;width:100%;max-width:420px}
+  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px}
+  .subtitle{color:var(--muted);font-size:14px;margin-bottom:36px}
+  .field{margin-bottom:18px}
+  label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px}
+  input{width:100%;padding:14px 16px;background:#0a0a15;border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;transition:.2s;outline:none}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.12)}
+  .btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:.2s;margin-top:8px}
+  .btn:hover{opacity:.85}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-top:16px;display:none}
+  .msg.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--error);display:block}
+  .msg.success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green);display:block}
+  .divider{text-align:center;color:var(--muted);font-size:13px;margin:24px 0}
+  .link{color:var(--accent);text-decoration:none;font-weight:500}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── Mobile ─────────────────────────────── */
+  @media (max-width: 480px) {
+    nav { padding: 14px 16px; }
+    .main { padding: 24px 16px; align-items: flex-start; }
+    .card {
+      padding: 28px 20px;
+      border-radius: 18px;
+    }
+    h1 { font-size: 24px; }
+    input { padding: 13px 14px; font-size: 15px; }
+    .btn { padding: 14px; font-size: 15px; }
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
-  nav { display:flex; justify-content:space-between; align-items:center; padding:24px 48px; border-bottom:1px solid var(--border); }
-  .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; text-decoration:none; color:#fff; }
-  .logo span { color:var(--accent); }
-  .main { flex:1; display:flex; align-items:center; justify-content:center; padding:40px 24px; }
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:48px; width:100%; max-width:420px; }
-  h1 { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:8px; }
-  .subtitle { color:var(--muted); font-size:14px; margin-bottom:36px; }
-  .field { margin-bottom:18px; }
-  label { display:block; font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px; }
-  input { width:100%; padding:14px 16px; background:#0a0a15; border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; transition:.2s; outline:none; }
-  input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(108,99,255,0.12); }
-  .btn { width:100%; padding:15px; background:var(--accent); border:none; border-radius:12px; color:#fff; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500; cursor:pointer; transition:.2s; margin-top:8px; }
-  .btn:hover { opacity:.85; }
-  .btn:disabled { opacity:.5; cursor:not-allowed; }
-  .msg { padding:12px 16px; border-radius:10px; font-size:13px; margin-top:16px; display:none; }
-  .msg.error { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:var(--error); display:block; }
-  .msg.success { background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); color:var(--green); display:block; }
-  .divider { text-align:center; color:var(--muted); font-size:13px; margin:24px 0; }
-  .link { color:var(--accent); text-decoration:none; font-weight:500; }
-  .link:hover { opacity:.8; }
-  .loading { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; margin-right:8px; }
-  @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
-
 <nav>
   <a href="/" class="logo">card<span>pulse</span></a>
+  <div class="nav-links"></div>
 </nav>
-
 <div class="main">
   <div class="card">
-    <h1>Willkommen zurück</h1>
-    <p class="subtitle">Melde dich an, um deine Preise zu sehen.</p>
-
+    <h1 data-i18n="login_title">Welcome back</h1>
+    <p class="subtitle" data-i18n="login_sub">Sign in to view your prices.</p>
     <div class="field">
-      <label for="email">E-Mail</label>
-      <input type="email" id="email" placeholder="deine@email.de" autocomplete="email">
+      <label data-i18n="login_email">Email</label>
+      <input type="email" id="email" data-i18n-placeholder="login_email" autocomplete="email">
     </div>
     <div class="field">
-      <label for="password">Passwort</label>
+      <label data-i18n="login_password">Password</label>
       <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
     </div>
-
-    <button class="btn" id="loginBtn">Anmelden</button>
+    <button class="btn" id="loginBtn" data-i18n="login_btn">Sign in</button>
     <div class="msg" id="msg"></div>
-
-    <div class="divider">Noch kein Konto? <a href="/register.html" class="link">Jetzt registrieren</a></div>
+    <div class="divider"><span data-i18n="login_no_account">No account yet?</span> <a href="/register.html" class="link" data-i18n="login_register_link">Register now</a></div>
   </div>
 </div>
-
+<script src="/i18n.js"></script>
+<script src="/shared.js"></script>
 <script>
-const API = '';
-
-document.getElementById('loginBtn').addEventListener('click', login);
-document.getElementById('password').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
-
-async function login() {
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  const btn = document.getElementById('loginBtn');
-  const msg = document.getElementById('msg');
-
-  msg.className = 'msg';
-  msg.textContent = '';
-
-  if (!email || !password) {
-    showMsg('Bitte E-Mail und Passwort eingeben.', 'error');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="loading"></span>Anmelden...';
-
-  try {
-    const res = await fetch(`${API}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      showMsg(data.error || 'Anmeldung fehlgeschlagen.', 'error');
-      return;
-    }
-
-    // Token speichern
-    localStorage.setItem('cp_token', data.token);
-    localStorage.setItem('cp_user', JSON.stringify(data.user));
-
-    // Token an Extension senden (falls installiert)
-    try {
-      const EXT_ID = 'DEINE_EXTENSION_ID'; // wird später durch echte ID ersetzt
-      chrome.runtime.sendMessage(EXT_ID, { type: 'LOGIN_SUCCESS', token: data.token });
-    } catch(e) { /* Extension nicht installiert – kein Problem */ }
-
-    showMsg('Erfolgreich angemeldet! Weiterleitung...', 'success');
-    setTimeout(() => window.location.href = '/dashboard.html', 1000);
-
-  } catch(err) {
-    showMsg('Verbindungsfehler. Bitte versuche es erneut.', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Anmelden';
-  }
+const API='';
+document.getElementById('loginBtn').addEventListener('click',login);
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+async function login(){
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value;
+  const btn=document.getElementById('loginBtn');
+  const msg=document.getElementById('msg');
+  msg.className='msg';
+  if(!email||!password){showMsg(i18n.t('login_error_fields'),'error');return}
+  btn.disabled=true;btn.innerHTML=`<span class="spin"></span>${i18n.t('login_connecting')}`;
+  try{
+    const res=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const data=await res.json();
+    if(!res.ok){showMsg(data.error||i18n.t('login_error_failed'),'error');return}
+    localStorage.setItem('cp_token',data.token);
+    localStorage.setItem('cp_user',JSON.stringify(data.user));
+    try{chrome.runtime.sendMessage('fbckcnpmomkfbggocjjibnjgebjkkocl',{type:'LOGIN_SUCCESS',token:data.token})}catch(e){}
+    showMsg(i18n.t('login_success'),'success');
+    setTimeout(()=>window.location.href='/dashboard.html',1000);
+  }catch(err){showMsg(i18n.t('login_error_connection'),'error')}
+  finally{btn.disabled=false;btn.textContent=i18n.t('login_btn')}
 }
-
-function showMsg(text, type) {
-  const msg = document.getElementById('msg');
-  msg.textContent = text;
-  msg.className = `msg ${type}`;
-}
-
-// Bereits eingeloggt?
-if (localStorage.getItem('cp_token')) {
-  window.location.href = '/dashboard.html';
-}
+function showMsg(text,type){const m=document.getElementById('msg');m.textContent=text;m.className=`msg ${type}`}
+if(localStorage.getItem('cp_token'))window.location.href='/dashboard.html';
 </script>
 </body>
 </html>
