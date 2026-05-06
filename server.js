@@ -119,7 +119,6 @@ function mapPrices(data) {
   for (const variant of cardData.variants) {
     const price = variant.marketPrice ?? variant.price;
     if (typeof price !== "number") continue;
-
     const key = variant.condition.toUpperCase().trim();
     allPrices.push(price);
     if (!conditionPrices[key] || price < conditionPrices[key]) {
@@ -137,6 +136,42 @@ function mapPrices(data) {
     LOW:               allPrices.length ? Math.min(...allPrices) : null,
     HIGH:              allPrices.length ? Math.max(...allPrices) : null,
   };
+}
+
+// Extract trend + history from the best (NM Normal English) variant
+function extractTrendAndHistory(data) {
+  const variants = data.data?.[0]?.variants ?? [];
+
+  // Priority: NM Normal English → NM Holofoil English → any NM → first variant
+  const nmVariant =
+    variants.find(v => v.condition === "Near Mint" && v.printing === "Normal"   && v.language === "English") ??
+    variants.find(v => v.condition === "Near Mint" && v.printing === "Holofoil" && v.language === "English") ??
+    variants.find(v => v.condition === "Near Mint") ??
+    variants[0];
+
+  if (!nmVariant) return { trend: { "7d": null, "30d": null }, history: [] };
+
+  const trend = {
+    "7d": nmVariant.priceChange7d != null ? {
+      changePercent: nmVariant.priceChange7d,         // already a % value e.g. -3.86
+      avg:           nmVariant.minPrice7d ?? null,
+    } : null,
+    "30d": nmVariant.priceChange30d != null ? {
+      changePercent: nmVariant.priceChange30d,
+      avg:           nmVariant.avgPrice30d ?? null,
+    } : null,
+  };
+
+  // priceHistory: [{p: price, t: unix_timestamp}] → [{price, date}]
+  const history = (nmVariant.priceHistory ?? [])
+    .filter(h => h.p != null && h.t != null)
+    .map(h => ({
+      price: h.p,
+      date:  new Date(h.t * 1000).toISOString().split("T")[0],
+    }))
+    .slice(-30);
+
+  return { trend, history };
 }
 
 
@@ -375,28 +410,7 @@ app.get("/prices", requireAuth, requirePremium, async (req, res) => {
     const justTcgData = await fetchJustTcg(tcgPlayerId);
     const prices = mapPrices(justTcgData);
     const cardName = justTcgData.data?.[0]?.name ?? "Unbekannt";
-
-    // Extract statistics (7d + 30d trend)
-    const rawStats = justTcgData.data?.[0]?.statistics ?? {};
-    const trend = {
-      "7d":  rawStats["7d"]  ? {
-        change: rawStats["7d"].change ?? null,
-        changePercent: rawStats["7d"].changePercent ?? null,
-        avg: rawStats["7d"].avg ?? null,
-      } : null,
-      "30d": rawStats["30d"] ? {
-        change: rawStats["30d"].change ?? null,
-        changePercent: rawStats["30d"].changePercent ?? null,
-        avg: rawStats["30d"].avg ?? null,
-      } : null,
-    };
-
-    // Extract NM price history for sparkline (dates + prices)
-    const rawHistory = justTcgData.data?.[0]?.priceHistory ?? [];
-    const history = rawHistory
-      .filter(h => h.price != null)
-      .map(h => ({ date: h.date, price: h.price }))
-      .slice(-30); // last 30 data points max
+    const { trend, history } = extractTrendAndHistory(justTcgData);
 
     res.json({
       user: { plan: "premium" },
