@@ -430,33 +430,6 @@ app.get("/prices", requireAuth, requirePremium, async (req, res) => {
 // SETS ROUTE
 // ═══════════════════════════════════════════════════════════════════════════
 
-// GET /debug/raw – TEMPORARY, nach Debugging entfernen
-app.get("/debug/raw", requireAuth, async (req, res) => {
-  try {
-    const { set: setSlug, cardNumber } = req.query;
-    if (!setSlug || !cardNumber) return res.status(400).json({ error: "Missing params" });
-    const dbCardNumber = /^\d+$/.test(cardNumber) && cardNumber.length < 3
-      ? cardNumber.padStart(3, "0") : cardNumber;
-    const dbResult = await pool.query(
-      "SELECT tcg_player_id FROM card_mapping WHERE cardmarket_slug = $1 AND card_number = $2",
-      [setSlug, dbCardNumber]
-    );
-    if (!dbResult.rows.length) return res.status(404).json({ error: "Card not found in DB" });
-    const tcgPlayerId = dbResult.rows[0].tcg_player_id;
-    const raw = await fetchJustTcg(tcgPlayerId);
-    const d0 = raw.data?.[0] ?? {};
-    res.json({
-      topLevelKeys: Object.keys(raw),
-      dataKeys: Object.keys(d0),
-      statistics: d0.statistics ?? "MISSING",
-      priceHistorySample: Array.isArray(d0.priceHistory) ? d0.priceHistory.slice(0,3) : "MISSING",
-      variantSample: d0.variants?.[0] ?? null,
-    });
-  } catch(err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.get("/sets", async (req, res) => {
   try {
     const result = await pool.query(
