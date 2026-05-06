@@ -427,6 +427,37 @@ app.get("/prices", requireAuth, requirePremium, async (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════════════════════════
+// POST /suggest – Fehlende Karte melden → E-Mail an info@card-pulse.com
+app.post("/suggest", async (req, res) => {
+  const { url, note } = req.body;
+  if (!url || !url.includes('cardmarket.com')) {
+    return res.status(400).json({ error: "Ungültige oder fehlende Cardmarket URL." });
+  }
+  console.log(`[SUGGEST] URL: ${url} | Note: ${note || 'none'}`);
+
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: false,
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      });
+      await transporter.sendMail({
+        from: `"CardPulse" <${process.env.SMTP_USER}>`,
+        to: process.env.SUGGEST_EMAIL || 'info@card-pulse.com',
+        subject: 'CardPulse – Fehlende Karte gemeldet',
+        text: `Cardmarket URL: ${url}\n\nZusätzliche Infos:\n${note || '(keine)'}\n\nGesendet über card-pulse.com/suggest`,
+      });
+      console.log('[SUGGEST] E-Mail gesendet.');
+    } catch (err) {
+      console.error('[SUGGEST] E-Mail Fehler:', err.message);
+    }
+  }
+  res.json({ success: true });
+});
+
 // SETS ROUTE
 // ═══════════════════════════════════════════════════════════════════════════
 
