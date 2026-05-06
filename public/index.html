@@ -6,56 +6,439 @@
 <title>CardPulse – Coming Soon</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--accent-dim:rgba(108,99,255,0.12);--text:#e8e8f0;--muted:#6b6b80}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  body::before{content:'';position:fixed;top:50%;left:50%;transform:translate(-50%,-60%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(108,99,255,0.12) 0%,transparent 70%);pointer-events:none}
-  .container{text-align:center;padding:40px 24px;max-width:520px;position:relative;z-index:1}
-  .logo{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;margin-bottom:48px;display:block}
-  .logo span{color:var(--accent)}
-  .icon-wrap{width:80px;height:80px;border-radius:22px;background:var(--accent-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 32px}
-  .pulse-icon{width:40px;height:40px}
-  .pulse-icon svg{width:40px;height:40px}
-  .pulse-line{stroke-dasharray:120;stroke-dashoffset:120;animation:draw 2s ease infinite}
-  @keyframes draw{0%{stroke-dashoffset:120;opacity:.3}50%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-120;opacity:.3}}
-  h1{font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,42px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:16px}
-  h1 em{color:var(--accent);font-style:normal}
-  .sub{font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:40px;font-weight:300}
-  .status-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:48px}
-  .pill{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:99px;background:var(--surface);border:1px solid var(--border);font-size:13px;color:var(--muted)}
-  .pill-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-  .green{background:#22c55e}
-  .yellow{background:#f59e0b;animation:blink 1.5s ease infinite}
-  .gray{background:#4b5563}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-  .pill.done{border-color:rgba(34,197,94,0.3)}
-  .pill.active{border-color:rgba(245,158,11,0.3)}
-  .note{font-size:12px;color:var(--muted);opacity:.5;font-family:'DM Mono',monospace;letter-spacing:.5px}
+  :root {
+    --bg: #060610;
+    --card: #0d0d1f;
+    --border: rgba(255,255,255,0.07);
+    --accent: #7b6fff;
+    --accent2: #a78bfa;
+    --text: #f0f0f8;
+    --muted: #5a5a78;
+    --green: #34d399;
+    --amber: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(123,111,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(123,111,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  /* Glow blob */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(123,111,255,0.10) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  /* ── Lang switcher ───────────────────────────────── */
+  .lang-switcher {
+    position: fixed;
+    top: 24px;
+    right: 28px;
+    display: flex;
+    gap: 6px;
+    z-index: 100;
+    background: rgba(13,13,31,0.8);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 5px;
+    backdrop-filter: blur(12px);
+  }
+
+  .lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .18s ease;
+    white-space: nowrap;
+  }
+  .flag-svg {
+    width: 20px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .lang-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .lang-btn.active {
+    color: var(--text);
+    background: rgba(123,111,255,0.15);
+    border: 1px solid rgba(123,111,255,0.25);
+  }
+
+  /* ── Main card ───────────────────────────────────── */
+  .wrap {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  /* Logo row */
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 56px;
+  }
+
+  .logo-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #7b6fff 0%, #a78bfa 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg { width: 22px; height: 22px; }
+
+  .logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .logo-text span { color: var(--accent2); }
+
+  /* Eyebrow */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .eyebrow-line {
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  /* Heading */
+  h1 {
+    font-size: clamp(36px, 7vw, 64px);
+    font-weight: 900;
+    line-height: 1.08;
+    letter-spacing: -2px;
+    padding-bottom: 0.18em;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  h1 .line2 {
+    display: inline-block;
+    padding-bottom: 0.2em;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sub {
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.65;
+    font-weight: 400;
+    max-width: 440px;
+    margin-bottom: 44px;
+  }
+
+  /* Divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin-bottom: 36px;
+  }
+
+  /* Status list */
+  .status-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 44px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .status-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .status-bar {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s ease;
+  }
+  .bar-done  { background: var(--green); width: 100%; }
+  .bar-wip   { background: linear-gradient(90deg, var(--amber), rgba(251,191,36,0.3)); width: 65%; animation: shimmer 2s ease infinite; }
+  .bar-todo  { background: rgba(255,255,255,0.08); width: 100%; }
+
+  @keyframes shimmer {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+  }
+
+  .status-name { min-width: 160px; color: var(--text); }
+  .status-name.muted { color: var(--muted); }
+
+  .status-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-weight: 500;
+  }
+  .tag-done { background: rgba(52,211,153,0.1); color: var(--green); }
+  .tag-wip  { background: rgba(251,191,36,0.1); color: var(--amber); }
+  .tag-soon { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+  /* Footer note */
+  .bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .mono-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0.5;
+    letter-spacing: 0.5px;
+  }
+  .powered {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    opacity: 0.4;
+  }
+  .powered-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
 </style>
 </head>
 <body>
-<div class="container">
-  <span class="logo">card<span>pulse</span></span>
-  <div class="icon-wrap">
-    <div class="pulse-icon">
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M30 8 A14 14 0 1 0 30 32" stroke="#6c63ff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.5"/>
-        <polyline class="pulse-line" points="6,20 11,20 14,12 19,28 23,16 28,20 34,20" stroke="#6c63ff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- Language switcher -->
+<div class="lang-switcher">
+  <button class="lang-btn active" id="btn-en" onclick="setLang('en')">
+    <svg class="flag-svg" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg">
+      <rect width="20" height="14" fill="#012169"/>
+      <path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/>
+      <path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/>
+      <path d="M10,0 V14 M0,7 H20" stroke="#fff" stroke-width="4"/>
+      <path d="M10,0 V14 M0,7 H20" stroke="#C8102E" stroke-width="2.4"/>
+    </svg>
+    EN
+  </button>
+  <button class="lang-btn" id="btn-de" onclick="setLang('de')">
+    <svg class="flag-svg" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg">
+      <rect y="0"    width="20" height="4.67" fill="#000"/>
+      <rect y="4.67" width="20" height="4.67" fill="#D00"/>
+      <rect y="9.33" width="20" height="4.67" fill="#FFCE00"/>
+    </svg>
+    DE
+  </button>
+</div>
+
+<div class="wrap">
+
+  <!-- Logo -->
+  <div class="logo-row">
+    <div class="logo-mark">
+      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17 4 A9 9 0 1 0 17 18" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <polyline points="3,11 6,11 8,6 11,16 13,9 16,11 19,11" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
+    <div class="logo-text">card<span>pulse</span></div>
   </div>
-  <h1>We're getting<br>ready to <em>launch.</em></h1>
-  <p class="sub">CardPulse is almost here — TCGPlayer prices directly on Cardmarket, for the whole of Europe.</p>
-  <div class="status-row">
-    <div class="pill done"><span class="pill-dot green"></span> Backend & API</div>
-    <div class="pill done"><span class="pill-dot green"></span> Database</div>
-    <div class="pill active"><span class="pill-dot yellow"></span> Website going live</div>
-    <div class="pill active"><span class="pill-dot yellow"></span> Chrome Extension</div>
-    <div class="pill"><span class="pill-dot gray"></span> Public launch</div>
+
+  <!-- Eyebrow -->
+  <div class="eyebrow">
+    <span class="eyebrow-line"></span>
+    <span id="txt-eyebrow">Under construction</span>
+    <span class="eyebrow-line"></span>
   </div>
-  <p class="note">card-pulse.com &nbsp;·&nbsp; coming soon</p>
+
+  <!-- Heading -->
+  <h1>
+    <span id="txt-h1a">Almost</span><br>
+    <span class="line2" id="txt-h1b">ready to launch.</span>
+  </h1>
+
+  <p class="sub" id="txt-sub">
+    CardPulse brings TCGPlayer market prices directly to Cardmarket — for collectors and traders across Europe.
+  </p>
+
+  <div class="divider"></div>
+
+  <!-- Status -->
+  <div class="status-label" id="txt-status-label">Build progress</div>
+  <div class="status-list">
+    <div class="status-item">
+      <span class="status-name" id="s1">Backend & API</span>
+      <div class="status-bar-wrap"><div class="status-bar bar-done"></div></div>
+      <span class="status-tag tag-done" id="t1">done</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name" id="s2">Database</span>
+      <div class="status-bar-wrap"><div class="status-bar bar-done"></div></div>
+      <span class="status-tag tag-done" id="t1b">done</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name" id="s3">Website</span>
+      <div class="status-bar-wrap"><div class="status-bar bar-wip"></div></div>
+      <span class="status-tag tag-wip" id="t2">in progress</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name" id="s4">Chrome Extension</span>
+      <div class="status-bar-wrap"><div class="status-bar bar-wip"></div></div>
+      <span class="status-tag tag-wip" id="t3">in progress</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name muted" id="s5">Public launch</span>
+      <div class="status-bar-wrap"><div class="status-bar bar-todo"></div></div>
+      <span class="status-tag tag-soon" id="t4">soon</span>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <span class="mono-note">card-pulse.com</span>
+    <div class="powered">
+      <div class="powered-dot"></div>
+      <span id="txt-online">Systems online</span>
+    </div>
+  </div>
+
 </div>
+
+<script>
+const T = {
+  en: {
+    eyebrow: 'Under construction',
+    h1a: 'Almost',
+    h1b: 'ready to launch.',
+    sub: 'CardPulse brings TCGPlayer market prices directly to Cardmarket — for collectors and traders across Europe.',
+    statusLabel: 'Build progress',
+    s1:'Backend & API', s2:'Database', s3:'Website', s4:'Chrome Extension', s5:'Public launch',
+    t1:'done', t2:'in progress', t3:'in progress', t4:'soon',
+    online: 'Systems online',
+  },
+  de: {
+    eyebrow: 'Im Aufbau',
+    h1a: 'Fast',
+    h1b: 'startklar.',
+    sub: 'CardPulse zeigt dir TCGPlayer-Marktpreise direkt auf Cardmarket — für Sammler und Trader in ganz Europa.',
+    statusLabel: 'Fortschritt',
+    s1:'Backend & API', s2:'Datenbank', s3:'Webseite', s4:'Chrome Extension', s5:'Öffentlicher Launch',
+    t1:'fertig', t2:'in Arbeit', t3:'in Arbeit', t4:'bald',
+    online: 'Systeme online',
+  }
+};
+
+let lang = localStorage.getItem('cp_lang') || 'en';
+
+function setLang(l) {
+  lang = l;
+  localStorage.setItem('cp_lang', l);
+  apply();
+}
+
+function apply() {
+  const t = T[lang];
+  document.getElementById('txt-eyebrow').textContent = t.eyebrow;
+  document.getElementById('txt-h1a').textContent     = t.h1a;
+  document.getElementById('txt-h1b').textContent     = t.h1b;
+  document.getElementById('txt-sub').textContent     = t.sub;
+  document.getElementById('txt-status-label').textContent = t.statusLabel;
+  document.getElementById('s1').textContent  = t.s1;
+  document.getElementById('s2').textContent  = t.s2;
+  document.getElementById('s3').textContent  = t.s3;
+  document.getElementById('s4').textContent  = t.s4;
+  document.getElementById('s5').textContent  = t.s5;
+  document.getElementById('t1').textContent  = t.t1;
+  document.getElementById('t1b').textContent = t.t1;
+  document.getElementById('t2').textContent  = t.t2;
+  document.getElementById('t3').textContent  = t.t3;
+  document.getElementById('t4').textContent  = t.t4;
+  document.getElementById('txt-online').textContent = t.online;
+  document.documentElement.lang = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-de').classList.toggle('active', lang === 'de');
+}
+
+apply();
+</script>
 </body>
 </html>
