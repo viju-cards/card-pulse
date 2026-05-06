@@ -89,7 +89,7 @@ async function login(){
     if(!res.ok){showMsg(data.error||i18n.t('login_error_failed'),'error');return}
     localStorage.setItem('cp_token',data.token);
     localStorage.setItem('cp_user',JSON.stringify(data.user));
-    try{chrome.runtime.sendMessage('fbckcnpmomkfbggocjjibnjgebjkkocl',{type:'LOGIN_SUCCESS',token:data.token})}catch(e){}
+    try{chrome.runtime.sendMessage('jofegljhkmoppkaiecbidoapponkjbld',{type:'LOGIN_SUCCESS',token:data.token})}catch(e){}
     showMsg(i18n.t('login_success'),'success');
     setTimeout(()=>window.location.href='/dashboard.html',1000);
   }catch(err){showMsg(i18n.t('login_error_connection'),'error')}
