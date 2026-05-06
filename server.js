@@ -436,24 +436,35 @@ app.post("/suggest", async (req, res) => {
   }
   console.log(`[SUGGEST] URL: ${url} | Note: ${note || 'none'}`);
 
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: false,
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-      });
-      await transporter.sendMail({
-        from: `"CardPulse" <${process.env.SMTP_USER}>`,
-        to: process.env.SUGGEST_EMAIL || 'info@card-pulse.com',
-        subject: 'CardPulse – Fehlende Karte gemeldet',
-        text: `Cardmarket URL: ${url}\n\nZusätzliche Infos:\n${note || '(keine)'}\n\nGesendet über card-pulse.com/suggest`,
-      });
-      console.log('[SUGGEST] E-Mail gesendet.');
-    } catch (err) {
-      console.error('[SUGGEST] E-Mail Fehler:', err.message);
-    }
+  const smtpPort = parseInt(process.env.SMTP_PORT || '587');
+  const smtpSecure = smtpPort === 465;
+  console.log(`[SUGGEST] SMTP config: host=${process.env.SMTP_HOST} port=${smtpPort} secure=${smtpSecure} user=${process.env.SMTP_USER}`);
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      tls: { rejectUnauthorized: false },
+    });
+
+    await transporter.verify();
+    console.log('[SUGGEST] SMTP Verbindung OK');
+
+    await transporter.sendMail({
+      from: `"CardPulse" <${process.env.SMTP_USER}>`,
+      to: process.env.SUGGEST_EMAIL || 'info@card-pulse.com',
+      subject: 'CardPulse – Fehlende Karte gemeldet',
+      text: `Cardmarket URL: ${url}\n\nZusätzliche Infos:\n${note || '(keine)'}\n\nGesendet über card-pulse.com/suggest`,
+    });
+    console.log('[SUGGEST] E-Mail gesendet.');
+  } catch (err) {
+    console.error('[SUGGEST] SMTP Fehler:', err.message);
+    console.error('[SUGGEST] SMTP Fehler Details:', err);
   }
   res.json({ success: true });
 });
