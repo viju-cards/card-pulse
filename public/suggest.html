@@ -22,7 +22,8 @@
   .subtitle{color:var(--muted);font-size:14px;margin-bottom:32px;line-height:1.6}
   .field{margin-bottom:20px}
   label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px}
-  label .req{color:var(--accent);margin-left:2px}
+  .req{color:var(--accent);margin-left:2px}
+  .opt{color:var(--muted);font-weight:400;margin-left:4px}
   input,textarea{width:100%;padding:13px 16px;background:#0a0a15;border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;transition:.2s;outline:none;resize:vertical}
   input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
   textarea{min-height:100px}
@@ -39,30 +40,36 @@
 </style>
 </head>
 <body>
+
 <nav>
   <a href="/" class="logo">card<span>pulse</span></a>
   <div class="nav-links"></div>
 </nav>
+
 <div class="main">
   <div class="card">
-    <div class="eyebrow">Missing data</div>
-    <h1 id="title">Found a missing card or set?</h1>
-    <p class="subtitle" id="subtitle">
-      Let us know and we'll add it as soon as possible. Just share the Cardmarket link and we'll take care of the rest.
-    </p>
+    <div class="eyebrow" data-i18n="suggest_eyebrow">Missing data</div>
+    <h1 data-i18n="suggest_h1">Found a missing card or set?</h1>
+    <p class="subtitle" data-i18n="suggest_sub">Let us know and we'll add it as soon as possible.</p>
 
     <div class="field">
-      <label for="url">Cardmarket URL <span class="req">*</span></label>
-      <input type="url" id="url" placeholder="https://www.cardmarket.com/en/Pokemon/Products/Singles/...">
-      <p class="hint" id="hint-url">Link to the card or set page on Cardmarket.</p>
+      <label for="url">
+        <span data-i18n="suggest_url_label">Cardmarket URL</span>
+        <span class="req">*</span>
+      </label>
+      <input type="url" id="url" placeholder="https://www.cardmarket.com/...">
+      <p class="hint" data-i18n="suggest_url_hint">Link to the card or set page on Cardmarket.</p>
     </div>
 
     <div class="field">
-      <label for="note" id="label-note">Additional info <span style="color:var(--muted);font-weight:400">(optional)</span></label>
-      <textarea id="note" placeholder="e.g. it's a full art version, or a specific language..."></textarea>
+      <label for="note">
+        <span data-i18n="suggest_note_label">Additional info</span>
+        <span class="opt" data-i18n="suggest_note_opt">(optional)</span>
+      </label>
+      <textarea id="note" data-i18n-placeholder="suggest_note_ph"></textarea>
     </div>
 
-    <button class="btn" id="submitBtn">Send report</button>
+    <button class="btn" id="submitBtn" data-i18n="suggest_btn">Send report</button>
     <div class="msg" id="msg"></div>
   </div>
 </div>
@@ -75,49 +82,28 @@ const params = new URLSearchParams(window.location.search);
 const prefill = params.get('url');
 if (prefill) document.getElementById('url').value = decodeURIComponent(prefill);
 
-// ── Language strings ───────────────────────────────────────────────────────
-const lang = localStorage.getItem('cp_lang') || 'en';
-if (lang === 'de') {
-  document.documentElement.lang = 'de';
-  document.title = 'Fehlende Karte melden – CardPulse';
-  document.getElementById('title').textContent = 'Fehlende Karte oder Set entdeckt?';
-  document.getElementById('subtitle').textContent =
-    'Melde dich bei uns und wir ergänzen die Karte so schnell wie möglich. Schick uns einfach den Cardmarket-Link.';
-  document.querySelector('label[for="url"]').innerHTML =
-    'Cardmarket URL <span style="color:var(--accent)">*</span>';
-  document.getElementById('hint-url').textContent =
-    'Link zur Karte oder zum Set auf Cardmarket.';
-  document.getElementById('label-note').innerHTML =
-    'Zusätzliche Infos <span style="color:var(--muted);font-weight:400">(optional)</span>';
-  document.getElementById('note').placeholder =
-    'z.B. es ist eine Full Art Version, oder eine bestimmte Sprache...';
-  document.getElementById('submitBtn').textContent = 'Meldung senden';
-  document.querySelector('.eyebrow').textContent = 'Fehlende Daten';
-}
-
-// ── Submit handler ─────────────────────────────────────────────────────────
+// ── Submit ─────────────────────────────────────────────────────────────────
 document.getElementById('submitBtn').addEventListener('click', async () => {
   const url  = document.getElementById('url').value.trim();
   const note = document.getElementById('note').value.trim();
   const btn  = document.getElementById('submitBtn');
   const msg  = document.getElementById('msg');
-  const isDE = lang === 'de';
 
   msg.className = 'msg';
 
   if (!url) {
-    msg.textContent = isDE ? 'Bitte gib einen Cardmarket-Link ein.' : 'Please enter a Cardmarket URL.';
+    msg.textContent = window.i18n.t('suggest_err_url');
     msg.className = 'msg error';
     return;
   }
   if (!url.includes('cardmarket.com')) {
-    msg.textContent = isDE ? 'Bitte gib einen gültigen Cardmarket-Link ein.' : 'Please enter a valid Cardmarket URL.';
+    msg.textContent = window.i18n.t('suggest_err_valid');
     msg.className = 'msg error';
     return;
   }
 
   btn.disabled = true;
-  btn.innerHTML = `<span class="spin"></span>${isDE ? 'Wird gesendet...' : 'Sending...'}`;
+  btn.innerHTML = `<span class="spin"></span>${window.i18n.t('suggest_sending')}`;
 
   try {
     const res = await fetch('/suggest', {
@@ -125,25 +111,20 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url, note }),
     });
-
     if (res.ok) {
-      msg.textContent = isDE
-        ? '✅ Danke! Wir haben deine Meldung erhalten und schauen uns die Karte an.'
-        : '✅ Thanks! We received your report and will look into it.';
+      msg.textContent = window.i18n.t('suggest_success');
       msg.className = 'msg success';
       document.getElementById('url').value = '';
       document.getElementById('note').value = '';
     } else {
-      throw new Error('Server error');
+      throw new Error();
     }
   } catch {
-    msg.textContent = isDE
-      ? 'Fehler beim Senden. Bitte versuche es erneut.'
-      : 'Error sending. Please try again.';
+    msg.textContent = window.i18n.t('suggest_err_send');
     msg.className = 'msg error';
   } finally {
     btn.disabled = false;
-    btn.textContent = isDE ? 'Meldung senden' : 'Send report';
+    btn.textContent = window.i18n.t('suggest_btn');
   }
 });
 </script>
