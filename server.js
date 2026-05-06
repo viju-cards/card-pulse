@@ -92,7 +92,13 @@ function generateToken(user) {
 }
 
 async function fetchJustTcg(tcgPlayerId) {
-  const url = `https://api.justtcg.com/v1/cards?tcgplayerId=${tcgPlayerId}`;
+  const params = new URLSearchParams({
+    tcgplayerId: tcgPlayerId,
+    include_price_history: 'true',
+    priceHistoryDuration: '30d',
+    include_statistics: '7d,30d',
+  });
+  const url = `https://api.justtcg.com/v1/cards?${params}`;
   const response = await fetch(url, {
     headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY },
   });
@@ -370,10 +376,34 @@ app.get("/prices", requireAuth, requirePremium, async (req, res) => {
     const prices = mapPrices(justTcgData);
     const cardName = justTcgData.data?.[0]?.name ?? "Unbekannt";
 
+    // Extract statistics (7d + 30d trend)
+    const rawStats = justTcgData.data?.[0]?.statistics ?? {};
+    const trend = {
+      "7d":  rawStats["7d"]  ? {
+        change: rawStats["7d"].change ?? null,
+        changePercent: rawStats["7d"].changePercent ?? null,
+        avg: rawStats["7d"].avg ?? null,
+      } : null,
+      "30d": rawStats["30d"] ? {
+        change: rawStats["30d"].change ?? null,
+        changePercent: rawStats["30d"].changePercent ?? null,
+        avg: rawStats["30d"].avg ?? null,
+      } : null,
+    };
+
+    // Extract NM price history for sparkline (dates + prices)
+    const rawHistory = justTcgData.data?.[0]?.priceHistory ?? [];
+    const history = rawHistory
+      .filter(h => h.price != null)
+      .map(h => ({ date: h.date, price: h.price }))
+      .slice(-30); // last 30 data points max
+
     res.json({
       user: { plan: "premium" },
       card: { name: cardName, tcgPlayerId },
       prices,
+      trend,
+      history,
     });
   } catch (err) {
     console.error("[/prices]", err.message);
