@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report Missing Card – CardPulse</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--text:#e8e8f0;--muted:#6b6b80;--error:#ef4444;--green:#22c55e}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:20px 48px;border-bottom:1px solid var(--border)}
+  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;text-decoration:none;color:#fff}
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:8px;align-items:center}
+  .main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px;width:100%;max-width:520px}
+  .eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:14px}
+  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:26px;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px}
+  .subtitle{color:var(--muted);font-size:14px;margin-bottom:32px;line-height:1.6}
+  .field{margin-bottom:20px}
+  label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px}
+  label .req{color:var(--accent);margin-left:2px}
+  input,textarea{width:100%;padding:13px 16px;background:#0a0a15;border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;transition:.2s;outline:none;resize:vertical}
+  input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
+  textarea{min-height:100px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;margin-top:4px}
+  .btn:hover{opacity:.85}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-top:16px;display:none;line-height:1.5}
+  .msg.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:var(--error);display:block}
+  .msg.success{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green);display:block}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(max-width:480px){nav{padding:14px 16px}.card{padding:28px 20px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">card<span>pulse</span></a>
+  <div class="nav-links"></div>
+</nav>
+<div class="main">
+  <div class="card">
+    <div class="eyebrow">Missing data</div>
+    <h1 id="title">Found a missing card or set?</h1>
+    <p class="subtitle" id="subtitle">
+      Let us know and we'll add it as soon as possible. Just share the Cardmarket link and we'll take care of the rest.
+    </p>
+
+    <div class="field">
+      <label for="url">Cardmarket URL <span class="req">*</span></label>
+      <input type="url" id="url" placeholder="https://www.cardmarket.com/en/Pokemon/Products/Singles/...">
+      <p class="hint" id="hint-url">Link to the card or set page on Cardmarket.</p>
+    </div>
+
+    <div class="field">
+      <label for="note" id="label-note">Additional info <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <textarea id="note" placeholder="e.g. it's a full art version, or a specific language..."></textarea>
+    </div>
+
+    <button class="btn" id="submitBtn">Send report</button>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script src="/i18n.js"></script>
+<script src="/shared.js"></script>
+<script>
+// ── Pre-fill URL from query param (sent by extension) ──────────────────────
+const params = new URLSearchParams(window.location.search);
+const prefill = params.get('url');
+if (prefill) document.getElementById('url').value = decodeURIComponent(prefill);
+
+// ── Language strings ───────────────────────────────────────────────────────
+const lang = localStorage.getItem('cp_lang') || 'en';
+if (lang === 'de') {
+  document.documentElement.lang = 'de';
+  document.title = 'Fehlende Karte melden – CardPulse';
+  document.getElementById('title').textContent = 'Fehlende Karte oder Set entdeckt?';
+  document.getElementById('subtitle').textContent =
+    'Melde dich bei uns und wir ergänzen die Karte so schnell wie möglich. Schick uns einfach den Cardmarket-Link.';
+  document.querySelector('label[for="url"]').innerHTML =
+    'Cardmarket URL <span style="color:var(--accent)">*</span>';
+  document.getElementById('hint-url').textContent =
+    'Link zur Karte oder zum Set auf Cardmarket.';
+  document.getElementById('label-note').innerHTML =
+    'Zusätzliche Infos <span style="color:var(--muted);font-weight:400">(optional)</span>';
+  document.getElementById('note').placeholder =
+    'z.B. es ist eine Full Art Version, oder eine bestimmte Sprache...';
+  document.getElementById('submitBtn').textContent = 'Meldung senden';
+  document.querySelector('.eyebrow').textContent = 'Fehlende Daten';
+}
+
+// ── Submit handler ─────────────────────────────────────────────────────────
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const url  = document.getElementById('url').value.trim();
+  const note = document.getElementById('note').value.trim();
+  const btn  = document.getElementById('submitBtn');
+  const msg  = document.getElementById('msg');
+  const isDE = lang === 'de';
+
+  msg.className = 'msg';
+
+  if (!url) {
+    msg.textContent = isDE ? 'Bitte gib einen Cardmarket-Link ein.' : 'Please enter a Cardmarket URL.';
+    msg.className = 'msg error';
+    return;
+  }
+  if (!url.includes('cardmarket.com')) {
+    msg.textContent = isDE ? 'Bitte gib einen gültigen Cardmarket-Link ein.' : 'Please enter a valid Cardmarket URL.';
+    msg.className = 'msg error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span>${isDE ? 'Wird gesendet...' : 'Sending...'}`;
+
+  try {
+    const res = await fetch('/suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, note }),
+    });
+
+    if (res.ok) {
+      msg.textContent = isDE
+        ? '✅ Danke! Wir haben deine Meldung erhalten und schauen uns die Karte an.'
+        : '✅ Thanks! We received your report and will look into it.';
+      msg.className = 'msg success';
+      document.getElementById('url').value = '';
+      document.getElementById('note').value = '';
+    } else {
+      throw new Error('Server error');
+    }
+  } catch {
+    msg.textContent = isDE
+      ? 'Fehler beim Senden. Bitte versuche es erneut.'
+      : 'Error sending. Please try again.';
+    msg.className = 'msg error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = isDE ? 'Meldung senden' : 'Send report';
+  }
+});
+</script>
+</body>
+</html>
