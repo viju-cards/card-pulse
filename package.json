@@ -1,15 +1,15 @@
 {
-  "name": "pokecardscout",
+  "name": "cardpulse-api",
   "version": "1.0.0",
-  "description": "Backend API for PokeCardScout Chrome Extension",
+  "description": "Backend API for CardPulse Chrome Extension",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/viju-cards/pokecardscout.git"
+    "url": "git+https://github.com/viju-cards/cardpulse.git"
   },
   "author": "",
   "license": "ISC",
@@ -17,10 +17,14 @@
     "express": "^4.18.2",
     "node-fetch": "^2.6.7",
     "pg": "^8.11.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "bcrypt": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
     "stripe": "^14.0.0",
-    "nodemailer": "^6.9.7"
+    "nodemailer": "^6.9.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
   }
 }
