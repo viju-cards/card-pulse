@@ -131,6 +131,7 @@ const TRANSLATIONS = {
     footer_imprint: "Imprint",
     footer_sets: "Sets",
     footer_copy: "© 2026 CardPulse. All rights reserved.",
+    footer_suggest: "Report missing card",
 
     // PRIVACY
     privacy_title: "Privacy Policy",
@@ -289,6 +290,7 @@ const TRANSLATIONS = {
     footer_imprint: "Impressum",
     footer_sets: "Sets",
     footer_copy: "© 2026 CardPulse. Alle Rechte vorbehalten.",
+    footer_suggest: "Fehlende Karte melden",
 
     privacy_title: "Datenschutzerklärung",
     privacy_updated: "Zuletzt aktualisiert: Mai 2026",
