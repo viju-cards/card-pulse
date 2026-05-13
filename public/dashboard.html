@@ -3,169 +3,182 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Language" content="en"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Language" content="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#09090f;--surface:#0f0f1c;--card:#13131f;
-    --border:rgba(255,255,255,0.06);--accent:#6c63ff;
-    --yellow:#ffd700;--red:#ef4444;--green:#22c55e;
-    --text:#e8e8f0;--muted:#5a5a78;
-    --pixel:"Press Start 2P",monospace;
-    --mono:"DM Mono",monospace;
-    --cond:"Barlow Condensed",sans-serif;
-    --sans:"DM Sans",sans-serif;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
-  nav{display:flex;justify-content:space-between;align-items:center;padding:20px 48px;border-bottom:1px solid var(--border)}
-  .logo{font-family:var(--pixel);font-size:10px;font-weight:400;letter-spacing:.5px;line-height:1.6;text-decoration:none;color:#fff}
-  .logo span{color:var(--accent)}
-  .nav-right{display:flex;gap:12px;align-items:center}
-  .user-email{font-size:13px;color:var(--muted)}
-  .btn-sm{padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.2s;text-decoration:none}
-  .btn-sm:hover{border-color:var(--accent);color:var(--accent)}
-  .main{max-width:900px;margin:0 auto;padding:48px 24px;flex:1;width:100%}
-  .page-title{font-family:'Cabinet Grotesk',sans-serif;font-size:32px;font-weight:800;margin-bottom:8px}
-  .page-sub{color:var(--muted);font-size:14px;margin-bottom:48px}
-  .status-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
-  .status-card.premium{border-color:var(--accent);background:linear-gradient(135deg,rgba(108,99,255,0.08),var(--surface))}
-  .status-left h2{font-family:var(--pixel);font-size:10px;font-weight:400;letter-spacing:.5px;line-height:1.6;margin-bottom:6px}
-  .status-left p{font-size:14px;color:var(--muted)}
-  .plan-badge{display:inline-flex;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
-  .plan-badge.premium{background:var(--accent);color:#fff}
-  .plan-badge.free{background:rgba(255,255,255,0.08);color:var(--muted)}
-  .btn-primary{padding:12px 24px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:.2s;text-decoration:none;display:inline-block}
-  .btn-primary:hover{opacity:.85}
-  .btn-outline{padding:12px 24px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;transition:.2s}
-  .btn-outline:hover{border-color:var(--accent);color:var(--accent)}
-  .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px}
-  .info-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
-  .info-label{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-  .info-value{font-family:var(--pixel);font-size:10px;font-weight:400;letter-spacing:.5px;line-height:1.6}
-  .info-value.green{color:var(--green)}
-  .info-value.muted{color:var(--muted);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:400}
-  .ext-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:24px}
-  .ext-box h3{font-family:'Cabinet Grotesk',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px}
-  .ext-box p{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6}
-  .steps{display:flex;flex-direction:column;gap:12px}
-  .step{display:flex;gap:16px;align-items:flex-start}
-  .step-num{width:28px;height:28px;border-radius:99px;background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .step-text{font-size:14px;color:var(--muted);padding-top:4px;line-height:1.5}
-  .step-text a{color:var(--accent);text-decoration:none}
-  .loading-state{text-align:center;padding:80px;color:var(--muted)}
-  .spin{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin-bottom:16px}
-  @keyframes spin{to{transform:rotate(360deg)}}
+:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--text:#e8e8f0;--muted:#5a5a78;--red:#ef4444;--green:#22c55e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
+.logo span{color:var(--accent)}
+.nav-right{display:flex;gap:10px;align-items:center}
+.user-email{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted)}
+.btn-sm{padding:7px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:"DM Mono",monospace;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.2s;text-decoration:none}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+.main{max-width:960px;margin:0 auto;padding:48px 24px;flex:1;width:100%;position:relative;z-index:1}
 
-  /* ── Mobile ─────────────────────────────── */
-  @media (max-width: 640px) {
-    nav { padding: 14px 16px; }
-    .main { padding: 28px 16px; }
-    .page-title { font-size: 24px; }
-    .page-sub { margin-bottom: 28px; }
+/* Loading */
+#loadingState{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--muted);letter-spacing:1px;padding:80px 0;text-align:center}
+#content{display:none}
 
-    .status-card {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-      padding: 22px;
-    }
-    .status-card > div:last-child {
-      width: 100%;
-      justify-content: space-between;
-    }
-    .btn-primary, .btn-outline {
-      flex: 1;
-      text-align: center;
-      padding: 12px 16px;
-    }
+/* Page header */
+.page-eyebrow{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:16px;display:block}
+.page-eyebrow::before{content:"> "}
+.page-title{font-family:"Barlow Condensed",sans-serif;font-size:clamp(36px,5vw,64px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:40px}
 
-    .info-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .info-card { padding: 16px; }
-    .info-value { font-size: 15px; }
+/* Status card */
+.status-card{border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;background:var(--card);transition:.3s}
+.status-card.premium{border-color:rgba(108,99,255,0.4);background:linear-gradient(135deg,rgba(108,99,255,0.08),var(--card))}
+.status-left{}
+.status-left h2{font-family:"Barlow Condensed",sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;margin-bottom:6px}
+.status-left p{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted)}
+.status-right{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.plan-badge{font-family:"Press Start 2P",monospace;font-size:8px;padding:7px 14px;border-radius:99px;display:inline-block;line-height:1.6}
+.action-btn{padding:11px 22px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-family:"DM Mono",monospace;font-size:13px;font-weight:500;cursor:pointer;transition:.2s;white-space:nowrap}
+.action-btn:hover{opacity:.85}
 
-    .ext-box { padding: 22px 18px; }
-    .ext-box h3 { font-size: 16px; }
-    .step-num { width: 24px; height: 24px; font-size: 12px; flex-shrink: 0; }
+/* Info grid */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:28px}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px}
+.info-label{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase}
+.info-value{font-family:"DM Mono",monospace;font-size:14px;font-weight:500}
 
-    .nav-right { gap: 6px; }
-    .user-email { display: none; }
-  }
+/* Usage bar */
+.usage-section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:28px}
+.usage-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.usage-label-text{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px}
+.usage-count{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted)}
+.bar-track{height:6px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .6s ease,background .3s}
 
-  @media (max-width: 380px) {
-    .info-grid { grid-template-columns: 1fr; }
-  }
-@media(max-width:640px){nav{padding:10px 16px}.main{padding:32px 16px}}
+/* Plans */
+.plans-header{font-family:"Barlow Condensed",sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;margin-bottom:6px}
+.plans-sub{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);margin-bottom:20px}
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:28px}
+.plan-card{border-radius:10px;padding:20px;border:1px solid var(--border);background:var(--card)}
+.plan-card.active{border-width:1.5px}
+.plan-tier{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:1px;margin-bottom:12px}
+.plan-price{font-family:"Barlow Condensed",sans-serif;font-size:32px;font-weight:900;margin-bottom:2px}
+.plan-period{font-size:13px;font-weight:400;color:var(--muted)}
+.plan-requests{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);margin-bottom:16px}
+.plan-btn{width:100%;padding:10px;border-radius:7px;font-family:"DM Mono",monospace;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;border:1px solid var(--border);background:transparent;color:var(--text)}
+.plan-btn:hover{border-color:var(--accent);color:var(--accent)}
+.plan-btn.current{border:none;color:#fff;cursor:default}
+
+/* Extension setup */
+.ext-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:24px}
+.ext-title{font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:6px}
+.ext-sub{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);margin-bottom:20px}
+.steps{display:flex;flex-direction:column;gap:12px}
+.step{display:flex;gap:14px;align-items:flex-start}
+.step-num{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);border-radius:5px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
+.step p{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);line-height:1.7}
+.step a{color:var(--accent)}
+
+@media(max-width:768px){nav{padding:10px 16px}.main{padding:32px 16px}.status-card{flex-direction:column}.plans-grid{grid-template-columns:repeat(2,1fr)}.info-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.plans-grid{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <nav>
   <a href="/" class="logo">card<span>pulse</span></a>
   <div class="nav-right">
-    <span class="user-email" id="userEmail">–</span>
+    <span class="user-email" id="userEmail"></span>
     <a href="/sets.html" class="btn-sm" data-i18n="nav_sets">Sets</a>
     <button class="btn-sm" id="logoutBtn" data-i18n="nav_logout">Sign out</button>
   </div>
 </nav>
+
 <div class="main">
-  <div id="loadingState" class="loading-state"><div class="spin"></div><br><span data-i18n="dash_loading">Loading dashboard...</span></div>
-  <div id="content" style="display:none">
-    <div class="page-title" data-i18n="dash_title">Dashboard</div>
-    <p class="page-sub" data-i18n="dash_sub">Manage your account and subscription.</p>
+  <div id="loadingState">> LOADING...</div>
+
+  <div id="content">
+    <span class="page-eyebrow" data-i18n="dash_eyebrow">Account</span>
+    <h1 class="page-title" data-i18n="dash_title">Dashboard.</h1>
+
+    <!-- Status card -->
     <div class="status-card" id="statusCard">
       <div class="status-left">
-        <h2 id="planTitle">Free Plan</h2>
-        <p id="planDesc">Upgrade to see TCGPlayer prices on Cardmarket.</p>
+        <h2 id="planTitle">—</h2>
+        <p id="planDesc">—</p>
       </div>
-      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-        <span class="plan-badge free" id="planBadge">Free</span>
-        <button class="btn-primary" id="actionBtn">Upgrade now</button>
+      <div class="status-right">
+        <span class="plan-badge" id="planBadge">—</span>
+        <button class="action-btn" id="actionBtn">—</button>
       </div>
     </div>
+
+    <!-- Info grid -->
     <div class="info-grid">
-      <div class="info-card"><div class="info-label" data-i18n="dash_label_email">Email</div><div class="info-value muted" id="infoEmail">–</div></div>
-      <div class="info-card"><div class="info-label" data-i18n="dash_label_plan">Plan</div><div class="info-value" id="infoPlan">Free</div></div>
-      <div class="info-card"><div class="info-label" data-i18n="dash_label_until">Valid until</div><div class="info-value muted" id="infoUntil">–</div></div>
-      <div class="info-card"><div class="info-label" data-i18n="dash_label_status">Status</div><div class="info-value green" id="infoStatus">Active</div></div>
-    </div>
-    <!-- Usage bar -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)" id="usageLabel">Monthly usage</div>
-        <div style="font-size:13px;color:var(--muted)" id="usageText">—</div>
+      <div class="info-card">
+        <div class="info-label" data-i18n="dash_info_email">E-Mail</div>
+        <div class="info-value" id="infoEmail">—</div>
       </div>
-      <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
-        <div id="usageBar" style="height:100%;border-radius:99px;transition:width .6s ease,background .3s;width:0%"></div>
+      <div class="info-card">
+        <div class="info-label" data-i18n="dash_info_plan">Plan</div>
+        <div class="info-value" id="infoPlan">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label" data-i18n="dash_info_until">Valid until</div>
+        <div class="info-value" id="infoUntil">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label" data-i18n="dash_info_status">Status</div>
+        <div class="info-value" id="infoStatus">—</div>
+      </div>
+    </div>
+
+    <!-- Usage bar -->
+    <div class="usage-section">
+      <div class="usage-header">
+        <span class="usage-label-text" id="usageLabel">Monthly usage</span>
+        <span class="usage-count" id="usageText">—</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="usageBar" style="width:0%"></div>
       </div>
     </div>
 
     <!-- Plans -->
-    <div id="plansSection" style="margin-bottom:24px">
-      <div style="font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px">Plans</div>
-      <p style="font-size:14px;color:var(--muted);margin-bottom:20px">Upgrade or change your plan anytime.</p>
-      <div id="plansGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px"></div>
+    <div id="plansSection">
+      <div class="plans-header" data-i18n="dash_plans_title">Plans</div>
+      <p class="plans-sub" data-i18n="dash_plans_sub">Upgrade or change your plan anytime.</p>
+      <div class="plans-grid" id="plansGrid"></div>
     </div>
 
+    <!-- Extension setup -->
     <div class="ext-box">
-      <h3>🧩 <span data-i18n="dash_ext_title">Set up browser extension</span></h3>
-      <p data-i18n="dash_ext_desc">How to install the CardPulse extension and connect it to your account:</p>
+      <div class="ext-title">🧩 <span data-i18n="dash_ext_title">Browser Extension</span></div>
+      <p class="ext-sub" data-i18n="dash_ext_sub">Connect CardPulse to your browser.</p>
       <div class="steps">
-        <div class="step"><div class="step-num">1</div><div class="step-text" data-i18n="dash_step1"></div></div>
-        <div class="step"><div class="step-num">2</div><div class="step-text" data-i18n="dash_step2"></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-text" data-i18n="dash_step3"></div></div>
+        <div class="step">
+          <div class="step-num">1</div>
+          <p data-i18n="dash_ext_step1">Open the <a href="#">Chrome Web Store</a> and search for <strong>CardPulse</strong>.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <p data-i18n="dash_ext_step2">Install and click the CardPulse icon in your browser toolbar.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <p data-i18n="dash_ext_step3">You're already signed in — your token is forwarded automatically. Open any card on <a href="https://cardmarket.com" target="_blank">Cardmarket</a>.</p>
+        </div>
       </div>
     </div>
-    <div style="text-align:right;padding-bottom:16px">
-      <button id="cancelSubBtn" onclick="openPortal()" style="padding:9px 20px;background:transparent;border:1px solid rgba(239,68,68,0.35);border-radius:10px;color:#ef4444;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:.2s" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'" data-i18n="dash_cancel_sub">Cancel subscription</button>
+
+    <!-- Cancel subscription -->
+    <div style="text-align:right;padding-bottom:24px">
+      <button id="cancelSubBtn" onclick="openPortal()" class="btn-sm" style="color:var(--red);border-color:rgba(239,68,68,0.25)" data-i18n="dash_cancel_sub">Cancel subscription</button>
     </div>
   </div>
 </div>
+
 <script src="/i18n.js"></script>
 <script src="/shared.js"></script>
 <script>
@@ -192,7 +205,7 @@ async function init(){
   }catch(err){
     const cached=localStorage.getItem('cp_user');
     if(cached)renderDashboard(JSON.parse(cached));
-    else{window.location.href='/login.html'}
+    else window.location.href='/login.html';
   }
 }
 
@@ -202,109 +215,79 @@ function renderDashboard(user){
   document.getElementById('userEmail').textContent=user.email;
   document.getElementById('infoEmail').textContent=user.email;
 
-  const plan    = user.plan || 'bronze';
-  const cfg     = PLANS[plan] || PLANS.bronze;
-  const used    = user.used ?? user.monthly_requests ?? 0;
-  const limit   = user.limit ?? cfg.limit;
-  const pct     = Math.min(100, Math.round((used/limit)*100));
-  const isDE    = (localStorage.getItem('cp_lang') || i18n.lang || 'en') === 'de';
-  const isPaid  = plan !== 'bronze';
+  const plan=user.plan||'bronze';
+  const cfg=PLANS[plan]||PLANS.bronze;
+  const used=user.used??user.monthly_requests??0;
+  const limit=user.limit??cfg.limit;
+  const pct=Math.min(100,Math.round((used/limit)*100));
+  const isDE=(localStorage.getItem('cp_lang')||i18n?.lang||'en')==='de';
+  const isPaid=plan!=='bronze';
 
-  // ── Status card ──
-  if(isPaid) document.getElementById('statusCard').classList.add('premium');
+  if(isPaid)document.getElementById('statusCard').classList.add('premium');
   else document.getElementById('statusCard').classList.remove('premium');
 
-  document.getElementById('planTitle').textContent =
-    cfg.label + ' Plan' + (user.cancel_at_period_end ? (isDE?' – läuft aus':' – canceling'):'');
-  document.getElementById('planDesc').textContent = isDE
-    ? `${used} von ${limit} Anfragen diesen Monat genutzt.`
-    : `${used} of ${limit} requests used this month.`;
-  document.getElementById('planBadge').textContent = cfg.label;
-  document.getElementById('planBadge').style.background = cfg.color;
-  document.getElementById('planBadge').style.color = '#fff';
-  document.getElementById('planBadge').className = 'plan-badge';
+  document.getElementById('planTitle').textContent=cfg.label+' Plan'+(user.cancel_at_period_end?(isDE?' – läuft aus':' – canceling'):'');
+  document.getElementById('planDesc').textContent=isDE?`${used} von ${limit} Anfragen diesen Monat.`:`${used} of ${limit} requests this month.`;
+  document.getElementById('planBadge').textContent=cfg.label;
+  document.getElementById('planBadge').style.cssText=`background:${cfg.color};color:#fff`;
 
   if(isPaid){
-    document.getElementById('actionBtn').textContent = isDE ? 'Abo verwalten' : 'Manage subscription';
-    document.getElementById('actionBtn').onclick = openPortal;
-  } else {
-    document.getElementById('actionBtn').textContent = isDE ? 'Upgraden' : 'Upgrade';
-    document.getElementById('actionBtn').onclick = function(){
-      document.getElementById('plansSection').scrollIntoView({behavior:'smooth'});
-    };
+    document.getElementById('actionBtn').textContent=isDE?'Abo verwalten':'Manage subscription';
+    document.getElementById('actionBtn').onclick=openPortal;
+  }else{
+    document.getElementById('actionBtn').textContent=isDE?'Upgraden':'Upgrade';
+    document.getElementById('actionBtn').onclick=()=>document.getElementById('plansSection').scrollIntoView({behavior:'smooth'});
   }
 
-  // ── Info grid ──
-  document.getElementById('infoPlan').textContent   = cfg.label;
-  document.getElementById('infoPlan').style.color   = cfg.color;
-  document.getElementById('infoStatus').textContent = isDE ? 'Aktiv' : 'Active';
-  document.getElementById('infoStatus').style.color = 'var(--green)';
-  if(user.cancel_at_period_end && user.premium_until){
-    const endDate = new Date(user.premium_until).toLocaleDateString(isDE?'de-DE':'en-GB');
-    document.getElementById('infoStatus').textContent = isDE ? 'Gekündigt' : 'Canceled';
-    document.getElementById('infoStatus').style.color = 'var(--red)';
-    // Update plan title + desc to show end date prominently
-    document.getElementById('planTitle').textContent = cfg.label + ' Plan – ' + (isDE ? 'läuft ab' : 'canceling');
-    document.getElementById('planDesc').textContent = isDE
-      ? `Aktiv bis ${endDate}. Danach wechsel auf Bronze.`
-      : `Active until ${endDate}. Reverts to Bronze after.`;
-    // Show end date in red in the info grid
-    document.getElementById('infoUntil').style.color = 'var(--red)';
-  }
-  if(user.premium_until){
-    document.getElementById('infoUntil').textContent =
-      new Date(user.premium_until).toLocaleDateString(isDE?'de-DE':'en-GB');
-  } else {
-    document.getElementById('infoUntil').textContent = '—';
+  document.getElementById('infoPlan').textContent=cfg.label;
+  document.getElementById('infoPlan').style.color=cfg.color;
+  document.getElementById('infoStatus').textContent=isDE?'Aktiv':'Active';
+  document.getElementById('infoStatus').style.color='var(--green)';
+
+  if(user.cancel_at_period_end&&user.premium_until){
+    const endDate=new Date(user.premium_until).toLocaleDateString(isDE?'de-DE':'en-GB');
+    document.getElementById('infoStatus').textContent=isDE?'Gekündigt':'Canceled';
+    document.getElementById('infoStatus').style.color='var(--red)';
+    document.getElementById('planTitle').textContent=cfg.label+' Plan – '+(isDE?'läuft ab':'canceling');
+    document.getElementById('planDesc').textContent=isDE?`Aktiv bis ${endDate}. Danach Bronze.`:`Active until ${endDate}. Reverts to Bronze.`;
+    document.getElementById('infoUntil').style.color='var(--red)';
   }
 
-  // ── Usage bar ──
-  const barColor = pct>=90?'#ef4444':pct>=70?'#f59e0b':'var(--green)';
-  document.getElementById('usageBar').style.width      = pct+'%';
-  document.getElementById('usageBar').style.background = barColor;
-  document.getElementById('usageLabel').textContent    = isDE ? 'Monatliche Nutzung' : 'Monthly usage';
-  document.getElementById('usageText').textContent     =
-    `${used.toLocaleString()} / ${limit.toLocaleString()} ${isDE?'Anfragen':'requests'} (${pct}%)`;
+  document.getElementById('infoUntil').textContent=user.premium_until?new Date(user.premium_until).toLocaleDateString(isDE?'de-DE':'en-GB'):'—';
 
-  // ── Plans grid ──
-  renderPlans(plan, isDE);
-  localStorage.setItem('cp_user', JSON.stringify(user));
+  const barColor=pct>=90?'#ef4444':pct>=70?'#f59e0b':'var(--green)';
+  document.getElementById('usageBar').style.cssText=`width:${pct}%;background:${barColor}`;
+  document.getElementById('usageLabel').textContent=isDE?'Monatliche Nutzung':'Monthly usage';
+  document.getElementById('usageText').textContent=`${used.toLocaleString()} / ${limit.toLocaleString()} ${isDE?'Anfragen':'requests'} (${pct}%)`;
+
+  renderPlans(plan,isDE);
+  localStorage.setItem('cp_user',JSON.stringify(user));
 }
 
-function renderPlans(currentPlan, isDE){
+function renderPlans(currentPlan,isDE){
   const list=[
-    {key:'bronze', label:'Bronze', price:isDE?'Kostenlos':'Free',  period:'',               limit:'20'},
-    {key:'silver', label:'Silver', price:'€3.99',                  period:isDE?'/Monat':'/mo', limit:'400'},
-    {key:'gold',   label:'Gold',   price:'€7.99',                  period:isDE?'/Monat':'/mo', limit:'1.000'},
-    {key:'platin', label:'Platin', price:'€24.99',                 period:isDE?'/Monat':'/mo', limit:'5.000'},
+    {key:'bronze',label:'Bronze',price:isDE?'Kostenlos':'Free',period:'',limit:'20'},
+    {key:'silver',label:'Silver',price:'€3.99',period:isDE?'/Monat':'/mo',limit:'400'},
+    {key:'gold',label:'Gold',price:'€7.99',period:isDE?'/Monat':'/mo',limit:'1.000'},
+    {key:'platin',label:'Platin',price:'€24.99',period:isDE?'/Monat':'/mo',limit:'5.000'},
   ];
-  document.getElementById('plansGrid').innerHTML=list.map(function(p){
-    const cfg2  = PLANS[p.key];
-    const isCur = p.key===currentPlan;
-    const btnTxt= isCur
-      ? (isDE?'Aktueller Plan':'Current plan')
-      : p.key==='bronze'
-        ? (isDE?'Downgrade':'Downgrade')
-        : (isDE?'Upgraden':'Upgrade');
-    const onClick= isCur ? '' : p.key==='bronze'
-      ? "openPortal()"
-      : "startCheckout('"+p.key+"')";
-    return '<div style="background:var(--surface);border:1.5px solid '+(isCur?cfg2.color:'var(--border)')+';border-radius:16px;padding:22px'+(isCur?';background:linear-gradient(135deg,rgba(108,99,255,0.06),var(--surface))':'')+'">'
-      +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:'+cfg2.color+';margin-bottom:10px">'+p.label+'</div>'
-      +'<div style="font-size:28px;font-weight:800;margin-bottom:2px">'+p.price+'<span style="font-size:13px;font-weight:400;color:var(--muted)">'+p.period+'</span></div>'
-      +'<div style="font-size:12px;color:var(--muted);margin-bottom:18px">'+p.limit+' '+(isDE?'Anfragen/Monat':'requests/month')+'</div>'
-      +'<button onclick="'+onClick+'" style="width:100%;padding:10px;border-radius:9px;border:'+(isCur?'none':'1px solid var(--border)')+';background:'+(isCur?cfg2.color:'transparent')+';color:'+(isCur?'#fff':'var(--text)')+';font-family:inherit;font-size:13px;font-weight:600;cursor:'+(isCur?'default':'pointer')+'" '+(isCur?'disabled':'')+'>'+btnTxt+'</button>'
-      +'</div>';
+  document.getElementById('plansGrid').innerHTML=list.map(p=>{
+    const c=PLANS[p.key];
+    const cur=p.key===currentPlan;
+    const btn=cur?(isDE?'Aktueller Plan':'Current plan'):p.key==='bronze'?(isDE?'Downgrade':'Downgrade'):(isDE?'Upgraden':'Upgrade');
+    const click=cur?'':p.key==='bronze'?'openPortal()':`startCheckout('${p.key}')`;
+    return `<div class="plan-card${cur?' active':''}" style="${cur?`border-color:${c.color}`:''}">
+      <div class="plan-tier" style="color:${c.color}">${p.label}</div>
+      <div class="plan-price">${p.price}<span class="plan-period">${p.period}</span></div>
+      <div class="plan-requests">${p.limit} ${isDE?'Anfragen/Monat':'req/mo'}</div>
+      <button onclick="${click}" class="plan-btn${cur?' current':''}" style="${cur?`background:${c.color};border-color:${c.color}`:''}" ${cur?'disabled':''}>${btn}</button>
+    </div>`;
   }).join('');
 }
 
 async function startCheckout(plan){
   try{
-    const res=await fetch(`${API}/stripe/checkout`,{
-      method:'POST',
-      headers:{'Authorization':`Bearer ${localStorage.getItem('cp_token')}`,'Content-Type':'application/json'},
-      body:JSON.stringify({plan})
-    });
+    const res=await fetch(`${API}/stripe/checkout`,{method:'POST',headers:{'Authorization':`Bearer ${localStorage.getItem('cp_token')}`,'Content-Type':'application/json'},body:JSON.stringify({plan})});
     const d=await res.json();
     if(d.url)window.location.href=d.url;
   }catch(e){console.error(e)}
@@ -327,8 +310,6 @@ function logout(){
 }
 
 document.getElementById('logoutBtn').onclick=logout;
-// logoutAllBtn replaced by cancelSubBtn
-
 const params=new URLSearchParams(window.location.search);
 if(params.get('success')==='true')history.replaceState({},'','/dashboard.html');
 init();
