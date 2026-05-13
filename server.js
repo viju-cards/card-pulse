@@ -42,10 +42,11 @@ const pool = new Pool({
 
 // ─── Plan Limits ─────────────────────────────────────────────────────────────
 const PLAN_LIMITS = {
-  bronze: 20,
-  silver: 400,
-  gold:   1000,
-  platin: 5000,
+  bronze:     20,
+  silver:     400,
+  gold:       1000,
+  platin:     5000,
+  enterprise: 999999, // fallback – overridden by custom_request_limit
 };
 
 const STRIPE_PLANS = {
@@ -274,7 +275,7 @@ app.get("/auth/me", requireAuth, async (req, res) => {
     }
 
     const userPlan = user.plan || 'bronze';
-    const userLimit = PLAN_LIMITS[userPlan] || 20;
+    const userLimit = user.custom_request_limit || PLAN_LIMITS[userPlan] || 20;
 
     // Reset if new month
     const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date();
@@ -431,7 +432,7 @@ app.get("/prices", requireAuth, async (req, res) => {
     // ── Check & increment request counter ──────────────────────────────────
     const userRow = await getUserById(req.user.id);
     const plan = userRow.plan || 'bronze';
-    const limit = PLAN_LIMITS[plan] || 20;
+    const limit = userRow.custom_request_limit || PLAN_LIMITS[plan] || 20;
 
     // Reset counter if new month
     const resetAt = userRow.requests_reset_at ? new Date(userRow.requests_reset_at) : new Date();
