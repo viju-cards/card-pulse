@@ -330,7 +330,7 @@ app.post("/stripe/checkout", requireAuth, async (req, res) => {
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
-      locale: 'de',
+      locale: 'auto',
       success_url: `${baseUrl}/dashboard.html?success=true`,
       cancel_url: `${baseUrl}/dashboard.html?canceled=true`,
       metadata: { user_id: String(user.id), plan },
