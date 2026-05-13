@@ -152,7 +152,7 @@
       </div>
     </div>
     <div style="text-align:right;padding-bottom:16px">
-      <button id="logoutAllBtn" style="padding:9px 20px;background:transparent;border:1px solid rgba(239,68,68,0.35);border-radius:10px;color:#ef4444;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:.2s" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'" data-i18n="dash_logout_all">Sign out everywhere</button>
+      <button id="cancelSubBtn" onclick="openPortal()" style="padding:9px 20px;background:transparent;border:1px solid rgba(239,68,68,0.35);border-radius:10px;color:#ef4444;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:.2s" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'" data-i18n="dash_cancel_sub">Cancel subscription</button>
     </div>
   </div>
 </div>
@@ -309,7 +309,7 @@ function logout(){
 }
 
 document.getElementById('logoutBtn').onclick=logout;
-document.getElementById('logoutAllBtn').onclick=logout;
+// logoutAllBtn replaced by cancelSubBtn
 
 const params=new URLSearchParams(window.location.search);
 if(params.get('success')==='true')history.replaceState({},'','/dashboard.html');
