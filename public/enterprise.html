@@ -3,99 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
+<meta http-equiv="Content-Language" content="en">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Enterprise – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--text:#e8e8f0;--muted:#6b6b80;--error:#ef4444;--green:#22c55e}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
-  nav{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-bottom:1px solid var(--border)}
-  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:800;text-decoration:none;color:#fff}
-  .logo span{color:var(--accent)}
-  .nav-links{display:flex;gap:8px;align-items:center}
-  .btn-ghost{padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;text-decoration:none;transition:.2s}
-  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
-  .main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px}
-  .wrap{width:100%;max-width:560px}
-  .eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#a78bfa;margin-bottom:14px}
-  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-1px;margin-bottom:10px}
-  .subtitle{color:var(--muted);font-size:15px;margin-bottom:36px;line-height:1.6}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .field{margin-bottom:18px}
-  label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px}
-  .req{color:var(--accent)}
-  input,textarea,select{width:100%;padding:13px 16px;background:#0a0a15;border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;transition:.2s;outline:none;resize:vertical}
-  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
-  select option{background:#0a0a15}
-  textarea{min-height:100px}
-  .btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:.2s}
-  .btn:hover{opacity:.85}.btn:disabled{opacity:.5;cursor:not-allowed}
-  .msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-top:16px;display:none;line-height:1.5}
-  .msg.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:var(--error);display:block}
-  .msg.success{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green);display:block}
-  .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .lang-flag-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 11px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s ease}
-  .lang-flag-btn:hover{color:var(--text);background:rgba(255,255,255,0.05)}
-  .lang-flag-btn.active{color:var(--text);background:rgba(108,99,255,0.15);border-color:rgba(108,99,255,0.25)}
-  @media(max-width:640px){nav{padding:14px 16px}.main{padding:28px 16px}.row{grid-template-columns:1fr}.card{padding:24px 20px}}
+:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78;--red:#ef4444;--green:#22c55e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:8px;align-items:center}
+.main{flex:1;position:relative;z-index:1;padding:60px 48px}
+.eyebrow{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:20px;display:block}
+.eyebrow::before{content:"> "}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:16px}
+h2{font-family:"Barlow Condensed",sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:16px}
+h3{font-family:"Barlow Condensed",sans-serif;font-size:24px;font-weight:800;text-transform:uppercase;margin-bottom:12px}
+p{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);line-height:1.8}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px}
+label{display:block;font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+input,textarea,select{width:100%;padding:13px 16px;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:"DM Mono",monospace;font-size:13px;outline:none;transition:.2s;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
+select option{background:var(--card)}
+.btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:"DM Mono",monospace;font-size:13px;font-weight:500;cursor:pointer;transition:.2s}
+.btn:hover{opacity:.85}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.outline{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn.outline:hover{border-color:var(--accent);color:var(--text)}
+.btn.danger{background:transparent;border:1px solid rgba(239,68,68,0.3);color:var(--red)}
+.btn.danger:hover{background:rgba(239,68,68,0.08)}
+.msg{padding:12px 16px;border-radius:8px;font-size:12px;font-family:"DM Mono",monospace;margin-top:14px;display:none;line-height:1.6}
+.msg.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:var(--red);display:block}
+.msg.success{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:var(--green);display:block}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hint{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);margin-top:5px}
+.link{color:var(--accent);font-family:"DM Mono",monospace;font-size:12px;text-decoration:none}
+.link:hover{text-decoration:underline}
+.wrap{max-width:560px;margin:0 auto}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:600px){.row{grid-template-columns:1fr}}
+@media(max-width:768px){nav{padding:10px 16px}.main{padding:40px 20px}h1{font-size:40px}}
 </style>
 </head>
 <body>
 <nav>
   <a href="/" class="logo">card<span>pulse</span></a>
-  <div class="nav-links">
-    <a href="/" class="btn-ghost" data-i18n="nav_sets">Home</a>
-  </div>
+  <div class="nav-links"><a href="/" style="padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-decoration:none">Home</a></div>
 </nav>
-<div class="main">
+
+<div class="main" style="display:flex;align-items:center;justify-content:center">
   <div class="wrap">
-    <div class="eyebrow" data-i18n="enterprise_label">Enterprise</div>
-    <h1 data-i18n="enterprise_h3">Platin not enough?</h1>
-    <p class="subtitle" data-i18n="enterprise_form_sub">Tell us about your needs and we'll get back to you with a custom quote.</p>
-
+    <span class="eyebrow" data-i18n="enterprise_label">Enterprise</span>
+    <h1 data-i18n="enterprise_h3_short">Custom<br>quote.</h1>
+    <p style="margin-bottom:32px" data-i18n="enterprise_form_sub">Tell us about your needs and we'll get back to you.</p>
     <div class="card">
-      <div class="row">
-        <div class="field">
-          <label><span data-i18n="enterprise_firstname">First name</span> <span class="req">*</span></label>
-          <input type="text" id="firstname" autocomplete="given-name">
+      <div class="row" style="margin-bottom:18px">
+        <div>
+          <label><span data-i18n="enterprise_firstname">First name</span> <span style="color:var(--accent)">*</span></label>
+          <input type="text" id="firstname">
         </div>
-        <div class="field">
-          <label><span data-i18n="enterprise_lastname">Last name</span> <span class="req">*</span></label>
-          <input type="text" id="lastname" autocomplete="family-name">
+        <div>
+          <label><span data-i18n="enterprise_lastname">Last name</span> <span style="color:var(--accent)">*</span></label>
+          <input type="text" id="lastname">
         </div>
       </div>
-
-      <div class="field">
-        <label><span data-i18n="enterprise_email">Email</span> <span class="req">*</span></label>
-        <input type="email" id="email" autocomplete="email">
+      <div style="margin-bottom:18px">
+        <label><span data-i18n="enterprise_email">Email</span> <span style="color:var(--accent)">*</span></label>
+        <input type="email" id="email">
       </div>
-
-      <div class="field">
-        <label><span data-i18n="enterprise_requests">Desired requests/month</span> <span class="req">*</span></label>
+      <div style="margin-bottom:18px">
+        <label><span data-i18n="enterprise_requests">Desired requests/month</span> <span style="color:var(--accent)">*</span></label>
         <select id="requests">
-          <option value="">— <span data-i18n="enterprise_select">Please select</span> —</option>
-          <option value="10.000">10.000</option>
-          <option value="25.000">25.000</option>
-          <option value="50.000">50.000</option>
-          <option value="100.000">100.000</option>
-          <option value="250.000">250.000</option>
-          <option value="500.000+">500.000+</option>
+          <option value="">— Select —</option>
+          <option>10.000</option><option>25.000</option><option>50.000</option>
+          <option>100.000</option><option>250.000</option><option>500.000+</option>
         </select>
       </div>
-
-      <div class="field">
-        <label>
-          <span data-i18n="enterprise_note">Additional information</span>
-          <span style="color:var(--muted);font-weight:400;margin-left:4px" data-i18n="suggest_note_opt">(optional)</span>
-        </label>
-        <textarea id="note" data-i18n-placeholder="enterprise_note_ph"></textarea>
+      <div style="margin-bottom:24px">
+        <label><span data-i18n="enterprise_note">Additional info</span> <span style="color:var(--muted);font-size:10px" data-i18n="suggest_note_opt">(optional)</span></label>
+        <textarea id="note" rows="4"></textarea>
       </div>
-
       <button class="btn" id="submitBtn" data-i18n="enterprise_send">Send request</button>
       <div class="msg" id="msg"></div>
     </div>
@@ -106,46 +96,18 @@
 <script src="/shared.js"></script>
 <script>
 document.getElementById('submitBtn').addEventListener('click', async function() {
-  var firstname = document.getElementById('firstname').value.trim();
-  var lastname  = document.getElementById('lastname').value.trim();
-  var email     = document.getElementById('email').value.trim();
-  var requests  = document.getElementById('requests').value;
-  var note      = document.getElementById('note').value.trim();
-  var btn = document.getElementById('submitBtn');
-  var msg = document.getElementById('msg');
-  msg.className = 'msg';
-
-  if (!firstname || !lastname || !email || !requests) {
-    msg.textContent = window.i18n.t('register_error_fields');
-    msg.className = 'msg error';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span>' + window.i18n.t('forgot_sending');
-
-  try {
-    var res = await fetch('/enterprise-contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ firstname, lastname, email, requests, note })
-    });
-    if (res.ok) {
-      msg.textContent = window.i18n.t('enterprise_success');
-      msg.className = 'msg success';
-      ['firstname','lastname','email','note'].forEach(function(id) { document.getElementById(id).value = ''; });
-      document.getElementById('requests').selectedIndex = 0;
-    } else {
-      throw new Error();
-    }
-  } catch {
-    msg.textContent = window.i18n.t('suggest_err_send');
-    msg.className = 'msg error';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = window.i18n.t('enterprise_send');
-  }
+  var fn=document.getElementById('firstname').value.trim(), ln=document.getElementById('lastname').value.trim();
+  var email=document.getElementById('email').value.trim(), req=document.getElementById('requests').value;
+  var note=document.getElementById('note').value.trim();
+  var btn=document.getElementById('submitBtn'), msg=document.getElementById('msg');
+  msg.className='msg';
+  if(!fn||!ln||!email||!req){msg.textContent=window.i18n?.t('register_error_fields')||'Please fill all required fields.';msg.className='msg error';return}
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>...';
+  try{
+    var res=await fetch('/enterprise-contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstname:fn,lastname:ln,email,requests:req,note})});
+    if(res.ok){msg.textContent=window.i18n?.t('enterprise_success')||'Thanks! We'll get back to you.';msg.className='msg success';}
+    else throw new Error();
+  }catch{msg.textContent=window.i18n?.t('suggest_err_send')||'Error.';msg.className='msg error';}
+  finally{btn.disabled=false;btn.textContent=window.i18n?.t('enterprise_send')||'Send request';}
 });
-</script>
-</body>
-</html>
+</script></body></html>
