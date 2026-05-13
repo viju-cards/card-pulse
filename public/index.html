@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta http-equiv="Content-Language" content="en">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CardPulse – TCGPlayer Prices on Cardmarket</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -331,21 +333,69 @@ document.addEventListener('DOMContentLoaded', function() { applyPreviewTheme(fal
   <div class="section-label" data-i18n="pricing_label">Pricing</div>
   <h2 data-i18n="pricing_h2">Simple & transparent.</h2>
   <p class="pricing-sub" data-i18n="pricing_sub"></p>
-  <div class="pricing-cards">
+  <div class="pricing-cards" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+
     <div class="price-card">
-      <div class="price-tier" data-i18n="plan_free">Free</div>
+      <div class="price-tier" style="color:#cd7f32">Bronze</div>
       <div class="price-amount">€0</div>
       <div class="price-per" data-i18n="plan_free_period">forever</div>
-      <ul class="price-features"><li>Account</li><li>Extension</li><li class="dim">TCGPlayer prices</li><li class="dim">All conditions</li><li class="dim">EUR conversion</li></ul>
+      <ul class="price-features">
+        <li>Account &amp; Extension</li>
+        <li>All conditions</li>
+        <li>EUR conversion</li>
+        <li>20 <span data-i18n="requests_mo">requests/month</span></li>
+      </ul>
       <a href="/register.html" class="btn-ghost btn-full" data-i18n="btn_start_free">Start for free</a>
     </div>
-    <div class="price-card featured">
-      <div class="price-tier">Premium</div>
-      <div class="price-amount">€4,99</div>
+
+    <div class="price-card">
+      <div class="price-tier" style="color:#94a3b8">Silver</div>
+      <div class="price-amount">€3,99</div>
       <div class="price-per" data-i18n="plan_premium_period">per month · cancel anytime</div>
-      <ul class="price-features"><li>Account</li><li>Extension</li><li>TCGPlayer prices</li><li>All conditions</li><li>EUR conversion</li></ul>
-      <a href="/register.html" class="btn-primary btn-full" data-i18n="btn_upgrade">Upgrade now</a>
+      <ul class="price-features">
+        <li>Account &amp; Extension</li>
+        <li>All conditions</li>
+        <li>EUR conversion</li>
+        <li>400 <span data-i18n="requests_mo">requests/month</span></li>
+      </ul>
+      <a href="/register.html" class="btn-ghost btn-full" data-i18n="btn_upgrade">Upgrade</a>
     </div>
+
+    <div class="price-card featured" style="border-color:#f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.06),var(--surface))">
+      <div class="price-tier" style="color:#f59e0b">Gold ⭐</div>
+      <div class="price-amount">€7,99</div>
+      <div class="price-per" data-i18n="plan_premium_period">per month · cancel anytime</div>
+      <ul class="price-features">
+        <li>Account &amp; Extension</li>
+        <li>All conditions</li>
+        <li>EUR conversion</li>
+        <li>1.000 <span data-i18n="requests_mo">requests/month</span></li>
+      </ul>
+      <a href="/register.html" class="btn-primary btn-full" style="background:#f59e0b" data-i18n="btn_upgrade">Upgrade</a>
+    </div>
+
+    <div class="price-card" style="border-color:rgba(167,139,250,0.3)">
+      <div class="price-tier" style="color:#a78bfa">Platin</div>
+      <div class="price-amount">€24,99</div>
+      <div class="price-per" data-i18n="plan_premium_period">per month · cancel anytime</div>
+      <ul class="price-features">
+        <li>Account &amp; Extension</li>
+        <li>All conditions</li>
+        <li>EUR conversion</li>
+        <li>5.000 <span data-i18n="requests_mo">requests/month</span></li>
+      </ul>
+      <a href="/register.html" class="btn-ghost btn-full" data-i18n="btn_upgrade">Upgrade</a>
+    </div>
+
+    <!-- Enterprise teaser -->
+    <a href="/enterprise.html" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:16px;padding:18px 22px;border:1px dashed rgba(167,139,250,0.3);border-radius:14px;text-decoration:none;transition:.2s" onmouseover="this.style.background='rgba(167,139,250,0.05)'" onmouseout="this.style.background='transparent'">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#e8e8f0" data-i18n="enterprise_h3">Platin not enough?</div>
+        <div style="font-size:12px;color:#6b6b80;margin-top:3px" data-i18n="enterprise_sub_short">More than 5,000 requests/month?</div>
+      </div>
+      <span style="padding:8px 18px;border-radius:8px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;font-size:13px;font-weight:600;white-space:nowrap" data-i18n="enterprise_btn">Get a custom quote →</span>
+    </a>
+
   </div>
 </section>
 <section class="sets-section">
