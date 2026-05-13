@@ -3,442 +3,364 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CardPulse – Coming Soon</title>
+<title>CardPulse – TCGPlayer Prices on Cardmarket</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #060610;
-    --card: #0d0d1f;
-    --border: rgba(255,255,255,0.07);
-    --accent: #7b6fff;
-    --accent2: #a78bfa;
-    --text: #f0f0f8;
-    --muted: #5a5a78;
-    --green: #34d399;
-    --amber: #fbbf24;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Cabinet Grotesk', system-ui, sans-serif;
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-  }
-
-  /* Background grid */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(123,111,255,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(123,111,255,0.04) 1px, transparent 1px);
-    background-size: 48px 48px;
-    pointer-events: none;
-  }
-
-  /* Glow blob */
-  body::after {
-    content: '';
-    position: fixed;
-    top: -20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 800px;
-    height: 600px;
-    background: radial-gradient(ellipse, rgba(123,111,255,0.10) 0%, transparent 65%);
-    pointer-events: none;
-  }
-
-  /* ── Lang switcher ───────────────────────────────── */
-  .lang-switcher {
-    position: fixed;
-    top: 24px;
-    right: 28px;
-    display: flex;
-    gap: 6px;
-    z-index: 100;
-    background: rgba(13,13,31,0.8);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 5px;
-    backdrop-filter: blur(12px);
-  }
-
-  .lang-btn {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 13px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    font-family: 'Cabinet Grotesk', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all .18s ease;
-    white-space: nowrap;
-  }
-  .flag-svg {
-    width: 20px;
-    height: 14px;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
-  .lang-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-  .lang-btn.active {
-    color: var(--text);
-    background: rgba(123,111,255,0.15);
-    border: 1px solid rgba(123,111,255,0.25);
-  }
-
-  /* ── Main card ───────────────────────────────────── */
-  .wrap {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 600px;
-  }
-
-  /* Logo row */
-  .logo-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 56px;
-  }
-
-  .logo-mark {
-    width: 42px;
-    height: 42px;
-    border-radius: 11px;
-    background: linear-gradient(135deg, #7b6fff 0%, #a78bfa 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .logo-mark svg { width: 22px; height: 22px; }
-
-  .logo-text {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--text);
-  }
-  .logo-text span { color: var(--accent2); }
-
-  /* Eyebrow */
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--accent);
-    margin-bottom: 20px;
-  }
-  .eyebrow-line {
-    width: 24px;
-    height: 1px;
-    background: var(--accent);
-    opacity: 0.5;
-  }
-
-  /* Heading */
-  h1 {
-    font-size: clamp(36px, 7vw, 64px);
-    font-weight: 900;
-    line-height: 1.08;
-    letter-spacing: -2px;
-    padding-bottom: 0.18em;
-    margin-bottom: 20px;
-    color: var(--text);
-  }
-
-  h1 .line2 {
-    display: inline-block;
-    padding-bottom: 0.2em;
-    background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .sub {
-    font-size: 17px;
-    color: var(--muted);
-    line-height: 1.65;
-    font-weight: 400;
-    max-width: 440px;
-    margin-bottom: 44px;
-  }
-
-  /* Divider */
-  .divider {
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-    margin-bottom: 36px;
-  }
-
-  /* Status list */
-  .status-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 16px;
-  }
-
-  .status-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 44px;
-  }
-
-  .status-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .status-bar-wrap {
-    flex: 1;
-    height: 3px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 99px;
-    overflow: hidden;
-  }
-  .status-bar {
-    height: 100%;
-    border-radius: 99px;
-    transition: width 1s ease;
-  }
-  .bar-done  { background: var(--green); width: 100%; }
-  .bar-wip   { background: linear-gradient(90deg, var(--amber), rgba(251,191,36,0.3)); width: 65%; animation: shimmer 2s ease infinite; }
-  .bar-todo  { background: rgba(255,255,255,0.08); width: 100%; }
-
-  @keyframes shimmer {
-    0%,100% { opacity: 1; }
-    50%      { opacity: 0.6; }
-  }
-
-  .status-name { min-width: 160px; color: var(--text); }
-  .status-name.muted { color: var(--muted); }
-
-  .status-tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 5px;
-    font-weight: 500;
-  }
-  .tag-done { background: rgba(52,211,153,0.1); color: var(--green); }
-  .tag-wip  { background: rgba(251,191,36,0.1); color: var(--amber); }
-  .tag-soon { background: rgba(255,255,255,0.05); color: var(--muted); }
-
-  /* Footer note */
-  .bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .mono-note {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    opacity: 0.5;
-    letter-spacing: 0.5px;
-  }
-  .powered {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--muted);
-    opacity: 0.4;
-  }
-  .powered-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s ease infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--accent-dim:rgba(108,99,255,0.12);--text:#e8e8f0;--muted:#6b6b80;--green:#22c55e}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(7,7,13,0.9);backdrop-filter:blur(16px);z-index:100}
+  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:800;color:#fff;text-decoration:none}
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:8px;align-items:center}
+  .btn-ghost{padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;text-decoration:none;transition:.2s}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-primary{padding:10px 22px;border-radius:10px;background:var(--accent);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;transition:.2s}
+  .btn-primary:hover{opacity:.85}
+  .hero{text-align:center;padding:120px 24px 80px;position:relative}
+  .hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(108,99,255,0.18) 0%,transparent 70%);pointer-events:none}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:99px;border:1px solid var(--border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:500;margin-bottom:32px}
+  .badge-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:clamp(42px,6vw,80px);font-weight:800;line-height:1.05;letter-spacing:-2px;margin-bottom:24px}
+  h1 em{color:var(--accent);font-style:normal}
+  .hero-sub{font-size:18px;color:var(--muted);max-width:480px;margin:0 auto 48px;line-height:1.6;font-weight:300}
+  .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn-large{padding:16px 36px;font-size:16px;border-radius:14px;font-weight:500}
+  .preview-url{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .preview{margin:0 auto 80px;max-width:900px;padding:0 24px}
+  .preview-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.5)}
+  .preview-bar{background:#0a0a15;padding:14px 20px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .preview-url{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-left:8px}
+  .preview-inner{display:flex}
+  .preview-site{flex:1;padding:40px;border-right:1px solid var(--border)}
+  .preview-site h3{font-family:'Cabinet Grotesk',sans-serif;font-size:14px;color:var(--muted);margin-bottom:20px;text-transform:uppercase;letter-spacing:1px}
+  .card-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+  .card-name{font-size:14px;color:var(--text)}
+  .card-price{font-family:'DM Mono',monospace;font-size:14px;color:var(--muted)}
+  .overlay-preview{width:240px;padding:24px}
+  .overlay-title{font-family:'Cabinet Grotesk',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px}
+  .overlay-title span{color:var(--accent)}
+  .premium-badge{background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:99px;text-transform:uppercase}
+  .market-box{background:var(--accent-dim);border:1.5px solid var(--accent);border-radius:12px;padding:14px;text-align:center;margin:16px 0}
+  .market-label{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px}
+  .market-price{font-family:'Cabinet Grotesk',sans-serif;font-size:28px;font-weight:800;color:#fff}
+  .market-eur{font-size:14px;color:var(--accent);font-weight:600}
+  .cond-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+  .cond-price{font-family:'DM Mono',monospace;color:var(--text)}
+  .features{padding:80px 24px;max-width:1100px;margin:0 auto;width:100%}
+  .section-label{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px}
+  .features h2{font-family:'Cabinet Grotesk',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-1px;margin-bottom:64px}
+  .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px;background:var(--border);border-radius:20px;overflow:hidden}
+  .feature{background:var(--surface);padding:36px;transition:.2s}
+  .feature:hover{background:#131325}
+  .feature-icon{font-size:28px;margin-bottom:16px}
+  .feature h3{font-family:'Cabinet Grotesk',sans-serif;font-size:18px;font-weight:700;margin-bottom:10px}
+  .feature p{font-size:14px;color:var(--muted);line-height:1.6}
+  .pricing{padding:80px 24px;max-width:800px;margin:0 auto;text-align:center;width:100%}
+  .pricing h2{font-family:'Cabinet Grotesk',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-1px;margin-bottom:16px}
+  .pricing-sub{color:var(--muted);margin-bottom:48px}
+  .pricing-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left}
+  .price-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px}
+  .price-card.featured{border-color:var(--accent);background:linear-gradient(135deg,rgba(108,99,255,0.08),var(--surface))}
+  .price-tier{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px}
+  .price-card.featured .price-tier{color:var(--accent)}
+  .price-amount{font-family:'Cabinet Grotesk',sans-serif;font-size:40px;font-weight:800;margin-bottom:4px}
+  .price-per{font-size:13px;color:var(--muted);margin-bottom:24px}
+  .price-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+  .price-features li{font-size:14px;color:var(--muted);display:flex;gap:10px}
+  .price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+  .price-features li.dim{opacity:.4}
+  .price-features li.dim::before{content:'✗';color:var(--muted)}
+  .btn-full{width:100%;text-align:center;display:block;padding:14px;border-radius:12px;font-weight:500}
+  .sets-section{padding:80px 24px;max-width:1100px;margin:0 auto;width:100%}
+  .sets-section h2{font-family:'Cabinet Grotesk',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-1px;margin-bottom:16px}
+  .sets-sub{color:var(--muted);margin-bottom:48px}
+  .sets-grid{display:flex;flex-wrap:wrap;gap:10px}
+  .set-pill{padding:8px 16px;border-radius:99px;border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);transition:.2s}
+  .set-pill:hover{border-color:var(--accent);color:var(--accent)}
+  .sets-more{margin-top:24px;font-size:14px;color:var(--muted)}
+  .sets-more a{color:var(--accent);text-decoration:none}
+  @media(max-width:640px){nav{padding:16px 20px}.pricing-cards{grid-template-columns:1fr}.preview-inner{flex-direction:column}.overlay-preview{width:100%;border-top:1px solid var(--border)}}
+  .lang-flag-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s ease;white-space:nowrap}
+  .lang-flag-btn:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+  .lang-flag-btn.active{color:var(--text);background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.25)}
+  #langSwitcher{display:flex;gap:5px;align-items:center;background:rgba(13,13,31,0.7);border:1px solid rgba(108,99,255,0.15);border-radius:10px;padding:4px}
 </style>
 </head>
 <body>
-
-<!-- Language switcher -->
-<div class="lang-switcher">
-  <button class="lang-btn active" id="btn-en" onclick="setLang('en')">
-    <svg class="flag-svg" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg">
-      <rect width="20" height="14" fill="#012169"/>
-      <path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/>
-      <path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/>
-      <path d="M10,0 V14 M0,7 H20" stroke="#fff" stroke-width="4"/>
-      <path d="M10,0 V14 M0,7 H20" stroke="#C8102E" stroke-width="2.4"/>
-    </svg>
-    EN
-  </button>
-  <button class="lang-btn" id="btn-de" onclick="setLang('de')">
-    <svg class="flag-svg" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg">
-      <rect y="0"    width="20" height="4.67" fill="#000"/>
-      <rect y="4.67" width="20" height="4.67" fill="#D00"/>
-      <rect y="9.33" width="20" height="4.67" fill="#FFCE00"/>
-    </svg>
-    DE
-  </button>
-</div>
-
-<div class="wrap">
-
-  <!-- Logo -->
-  <div class="logo-row">
-    <div class="logo-mark">
-      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M17 4 A9 9 0 1 0 17 18" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        <polyline points="3,11 6,11 8,6 11,16 13,9 16,11 19,11" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+<nav>
+  <a href="/" class="logo">card<span>pulse</span></a>
+  <div class="nav-links">
+    <a href="/sets.html" class="btn-ghost" data-i18n="nav_sets">Supported Sets</a>
+    <a href="/login.html" class="btn-ghost" data-i18n="nav_login">Sign in</a>
+    <a href="/register.html" class="btn-primary" data-i18n="nav_register">Get started</a>
+  </div>
+</nav>
+<section class="hero">
+  <div class="badge"><span class="badge-dot"></span><span data-i18n="hero_badge">Now available for Chrome</span></div>
+  <h1><span data-i18n="hero_h1_1">TCGPlayer prices</span><br><span data-i18n="hero_h1_2">directly on</span> <em data-i18n="hero_h1_accent">Cardmarket</em></h1>
+  <p class="hero-sub" data-i18n="hero_sub"></p>
+  <div class="hero-actions">
+    <a href="/register.html" class="btn-primary btn-large" data-i18n="hero_cta_primary">Start free</a>
+    <a href="/sets.html" class="btn-ghost btn-large" data-i18n="hero_cta_secondary">View all sets</a>
+  </div>
+</section>
+<div class="preview">
+  <!-- Light/Dark toggle -->
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px">
+    <span style="font-size:13px;color:var(--muted)" id="preview-label">Cardmarket Light Mode</span>
+    <div id="preview-toggle" onclick="togglePreview()" style="width:44px;height:24px;border-radius:12px;background:rgba(108,99,255,0.3);border:1px solid rgba(108,99,255,0.4);cursor:pointer;position:relative;transition:.3s">
+      <div id="toggle-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:9px;background:#6c63ff;transition:.3s"></div>
     </div>
-    <div class="logo-text">card<span>pulse</span></div>
+    <span style="font-size:13px;color:var(--muted)">Dark Mode</span>
   </div>
 
-  <!-- Eyebrow -->
-  <div class="eyebrow">
-    <span class="eyebrow-line"></span>
-    <span id="txt-eyebrow">Under construction</span>
-    <span class="eyebrow-line"></span>
+  <div class="preview-card" id="preview-card">
+    <div class="preview-bar" id="preview-bar">
+      <div class="dot" style="background:#ff5f57"></div>
+      <div class="dot" style="background:#febc2e"></div>
+      <div class="dot" style="background:#28c840"></div>
+      <span class="preview-url">cardmarket.com/en/Pokemon/Singles/Surging-Sparks/Latias-ex</span>
+    </div>
+    <div class="preview-inner">
+      <!-- Cardmarket page simulation -->
+      <div class="preview-site" id="preview-site">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;opacity:.5" id="preview-site-label">Cardmarket</div>
+        <div style="font-size:22px;font-weight:700;margin-bottom:4px" id="preview-card-title">Latias ex (SSP 076)</div>
+        <div style="font-size:13px;opacity:.5;margin-bottom:20px">Surging Sparks · Singles</div>
+        <div class="card-row" id="pr1"><span class="card-name">Price Trend</span><span class="card-price">€ 5,17</span></div>
+        <div class="card-row" id="pr2"><span class="card-name">30-days average</span><span class="card-price">€ 5,17</span></div>
+        <div class="card-row" id="pr3"><span class="card-name">Available items</span><span class="card-price" style="color:#22c55e">522</span></div>
+      </div>
+
+      <!-- CardPulse overlay simulation -->
+      <div class="overlay-preview" id="cp-preview-box">
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid" id="cp-header-wrap">
+          <div style="font-size:14px;font-weight:700;letter-spacing:-0.3px" id="cp-logo-preview">card<span style="color:#7b6fff">pulse</span></div>
+          <div style="font-size:16px;font-weight:700;cursor:pointer;opacity:.5">−</div>
+        </div>
+        <!-- Card name -->
+        <div style="font-size:11px;margin-bottom:10px;opacity:.5">Latias ex · 076/191</div>
+        <!-- Market price box -->
+        <div style="border-radius:8px;padding:12px;text-align:center;margin-bottom:10px;border:1.5px solid" id="cp-mkt-box">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px" id="cp-mkt-label">TCGPlayer Market Price</div>
+          <div style="font-size:26px;font-weight:700;line-height:1.1" id="cp-mkt-usd">$5.01</div>
+          <div style="font-size:13px;font-weight:600;margin-top:1px" id="cp-mkt-eur">€4.61</div>
+        </div>
+        <!-- Trend pills -->
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <div style="flex:1;border-radius:7px;padding:6px;text-align:center;border:1px solid" class="cp-pill" id="cp-pill1">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;opacity:.6;margin-bottom:2px">7D</div>
+            <div style="font-size:12px;font-weight:700;color:#dc2626">-2.1%</div>
+          </div>
+          <div style="flex:1;border-radius:7px;padding:6px;text-align:center;border:1px solid" class="cp-pill" id="cp-pill2">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;opacity:.6;margin-bottom:2px">30D</div>
+            <div style="font-size:12px;font-weight:700;color:#dc2626">-5.4%</div>
+          </div>
+          <div style="flex:1;border-radius:7px;padding:6px;text-align:center;border:1px solid" class="cp-pill" id="cp-pill3">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;opacity:.6;margin-bottom:2px">30D Ø</div>
+            <div style="font-size:12px;font-weight:700">$5.28</div>
+          </div>
+        </div>
+        <!-- Sparkline -->
+        <div style="border-radius:7px;padding:8px 8px 4px;border:1px solid;margin-bottom:10px" id="cp-spark-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;opacity:.5;margin-bottom:4px">
+            <span>30d price history</span><span>$5.60 → $5.01</span>
+          </div>
+          <svg width="100%" height="36" viewBox="0 0 220 36" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#dc2626" stop-opacity="0.18"/>
+                <stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <polygon points="4,8 26,6 48,10 70,7 92,12 114,9 136,14 158,16 180,20 202,24 216,28 216,36 4,36" fill="url(#lg1)"/>
+            <polyline points="4,8 26,6 48,10 70,7 92,12 114,9 136,14 158,16 180,20 202,24 216,28" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="216" cy="28" r="2.5" fill="#dc2626"/>
+          </svg>
+        </div>
+        <!-- Conditions -->
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;border:1px solid" class="cp-cond-row" id="cpnm">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="background:#DFF6DD;color:#107C10;font-size:10px;font-weight:700;padding:2px 5px;border-radius:3px">NM</span>
+              <span style="font-size:11px;opacity:.7">Near Mint</span>
+            </div>
+            <div style="text-align:right"><div style="font-size:12px;font-weight:600">$5.01</div><div style="font-size:10px;color:#1a4b8c">€4.61</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;border:1px solid" class="cp-cond-row" id="cplp">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="background:#E6F4E0;color:#2D7D1F;font-size:10px;font-weight:700;padding:2px 5px;border-radius:3px">LP</span>
+              <span style="font-size:11px;opacity:.7">Lightly Played</span>
+            </div>
+            <div style="text-align:right"><div style="font-size:12px;font-weight:600">$4.45</div><div style="font-size:10px;color:#1a4b8c">€4.09</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;border:1px solid" class="cp-cond-row" id="cpmp">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="background:#FFF4CE;color:#8A6914;font-size:10px;font-weight:700;padding:2px 5px;border-radius:3px">MP</span>
+              <span style="font-size:11px;opacity:.7">Mod. Played</span>
+            </div>
+            <div style="text-align:right"><div style="font-size:12px;font-weight:600">$3.78</div><div style="font-size:10px;color:#1a4b8c">€3.48</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;border:1px solid" class="cp-cond-row" id="cphp">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="background:#FDEDE3;color:#C05000;font-size:10px;font-weight:700;padding:2px 5px;border-radius:3px">HP</span>
+              <span style="font-size:11px;opacity:.7">Heavily Played</span>
+            </div>
+            <div style="text-align:right"><div style="font-size:12px;font-weight:600">$3.04</div><div style="font-size:10px;color:#1a4b8c">€2.80</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;border:1px solid" class="cp-cond-row" id="cpd">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="background:#FDE7E9;color:#A4262C;font-size:10px;font-weight:700;padding:2px 5px;border-radius:3px">D</span>
+              <span style="font-size:11px;opacity:.7">Damaged</span>
+            </div>
+            <div style="text-align:right"><div style="font-size:12px;font-weight:600">$2.99</div><div style="font-size:10px;color:#1a4b8c">€2.75</div></div>
+          </div>
+        </div>
+        <div style="border-radius:8px;padding:9px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;border:1px solid" id="cp-dash-preview">Dashboard & Subscription</div>
+      </div>
+    </div>
   </div>
-
-  <!-- Heading -->
-  <h1>
-    <span id="txt-h1a">Almost</span><br>
-    <span class="line2" id="txt-h1b">ready to launch.</span>
-  </h1>
-
-  <p class="sub" id="txt-sub">
-    CardPulse brings TCGPlayer market prices directly to Cardmarket — for collectors and traders across Europe.
-  </p>
-
-  <div class="divider"></div>
-
-  <!-- Status -->
-  <div class="status-label" id="txt-status-label">Build progress</div>
-  <div class="status-list">
-    <div class="status-item">
-      <span class="status-name" id="s1">Backend & API</span>
-      <div class="status-bar-wrap"><div class="status-bar bar-done"></div></div>
-      <span class="status-tag tag-done" id="t1">done</span>
-    </div>
-    <div class="status-item">
-      <span class="status-name" id="s2">Database</span>
-      <div class="status-bar-wrap"><div class="status-bar bar-done"></div></div>
-      <span class="status-tag tag-done" id="t1b">done</span>
-    </div>
-    <div class="status-item">
-      <span class="status-name" id="s3">Website</span>
-      <div class="status-bar-wrap"><div class="status-bar bar-wip"></div></div>
-      <span class="status-tag tag-wip" id="t2">in progress</span>
-    </div>
-    <div class="status-item">
-      <span class="status-name" id="s4">Chrome Extension</span>
-      <div class="status-bar-wrap"><div class="status-bar bar-wip"></div></div>
-      <span class="status-tag tag-wip" id="t3">in progress</span>
-    </div>
-    <div class="status-item">
-      <span class="status-name muted" id="s5">Public launch</span>
-      <div class="status-bar-wrap"><div class="status-bar bar-todo"></div></div>
-      <span class="status-tag tag-soon" id="t4">soon</span>
-    </div>
-  </div>
-
-  <div class="bottom">
-    <span class="mono-note">card-pulse.com</span>
-    <div class="powered">
-      <div class="powered-dot"></div>
-      <span id="txt-online">Systems online</span>
-    </div>
-  </div>
-
 </div>
 
 <script>
-const T = {
-  en: {
-    eyebrow: 'Under construction',
-    h1a: 'Almost',
-    h1b: 'ready to launch.',
-    sub: 'CardPulse brings TCGPlayer market prices directly to Cardmarket — for collectors and traders across Europe.',
-    statusLabel: 'Build progress',
-    s1:'Backend & API', s2:'Database', s3:'Website', s4:'Chrome Extension', s5:'Public launch',
-    t1:'done', t2:'in progress', t3:'in progress', t4:'soon',
-    online: 'Systems online',
-  },
-  de: {
-    eyebrow: 'Im Aufbau',
-    h1a: 'Fast',
-    h1b: 'startklar.',
-    sub: 'CardPulse zeigt dir TCGPlayer-Marktpreise direkt auf Cardmarket — für Sammler und Trader in ganz Europa.',
-    statusLabel: 'Fortschritt',
-    s1:'Backend & API', s2:'Datenbank', s3:'Webseite', s4:'Chrome Extension', s5:'Öffentlicher Launch',
-    t1:'fertig', t2:'in Arbeit', t3:'in Arbeit', t4:'bald',
-    online: 'Systeme online',
-  }
-};
+var isDarkPreview = false;
+function applyPreviewTheme(dark) {
+  var accent = dark ? '#7b6fff' : '#1a4b8c';
+  var bg = dark ? '#16181d' : '#ffffff';
+  var surface = dark ? '#1e2028' : '#f7f8fa';
+  var border = dark ? 'rgba(255,255,255,0.07)' : '#e4e6ea';
+  var text = dark ? '#e8e8f0' : '#1a1a2e';
+  var muted = dark ? '#7a7a9a' : '#6b7280';
+  var accentBg = dark ? 'rgba(123,111,255,0.1)' : '#f0f4fa';
+  var cardBg = dark ? '#14161d' : '#f5f5f5';
+  var siteBg = dark ? '#0f1117' : '#ffffff';
+  var siteText = dark ? '#e8e8f0' : '#1a1a2e';
 
-let lang = localStorage.getItem('cp_lang') || 'en';
+  // Preview card
+  var pc = document.getElementById('preview-card');
+  pc.style.background = bg;
+  pc.style.border = '1px solid ' + border;
 
-function setLang(l) {
-  lang = l;
-  localStorage.setItem('cp_lang', l);
-  apply();
+  var pb = document.getElementById('preview-bar');
+  pb.style.background = dark ? '#0a0c12' : '#f5f5f5';
+  pb.style.borderBottom = '1px solid ' + border;
+
+  var ps = document.getElementById('preview-site');
+  ps.style.background = siteBg;
+  ps.style.color = siteText;
+  ps.style.borderRight = '1px solid ' + border;
+
+  // CardPulse box
+  var cpb = document.getElementById('cp-preview-box');
+  cpb.style.background = bg;
+  cpb.style.color = text;
+
+  document.getElementById('cp-header-wrap').style.borderColor = border;
+  document.getElementById('cp-logo-preview').querySelector('span').style.color = accent;
+
+  var mktBox = document.getElementById('cp-mkt-box');
+  mktBox.style.background = accentBg;
+  mktBox.style.borderColor = accent;
+  document.getElementById('cp-mkt-label').style.color = accent;
+  document.getElementById('cp-mkt-usd').style.color = text;
+  document.getElementById('cp-mkt-eur').style.color = accent;
+
+  document.querySelectorAll('.cp-pill').forEach(function(p) {
+    p.style.background = surface;
+    p.style.borderColor = border;
+    p.style.color = text;
+  });
+
+  var sw = document.getElementById('cp-spark-wrap');
+  sw.style.background = surface;
+  sw.style.borderColor = border;
+
+  document.querySelectorAll('.cp-cond-row').forEach(function(r) {
+    r.style.background = surface;
+    r.style.borderColor = border;
+    r.style.color = text;
+  });
+
+  // Fix EUR color in condition rows for dark
+  ['cpnm','cplp','cpmp','cphp','cpd'].forEach(function(id) {
+    var eur = document.getElementById(id).querySelectorAll('div')[1].children[1];
+    eur.style.color = accent;
+  });
+
+  var dashBtn = document.getElementById('cp-dash-preview');
+  dashBtn.style.background = dark ? 'rgba(255,255,255,0.04)' : 'transparent';
+  dashBtn.style.borderColor = border;
+  dashBtn.style.color = text;
+
+  // Label
+  document.getElementById('preview-label').textContent = dark ? 'Cardmarket Dark Mode' : 'Cardmarket Light Mode';
+  document.getElementById('preview-card-title').style.color = siteText;
 }
 
-function apply() {
-  const t = T[lang];
-  document.getElementById('txt-eyebrow').textContent = t.eyebrow;
-  document.getElementById('txt-h1a').textContent     = t.h1a;
-  document.getElementById('txt-h1b').textContent     = t.h1b;
-  document.getElementById('txt-sub').textContent     = t.sub;
-  document.getElementById('txt-status-label').textContent = t.statusLabel;
-  document.getElementById('s1').textContent  = t.s1;
-  document.getElementById('s2').textContent  = t.s2;
-  document.getElementById('s3').textContent  = t.s3;
-  document.getElementById('s4').textContent  = t.s4;
-  document.getElementById('s5').textContent  = t.s5;
-  document.getElementById('t1').textContent  = t.t1;
-  document.getElementById('t1b').textContent = t.t1;
-  document.getElementById('t2').textContent  = t.t2;
-  document.getElementById('t3').textContent  = t.t3;
-  document.getElementById('t4').textContent  = t.t4;
-  document.getElementById('txt-online').textContent = t.online;
-  document.documentElement.lang = lang;
-  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-  document.getElementById('btn-de').classList.toggle('active', lang === 'de');
+function togglePreview() {
+  isDarkPreview = !isDarkPreview;
+  var knob = document.getElementById('toggle-knob');
+  var toggle = document.getElementById('preview-toggle');
+  knob.style.transform = isDarkPreview ? 'translateX(20px)' : 'translateX(0)';
+  toggle.style.background = isDarkPreview ? 'rgba(108,99,255,0.5)' : 'rgba(108,99,255,0.3)';
+  applyPreviewTheme(isDarkPreview);
 }
 
-apply();
+// Init light mode
+document.addEventListener('DOMContentLoaded', function() { applyPreviewTheme(false); });
 </script>
+<section class="features">
+  <div class="section-label" data-i18n="features_label">Features</div>
+  <h2 data-i18n="features_h2">Everything you need,\nnothing you don't.</h2>
+  <div class="features-grid">
+    <div class="feature"><div class="feature-icon">⚡</div><h3 data-i18n="feat1_title">Real-time prices</h3><p data-i18n="feat1_desc"></p></div>
+    <div class="feature"><div class="feature-icon">🎯</div><h3 data-i18n="feat2_title">All conditions</h3><p data-i18n="feat2_desc"></p></div>
+    <div class="feature"><div class="feature-icon">💶</div><h3 data-i18n="feat3_title">USD & EUR</h3><p data-i18n="feat3_desc"></p></div>
+    <div class="feature"><div class="feature-icon">🔒</div><h3 data-i18n="feat4_title">Secure & private</h3><p data-i18n="feat4_desc"></p></div>
+    <div class="feature"><div class="feature-icon">📦</div><h3 data-i18n="feat5_title">80+ Sets</h3><p data-i18n="feat5_desc"></p></div>
+    <div class="feature"><div class="feature-icon">🔄</div><h3 data-i18n="feat6_title">Always up to date</h3><p data-i18n="feat6_desc"></p></div>
+  </div>
+</section>
+<section class="pricing">
+  <div class="section-label" data-i18n="pricing_label">Pricing</div>
+  <h2 data-i18n="pricing_h2">Simple & transparent.</h2>
+  <p class="pricing-sub" data-i18n="pricing_sub"></p>
+  <div class="pricing-cards">
+    <div class="price-card">
+      <div class="price-tier" data-i18n="plan_free">Free</div>
+      <div class="price-amount">€0</div>
+      <div class="price-per" data-i18n="plan_free_period">forever</div>
+      <ul class="price-features"><li>Account</li><li>Extension</li><li class="dim">TCGPlayer prices</li><li class="dim">All conditions</li><li class="dim">EUR conversion</li></ul>
+      <a href="/register.html" class="btn-ghost btn-full" data-i18n="btn_start_free">Start for free</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-tier">Premium</div>
+      <div class="price-amount">€4,99</div>
+      <div class="price-per" data-i18n="plan_premium_period">per month · cancel anytime</div>
+      <ul class="price-features"><li>Account</li><li>Extension</li><li>TCGPlayer prices</li><li>All conditions</li><li>EUR conversion</li></ul>
+      <a href="/register.html" class="btn-primary btn-full" data-i18n="btn_upgrade">Upgrade now</a>
+    </div>
+  </div>
+</section>
+<section class="sets-section">
+  <div class="section-label" data-i18n="sets_label">Supported Sets</div>
+  <h2 data-i18n="sets_h2">Already 80+ sets\navailable.</h2>
+  <p class="sets-sub" data-i18n="sets_sub"></p>
+  <div class="sets-grid">
+    <div class="set-pill">Surging Sparks</div><div class="set-pill">Stellar Crown</div><div class="set-pill">Prismatic Evolutions</div>
+    <div class="set-pill">Journey Together</div><div class="set-pill">Destined Rivals</div><div class="set-pill">Sword & Shield</div>
+    <div class="set-pill">Scarlet ex</div><div class="set-pill">Violet ex</div><div class="set-pill">Paradox Rift</div>
+    <div class="set-pill">Temporal Forces</div><div class="set-pill">Twilight Masquerade</div><div class="set-pill">Shrouded Fable</div>
+  </div>
+  <p class="sets-more">→ <a href="/sets.html" data-i18n="sets_more_link">View full list</a></p>
+</section>
+<script src="/i18n.js"></script>
+<script src="/shared.js"></script>
 </body>
 </html>
