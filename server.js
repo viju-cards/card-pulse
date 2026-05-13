@@ -326,11 +326,21 @@ app.post("/stripe/checkout", requireAuth, async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
-      payment_method_types: ["card"],
+      // No payment_method_types = Stripe shows all enabled in dashboard
+      // Link disabled explicitly
+      payment_method_options: {
+        link: { display_preference: { preference: 'none' } },
+      },
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
+      locale: 'de',
       success_url: `${baseUrl}/dashboard?success=true`,
       cancel_url: `${baseUrl}/dashboard?canceled=true`,
       metadata: { user_id: String(user.id), plan },
+      custom_text: {
+        submit: { message: 'Du kannst dein Abo jederzeit kündigen.' },
+      },
     });
 
     res.json({ url: session.url });
