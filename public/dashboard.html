@@ -47,11 +47,6 @@
   .step-num{width:28px;height:28px;border-radius:99px;background:var(--accent-dim);border:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .step-text{font-size:14px;color:var(--muted);padding-top:4px;line-height:1.5}
   .step-text a{color:var(--accent);text-decoration:none}
-  .danger-box{background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.15);border-radius:16px;padding:24px}
-  .danger-box h3{font-family:'Cabinet Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--red);margin-bottom:8px}
-  .danger-box p{font-size:14px;color:var(--muted);margin-bottom:16px}
-  .btn-danger{padding:10px 20px;background:transparent;border:1px solid rgba(239,68,68,0.3);border-radius:10px;color:var(--red);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;transition:.2s}
-  .btn-danger:hover{background:rgba(239,68,68,0.1)}
   .loading-state{text-align:center;padding:80px;color:var(--muted)}
   .spin{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;margin-bottom:16px}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -89,9 +84,6 @@
     .ext-box { padding: 22px 18px; }
     .ext-box h3 { font-size: 16px; }
     .step-num { width: 24px; height: 24px; font-size: 12px; flex-shrink: 0; }
-
-    .danger-box { padding: 18px; }
-    .btn-danger { width: 100%; text-align: center; padding: 12px; }
 
     .nav-right { gap: 6px; }
     .user-email { display: none; }
@@ -135,7 +127,7 @@
     <!-- Usage bar -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Monthly usage</div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)" id="usageLabel">Monthly usage</div>
         <div style="font-size:13px;color:var(--muted)" id="usageText">—</div>
       </div>
       <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
@@ -159,17 +151,25 @@
         <div class="step"><div class="step-num">3</div><div class="step-text" data-i18n="dash_step3"></div></div>
       </div>
     </div>
-    <div class="danger-box">
-      <h3 data-i18n="dash_danger_title">Danger zone</h3>
-      <p data-i18n="dash_danger_desc">Sign out on all devices.</p>
-      <button class="btn-danger" id="logoutAllBtn" data-i18n="dash_logout_all">Sign out everywhere</button>
+    <div style="text-align:right;padding-bottom:16px">
+      <button id="logoutAllBtn" style="padding:9px 20px;background:transparent;border:1px solid rgba(239,68,68,0.35);border-radius:10px;color:#ef4444;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:.2s" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='transparent'" data-i18n="dash_logout_all">Sign out everywhere</button>
     </div>
   </div>
 </div>
 <script src="/i18n.js"></script>
 <script src="/shared.js"></script>
 <script>
-const API='';const EXT_ID='jofegljhkmoppkaiecbidoapponkjbld';
+const API='';
+const EXT_ID='jofegljhkmoppkaiecbidoapponkjbld';
+
+const PLANS={
+  bronze:    {label:'Bronze', color:'#cd7f32', limit:20,    price:'Free'},
+  silver:    {label:'Silver', color:'#94a3b8', limit:400,   price:'€3.99/mo'},
+  gold:      {label:'Gold',   color:'#f59e0b', limit:1000,  price:'€7.99/mo'},
+  platin:    {label:'Platin', color:'#a78bfa', limit:5000,  price:'€24.99/mo'},
+  enterprise:{label:'Enterprise', color:'#6c63ff', limit:999999, price:'Custom'},
+};
+
 async function init(){
   const token=localStorage.getItem('cp_token');
   if(!token){window.location.href='/login.html';return}
@@ -185,46 +185,132 @@ async function init(){
     else{window.location.href='/login.html'}
   }
 }
+
 function renderDashboard(user){
   document.getElementById('loadingState').style.display='none';
   document.getElementById('content').style.display='block';
   document.getElementById('userEmail').textContent=user.email;
   document.getElementById('infoEmail').textContent=user.email;
-  if(user.is_premium){
-    document.getElementById('statusCard').classList.add('premium');
-    document.getElementById('planTitle').textContent=i18n.t('dash_plan_premium_title');
-    document.getElementById('planDesc').textContent=user.cancel_at_period_end?i18n.t('dash_plan_canceling'):i18n.t('dash_plan_premium_desc');
-    document.getElementById('planBadge').textContent=i18n.t('dash_badge_premium');
-    document.getElementById('planBadge').className='plan-badge premium';
-    document.getElementById('actionBtn').textContent=i18n.t('dash_btn_manage');
-    document.getElementById('actionBtn').onclick=openPortal;
-    document.getElementById('infoPlan').textContent='Premium';
-    document.getElementById('infoPlan').style.color='var(--accent)';
-    if(user.premium_until)document.getElementById('infoUntil').textContent=new Date(user.premium_until).toLocaleDateString(i18n.lang==='de'?'de-DE':'en-GB');
-    if(user.cancel_at_period_end){document.getElementById('infoStatus').textContent=i18n.t('dash_status_canceled');document.getElementById('infoStatus').style.color='var(--red)'}
-  }else{document.getElementById('actionBtn').onclick=startCheckout}
-  localStorage.setItem('cp_user',JSON.stringify(user));
+
+  const plan    = user.plan || 'bronze';
+  const cfg     = PLANS[plan] || PLANS.bronze;
+  const used    = user.used ?? user.monthly_requests ?? 0;
+  const limit   = user.limit ?? cfg.limit;
+  const pct     = Math.min(100, Math.round((used/limit)*100));
+  const isDE    = i18n.lang === 'de';
+  const isPaid  = plan !== 'bronze';
+
+  // ── Status card ──
+  if(isPaid) document.getElementById('statusCard').classList.add('premium');
+  else document.getElementById('statusCard').classList.remove('premium');
+
+  document.getElementById('planTitle').textContent =
+    cfg.label + ' Plan' + (user.cancel_at_period_end ? (isDE?' – läuft aus':' – canceling'):'');
+  document.getElementById('planDesc').textContent = isDE
+    ? `${used} von ${limit} Anfragen diesen Monat genutzt.`
+    : `${used} of ${limit} requests used this month.`;
+  document.getElementById('planBadge').textContent = cfg.label;
+  document.getElementById('planBadge').style.background = cfg.color;
+  document.getElementById('planBadge').style.color = '#fff';
+  document.getElementById('planBadge').className = 'plan-badge';
+
+  if(isPaid){
+    document.getElementById('actionBtn').textContent = isDE ? 'Abo verwalten' : 'Manage subscription';
+    document.getElementById('actionBtn').onclick = openPortal;
+  } else {
+    document.getElementById('actionBtn').textContent = isDE ? 'Upgraden' : 'Upgrade';
+    document.getElementById('actionBtn').onclick = function(){
+      document.getElementById('plansSection').scrollIntoView({behavior:'smooth'});
+    };
+  }
+
+  // ── Info grid ──
+  document.getElementById('infoPlan').textContent   = cfg.label;
+  document.getElementById('infoPlan').style.color   = cfg.color;
+  document.getElementById('infoStatus').textContent = isDE ? 'Aktiv' : 'Active';
+  document.getElementById('infoStatus').style.color = 'var(--green)';
+  if(user.cancel_at_period_end){
+    document.getElementById('infoStatus').textContent = isDE ? 'Gekündigt' : 'Canceled';
+    document.getElementById('infoStatus').style.color = 'var(--red)';
+  }
+  if(user.premium_until){
+    document.getElementById('infoUntil').textContent =
+      new Date(user.premium_until).toLocaleDateString(isDE?'de-DE':'en-GB');
+  } else {
+    document.getElementById('infoUntil').textContent = '—';
+  }
+
+  // ── Usage bar ──
+  const barColor = pct>=90?'#ef4444':pct>=70?'#f59e0b':'var(--green)';
+  document.getElementById('usageBar').style.width      = pct+'%';
+  document.getElementById('usageBar').style.background = barColor;
+  document.getElementById('usageLabel').textContent    = isDE ? 'Monatliche Nutzung' : 'Monthly usage';
+  document.getElementById('usageText').textContent     =
+    `${used.toLocaleString()} / ${limit.toLocaleString()} ${isDE?'Anfragen':'requests'} (${pct}%)`;
+
+  // ── Plans grid ──
+  renderPlans(plan, isDE);
+  localStorage.setItem('cp_user', JSON.stringify(user));
 }
+
+function renderPlans(currentPlan, isDE){
+  const list=[
+    {key:'bronze', label:'Bronze', price:isDE?'Kostenlos':'Free',  period:'',               limit:'20'},
+    {key:'silver', label:'Silver', price:'€3.99',                  period:isDE?'/Monat':'/mo', limit:'400'},
+    {key:'gold',   label:'Gold',   price:'€7.99',                  period:isDE?'/Monat':'/mo', limit:'1.000'},
+    {key:'platin', label:'Platin', price:'€24.99',                 period:isDE?'/Monat':'/mo', limit:'5.000'},
+  ];
+  document.getElementById('plansGrid').innerHTML=list.map(function(p){
+    const cfg2  = PLANS[p.key];
+    const isCur = p.key===currentPlan;
+    const btnTxt= isCur
+      ? (isDE?'Aktueller Plan':'Current plan')
+      : p.key==='bronze'
+        ? (isDE?'Downgrade':'Downgrade')
+        : (isDE?'Upgraden':'Upgrade');
+    const onClick= isCur ? '' : p.key==='bronze'
+      ? "openPortal()"
+      : "startCheckout('"+p.key+"')";
+    return '<div style="background:var(--surface);border:1.5px solid '+(isCur?cfg2.color:'var(--border)')+';border-radius:16px;padding:22px'+(isCur?';background:linear-gradient(135deg,rgba(108,99,255,0.06),var(--surface))':'')+'">'
+      +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:'+cfg2.color+';margin-bottom:10px">'+p.label+'</div>'
+      +'<div style="font-family:'Cabinet Grotesk',sans-serif;font-size:28px;font-weight:800;margin-bottom:2px">'+p.price+'<span style="font-size:13px;font-weight:400;color:var(--muted)">'+p.period+'</span></div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-bottom:18px">'+p.limit+' '+(isDE?'Anfragen/Monat':'requests/month')+'</div>'
+      +'<button onclick="'+onClick+'" style="width:100%;padding:10px;border-radius:9px;border:'+(isCur?'none':'1px solid var(--border)')+';background:'+(isCur?cfg2.color:'transparent')+';color:'+(isCur?'#fff':'var(--text)')+';font-family:inherit;font-size:13px;font-weight:600;cursor:'+(isCur?'default':'pointer')+'" '+(isCur?'disabled':'')+'>'+btnTxt+'</button>'
+      +'</div>';
+  }).join('');
+}
+
 async function startCheckout(plan){
-  plan = plan || 'silver';
   try{
     const res=await fetch(`${API}/stripe/checkout`,{
       method:'POST',
       headers:{'Authorization':`Bearer ${localStorage.getItem('cp_token')}`,'Content-Type':'application/json'},
-      body: JSON.stringify({plan})
+      body:JSON.stringify({plan})
     });
     const d=await res.json();
     if(d.url)window.location.href=d.url;
-  } catch(e){ console.error(e); }
+  }catch(e){console.error(e)}
 }
+
 async function openPortal(){
-  const btn=document.getElementById('actionBtn');btn.textContent='...';btn.disabled=true;
-  try{const res=await fetch(`${API}/stripe/portal`,{method:'POST',headers:{'Authorization':`Bearer ${localStorage.getItem('cp_token')}`}});const d=await res.json();if(d.url)window.location.href=d.url}
-  catch(e){btn.textContent=i18n.t('dash_btn_manage');btn.disabled=false}
+  const btn=document.getElementById('actionBtn');
+  btn.textContent='...';btn.disabled=true;
+  try{
+    const res=await fetch(`${API}/stripe/portal`,{method:'POST',headers:{'Authorization':`Bearer ${localStorage.getItem('cp_token')}`}});
+    const d=await res.json();
+    if(d.url)window.location.href=d.url;
+  }catch(e){btn.disabled=false}
 }
-function logout(){localStorage.removeItem('cp_token');localStorage.removeItem('cp_user');try{chrome.runtime.sendMessage(EXT_ID,{type:'LOGOUT'})}catch(e){}window.location.href='/login.html'}
+
+function logout(){
+  localStorage.removeItem('cp_token');localStorage.removeItem('cp_user');
+  try{chrome.runtime.sendMessage(EXT_ID,{type:'LOGOUT'})}catch(e){}
+  window.location.href='/login.html';
+}
+
 document.getElementById('logoutBtn').onclick=logout;
 document.getElementById('logoutAllBtn').onclick=logout;
+
 const params=new URLSearchParams(window.location.search);
 if(params.get('success')==='true')history.replaceState({},'','/dashboard.html');
 init();
