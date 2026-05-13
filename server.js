@@ -335,8 +335,8 @@ app.post("/stripe/checkout", requireAuth, async (req, res) => {
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
       locale: 'de',
-      success_url: `${baseUrl}/dashboard?success=true`,
-      cancel_url: `${baseUrl}/dashboard?canceled=true`,
+      success_url: `${baseUrl}/dashboard.html?success=true`,
+      cancel_url: `${baseUrl}/dashboard.html?canceled=true`,
       metadata: { user_id: String(user.id), plan },
       custom_text: {
         submit: { message: 'Du kannst dein Abo jederzeit kündigen.' },
@@ -359,7 +359,7 @@ app.post("/stripe/portal", requireAuth, async (req, res) => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripe_customer_id,
-      return_url: `${process.env.FRONTEND_URL || 'https://www.card-pulse.com'}/dashboard`,
+      return_url: `${process.env.FRONTEND_URL || 'https://www.card-pulse.com'}/dashboard.html`,
     });
 
     res.json({ url: session.url });
