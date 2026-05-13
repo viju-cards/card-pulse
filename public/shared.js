@@ -18,14 +18,25 @@
   </svg>`;
 
   function injectLangToggle() {
-    const navLinks = document.querySelector('.nav-links, .nav-right');
-    if (!navLinks) return;
-
+    if (document.getElementById('langSwitcher')) return;
     const lang = localStorage.getItem('cp_lang') || 'en';
 
     const wrap = document.createElement('div');
     wrap.id = 'langSwitcher';
-    wrap.style.cssText = 'display:flex;gap:5px;align-items:center;background:rgba(13,13,31,0.7);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:4px;backdrop-filter:blur(12px)';
+    wrap.style.cssText = [
+      'position:fixed',
+      'top:16px',
+      'right:20px',
+      'z-index:9999',
+      'display:flex',
+      'gap:5px',
+      'align-items:center',
+      'background:rgba(13,13,31,0.85)',
+      'border:1px solid rgba(108,99,255,0.2)',
+      'border-radius:10px',
+      'padding:4px',
+      'backdrop-filter:blur(12px)',
+    ].join(';');
 
     const btnEn = document.createElement('button');
     btnEn.id = 'langBtnEn';
@@ -41,7 +52,7 @@
 
     wrap.appendChild(btnEn);
     wrap.appendChild(btnDe);
-    navLinks.prepend(wrap);
+    document.body.appendChild(wrap);
   }
 
   function switchLang(l) {
@@ -115,6 +126,31 @@
         transition: .2s;
       }
       .site-footer a:hover { color: #6c63ff; }
+
+      /* ── Mobile nav ── */
+      @media (max-width: 640px) {
+        nav {
+          padding: 14px 16px !important;
+          gap: 8px;
+        }
+        .nav-links, .nav-right {
+          gap: 4px !important;
+          flex-wrap: wrap;
+        }
+        .btn-ghost { padding: 8px 12px !important; font-size: 13px !important; }
+        .btn-primary { padding: 8px 14px !important; font-size: 13px !important; }
+        .site-footer {
+          padding: 28px 20px !important;
+          flex-direction: column !important;
+          text-align: center !important;
+          gap: 12px !important;
+        }
+        .footer-links {
+          justify-content: center !important;
+          flex-wrap: wrap !important;
+          gap: 16px !important;
+        }
+      }
 
       .lang-flag-btn {
         display: inline-flex;
