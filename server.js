@@ -1,6 +1,6 @@
 // server.js – CardPulse Backend (Finale Version)
 // Routes: /auth/register, /auth/login, /auth/me
-//         /stripe/checkout, /stripe/portal, /stripe/webhook
+//         /stripe/checkout, /stripe/portal, /webhook
 //         /prices, /sets
 
 const express = require("express");
@@ -68,7 +68,7 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 
 // ─── Body Parser ─────────────────────────────────────────────────────────────
-app.use("/stripe/webhook", express.raw({ type: "application/json" }));
+app.use("/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
 
 // ─── JWT Middleware ───────────────────────────────────────────────────────────
@@ -322,13 +322,14 @@ app.post("/stripe/checkout", requireAuth, async (req, res) => {
       await pool.query("UPDATE users SET stripe_customer_id = $1 WHERE id = $2", [customerId, user.id]);
     }
 
+    const baseUrl = process.env.FRONTEND_URL || 'https://www.card-pulse.com';
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.FRONTEND_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.FRONTEND_URL}/dashboard?canceled=true`,
+      success_url: `${baseUrl}/dashboard?success=true`,
+      cancel_url: `${baseUrl}/dashboard?canceled=true`,
       metadata: { user_id: String(user.id), plan },
     });
 
@@ -348,7 +349,7 @@ app.post("/stripe/portal", requireAuth, async (req, res) => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: user.stripe_customer_id,
-      return_url: `${process.env.FRONTEND_URL}/dashboard`,
+      return_url: `${process.env.FRONTEND_URL || 'https://www.card-pulse.com'}/dashboard`,
     });
 
     res.json({ url: session.url });
@@ -358,7 +359,7 @@ app.post("/stripe/portal", requireAuth, async (req, res) => {
   }
 });
 
-app.post("/stripe/webhook", async (req, res) => {
+app.post("/webhook", async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
 
@@ -599,7 +600,7 @@ app.post("/auth/forgot-password", async (req, res) => {
       [token, expires, userId]
     );
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password.html?token=${token}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'https://www.card-pulse.com'}/reset-password.html?token=${token}`;
 
     if (process.env.RESEND_API_KEY) {
       await fetch("https://api.resend.com/emails", {
