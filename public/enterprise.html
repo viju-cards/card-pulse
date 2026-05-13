@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enterprise – CardPulse</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--text:#e8e8f0;--muted:#6b6b80;--error:#ef4444;--green:#22c55e}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-bottom:1px solid var(--border)}
+  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:800;text-decoration:none;color:#fff}
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:8px;align-items:center}
+  .btn-ghost{padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;text-decoration:none;transition:.2s}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px}
+  .wrap{width:100%;max-width:560px}
+  .eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#a78bfa;margin-bottom:14px}
+  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-1px;margin-bottom:10px}
+  .subtitle{color:var(--muted);font-size:15px;margin-bottom:36px;line-height:1.6}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .field{margin-bottom:18px}
+  label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px}
+  .req{color:var(--accent)}
+  input,textarea,select{width:100%;padding:13px 16px;background:#0a0a15;border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;transition:.2s;outline:none;resize:vertical}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
+  select option{background:#0a0a15}
+  textarea{min-height:100px}
+  .btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:.2s}
+  .btn:hover{opacity:.85}.btn:disabled{opacity:.5;cursor:not-allowed}
+  .msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-top:16px;display:none;line-height:1.5}
+  .msg.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:var(--error);display:block}
+  .msg.success{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green);display:block}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .lang-flag-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 11px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s ease}
+  .lang-flag-btn:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+  .lang-flag-btn.active{color:var(--text);background:rgba(108,99,255,0.15);border-color:rgba(108,99,255,0.25)}
+  @media(max-width:640px){nav{padding:14px 16px}.main{padding:28px 16px}.row{grid-template-columns:1fr}.card{padding:24px 20px}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">card<span>pulse</span></a>
+  <div class="nav-links">
+    <a href="/" class="btn-ghost" data-i18n="nav_sets">Home</a>
+  </div>
+</nav>
+<div class="main">
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="enterprise_label">Enterprise</div>
+    <h1 data-i18n="enterprise_h3">Platin not enough?</h1>
+    <p class="subtitle" data-i18n="enterprise_form_sub">Tell us about your needs and we'll get back to you with a custom quote.</p>
+
+    <div class="card">
+      <div class="row">
+        <div class="field">
+          <label><span data-i18n="enterprise_firstname">First name</span> <span class="req">*</span></label>
+          <input type="text" id="firstname" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label><span data-i18n="enterprise_lastname">Last name</span> <span class="req">*</span></label>
+          <input type="text" id="lastname" autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="field">
+        <label><span data-i18n="enterprise_email">Email</span> <span class="req">*</span></label>
+        <input type="email" id="email" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label><span data-i18n="enterprise_requests">Desired requests/month</span> <span class="req">*</span></label>
+        <select id="requests">
+          <option value="">— <span data-i18n="enterprise_select">Please select</span> —</option>
+          <option value="10.000">10.000</option>
+          <option value="25.000">25.000</option>
+          <option value="50.000">50.000</option>
+          <option value="100.000">100.000</option>
+          <option value="250.000">250.000</option>
+          <option value="500.000+">500.000+</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>
+          <span data-i18n="enterprise_note">Additional information</span>
+          <span style="color:var(--muted);font-weight:400;margin-left:4px" data-i18n="suggest_note_opt">(optional)</span>
+        </label>
+        <textarea id="note" data-i18n-placeholder="enterprise_note_ph"></textarea>
+      </div>
+
+      <button class="btn" id="submitBtn" data-i18n="enterprise_send">Send request</button>
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/i18n.js"></script>
+<script src="/shared.js"></script>
+<script>
+document.getElementById('submitBtn').addEventListener('click', async function() {
+  var firstname = document.getElementById('firstname').value.trim();
+  var lastname  = document.getElementById('lastname').value.trim();
+  var email     = document.getElementById('email').value.trim();
+  var requests  = document.getElementById('requests').value;
+  var note      = document.getElementById('note').value.trim();
+  var btn = document.getElementById('submitBtn');
+  var msg = document.getElementById('msg');
+  msg.className = 'msg';
+
+  if (!firstname || !lastname || !email || !requests) {
+    msg.textContent = window.i18n.t('register_error_fields');
+    msg.className = 'msg error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>' + window.i18n.t('forgot_sending');
+
+  try {
+    var res = await fetch('/enterprise-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstname, lastname, email, requests, note })
+    });
+    if (res.ok) {
+      msg.textContent = window.i18n.t('enterprise_success');
+      msg.className = 'msg success';
+      ['firstname','lastname','email','note'].forEach(function(id) { document.getElementById(id).value = ''; });
+      document.getElementById('requests').selectedIndex = 0;
+    } else {
+      throw new Error();
+    }
+  } catch {
+    msg.textContent = window.i18n.t('suggest_err_send');
+    msg.className = 'msg error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = window.i18n.t('enterprise_send');
+  }
+});
+</script>
+</body>
+</html>
