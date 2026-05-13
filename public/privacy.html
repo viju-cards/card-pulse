@@ -3,44 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Language" content="en"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Language" content="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Privacy Policy – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--text:#e8e8f0;--muted:#6b6b80}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
-  nav{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-bottom:1px solid var(--border)}
-  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;text-decoration:none;color:#fff}
-  .logo span{color:var(--accent)}
-  .nav-links{display:flex;gap:8px;align-items:center}
-  .main{max-width:720px;margin:0 auto;padding:64px 24px;flex:1;width:100%}
-  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:36px;font-weight:800;margin-bottom:8px}
-  .updated{font-size:13px;color:var(--muted);margin-bottom:48px}
-  h2{font-family:'Cabinet Grotesk',sans-serif;font-size:18px;font-weight:700;margin:36px 0 12px;color:var(--accent)}
-  p{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:12px}
-  ul{padding-left:20px;margin-bottom:12px}
-  li{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:6px}
-  a{color:var(--accent);text-decoration:none}
-  .highlight{background:rgba(108,99,255,0.08);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:24px 0}
-  .highlight p{margin:0}
-  strong{color:var(--text)}
+:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:8px;align-items:center}
+.main{flex:1;position:relative;z-index:1;max-width:800px;margin:0 auto;width:100%;padding:64px 48px}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:20px}
+h2{font-family:"Barlow Condensed",sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin:36px 0 12px;color:var(--text)}
+h3{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;margin:24px 0 8px;color:var(--accent)}
+p{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:14px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+strong{color:var(--text);font-weight:500}
+.updated{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:32px;display:block}
+.section-label{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:20px;display:block}
+.section-label::before{content:"> "}
+.page-sub{font-size:15px;margin-bottom:40px;color:var(--muted)}
+.block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+.block p{margin:0;line-height:1.7}
+.block strong{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:.5px;display:block;margin-bottom:8px;color:var(--accent)}
+hr{border:none;border-top:1px solid var(--border);margin:32px 0}
 
-  /* ── Mobile ─────────────────────────────── */
-  @media (max-width: 640px) {
-    nav { padding: 14px 16px; }
-    .main { padding: 40px 16px; }
-    h1 { font-size: 28px; margin-bottom: 28px; }
-    h2 { font-size: 14px; margin: 28px 0 10px; }
-    p, li { font-size: 14px; }
-    .block { padding: 18px 16px; border-radius: 12px; }
-  }
-.lang-flag-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s ease}
-  .lang-flag-btn:hover{color:var(--text);background:rgba(255,255,255,0.05)}
-  .lang-flag-btn.active{color:var(--text);background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.25)}
-  </style>
+@media(max-width:768px){nav{padding:10px 16px}.main{padding:48px 20px}h1{font-size:40px}}
+</style>
 </head>
 <body>
 <nav>
@@ -48,7 +44,9 @@
   <div class="nav-links"></div>
 </nav>
 <div class="main">
-  <h1 data-i18n="privacy_title">Privacy Policy</h1>
+<div class="main">
+  <span class="section-label" data-i18n="privacy_label">Legal</span>
+  <h1 data-i18n="privacy_title">Privacy<br>Policy.</h1>
   <p class="updated" data-i18n="privacy_updated">Last updated: May 2026</p>
   <div class="highlight"><p>CardPulse does not collect personal data beyond what is necessary for the service to function. We do not sell data to third parties.</p></div>
   <h2>1. Who we are</h2>
@@ -93,7 +91,9 @@
   <h2>9. Contact</h2>
   <p>Questions about privacy: <a href="mailto:privacy@card-pulse.com">privacy@card-pulse.com</a></p>
 </div>
+</div>
 <script src="/i18n.js"></script>
 <script src="/shared.js"></script>
+
 </body>
 </html>
