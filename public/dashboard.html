@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta http-equiv="Content-Language" content="en"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +13,7 @@
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
   nav{display:flex;justify-content:space-between;align-items:center;padding:20px 48px;border-bottom:1px solid var(--border)}
-  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;text-decoration:none;color:#fff}
+  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:800;text-decoration:none;color:#fff}
   .logo span{color:var(--accent)}
   .nav-right{display:flex;gap:12px;align-items:center}
   .user-email{font-size:13px;color:var(--muted)}
@@ -22,7 +24,7 @@
   .page-sub{color:var(--muted);font-size:14px;margin-bottom:48px}
   .status-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
   .status-card.premium{border-color:var(--accent);background:linear-gradient(135deg,rgba(108,99,255,0.08),var(--surface))}
-  .status-left h2{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px}
+  .status-left h2{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px}
   .status-left p{font-size:14px;color:var(--muted)}
   .plan-badge{display:inline-flex;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
   .plan-badge.premium{background:var(--accent);color:#fff}
@@ -34,7 +36,7 @@
   .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px}
   .info-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
   .info-label{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-  .info-value{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800}
+  .info-value{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:800}
   .info-value.green{color:var(--green)}
   .info-value.muted{color:var(--muted);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:400}
   .ext-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:24px}
@@ -130,6 +132,24 @@
       <div class="info-card"><div class="info-label" data-i18n="dash_label_until">Valid until</div><div class="info-value muted" id="infoUntil">–</div></div>
       <div class="info-card"><div class="info-label" data-i18n="dash_label_status">Status</div><div class="info-value green" id="infoStatus">Active</div></div>
     </div>
+    <!-- Usage bar -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Monthly usage</div>
+        <div style="font-size:13px;color:var(--muted)" id="usageText">—</div>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div id="usageBar" style="height:100%;border-radius:99px;transition:width .6s ease,background .3s;width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Plans -->
+    <div id="plansSection" style="margin-bottom:24px">
+      <div style="font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px">Plans</div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:20px">Upgrade or change your plan anytime.</p>
+      <div id="plansGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px"></div>
+    </div>
+
     <div class="ext-box">
       <h3>🧩 <span data-i18n="dash_ext_title">Set up browser extension</span></h3>
       <p data-i18n="dash_ext_desc">How to install the CardPulse extension and connect it to your account:</p>
@@ -185,10 +205,17 @@ function renderDashboard(user){
   }else{document.getElementById('actionBtn').onclick=startCheckout}
   localStorage.setItem('cp_user',JSON.stringify(user));
 }
-async function startCheckout(){
-  const btn=document.getElementById('actionBtn');btn.textContent='...';btn.disabled=true;
-  try{const res=await fetch(`${API}/stripe/checkout`,{method:'POST',headers:{'Authorization':`Bearer ${localStorage.getItem('cp_token')}`}});const d=await res.json();if(d.url)window.location.href=d.url}
-  catch(e){btn.textContent=i18n.t('dash_btn_upgrade');btn.disabled=false}
+async function startCheckout(plan){
+  plan = plan || 'silver';
+  try{
+    const res=await fetch(`${API}/stripe/checkout`,{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${localStorage.getItem('cp_token')}`,'Content-Type':'application/json'},
+      body: JSON.stringify({plan})
+    });
+    const d=await res.json();
+    if(d.url)window.location.href=d.url;
+  } catch(e){ console.error(e); }
 }
 async function openPortal(){
   const btn=document.getElementById('actionBtn');btn.textContent='...';btn.disabled=true;
