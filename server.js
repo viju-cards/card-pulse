@@ -40,6 +40,20 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
+// ─── Plan Limits ─────────────────────────────────────────────────────────────
+const PLAN_LIMITS = {
+  bronze: 20,
+  silver: 300,
+  gold:   1000,
+  platin: 20000,
+};
+
+const STRIPE_PLANS = {
+  silver: process.env.STRIPE_PRICE_SILVER,
+  gold:   process.env.STRIPE_PRICE_GOLD,
+  platin: process.env.STRIPE_PRICE_PLATIN,
+};
+
 // ─── CORS ────────────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -73,8 +87,8 @@ function requireAuth(req, res, next) {
 }
 
 function requirePremium(req, res, next) {
-  if (!req.user.is_premium) {
-    return res.status(403).json({ error: "PAYMENT_REQUIRED" });
+  if (!req.user.is_premium && req.user.plan === 'bronze') {
+    // Bronze still allowed – limit checked in route
   }
   next();
 }
@@ -259,6 +273,17 @@ app.get("/auth/me", requireAuth, async (req, res) => {
       is_premium = false;
     }
 
+    const userPlan = user.plan || 'bronze';
+    const userLimit = PLAN_LIMITS[userPlan] || 20;
+
+    // Reset if new month
+    const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date();
+    const now = new Date();
+    if (resetAt.getFullYear() !== now.getFullYear() || resetAt.getMonth() !== now.getMonth()) {
+      await pool.query("UPDATE users SET monthly_requests = 0, requests_reset_at = NOW() WHERE id = $1", [user.id]);
+      user.monthly_requests = 0;
+    }
+
     res.json({
       user: {
         id: user.id,
@@ -266,7 +291,9 @@ app.get("/auth/me", requireAuth, async (req, res) => {
         is_premium,
         premium_until: user.premium_until,
         cancel_at_period_end: user.cancel_at_period_end,
-        plan: is_premium ? "premium" : "free",
+        plan: userPlan,
+        used: user.monthly_requests || 0,
+        limit: userLimit,
       },
     });
   } catch (err) {
@@ -282,8 +309,11 @@ app.get("/auth/me", requireAuth, async (req, res) => {
 
 app.post("/stripe/checkout", requireAuth, async (req, res) => {
   try {
-    const user = await getUserById(req.user.id);
+    const { plan } = req.body; // 'silver' | 'gold' | 'platin'
+    const priceId = STRIPE_PLANS[plan] || process.env.STRIPE_PRICE_ID;
+    if (!priceId) return res.status(400).json({ error: "Ungültiger Plan." });
 
+    const user = await getUserById(req.user.id);
     let customerId = user.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({ email: user.email });
@@ -295,10 +325,10 @@ app.post("/stripe/checkout", requireAuth, async (req, res) => {
       customer: customerId,
       mode: "subscription",
       payment_method_types: ["card"],
-      line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.FRONTEND_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.FRONTEND_URL}/shop?canceled=true`,
-      metadata: { user_id: String(user.id) },
+      cancel_url: `${process.env.FRONTEND_URL}/dashboard?canceled=true`,
+      metadata: { user_id: String(user.id), plan },
     });
 
     res.json({ url: session.url });
@@ -349,17 +379,24 @@ app.post("/stripe/webhook", async (req, res) => {
         const premiumUntil = new Date(sub.current_period_end * 1000);
         const cancelAtEnd = sub.cancel_at_period_end;
 
+        // Determine plan from price ID
+        const priceId = sub.items?.data?.[0]?.price?.id;
+        let planName = 'silver'; // default paid plan
+        if (priceId === process.env.STRIPE_PRICE_GOLD)   planName = 'gold';
+        if (priceId === process.env.STRIPE_PRICE_PLATIN) planName = 'platin';
+        if (priceId === process.env.STRIPE_PRICE_SILVER) planName = 'silver';
+
         await pool.query(
-          `UPDATE users SET is_premium = $1, premium_until = $2, cancel_at_period_end = $3
-           WHERE stripe_customer_id = $4`,
-          [isActive, premiumUntil, cancelAtEnd, sub.customer]
+          `UPDATE users SET is_premium = $1, premium_until = $2, cancel_at_period_end = $3, plan = $4
+           WHERE stripe_customer_id = $5`,
+          [isActive, premiumUntil, cancelAtEnd, isActive ? planName : 'bronze', sub.customer]
         );
         break;
       }
       case "customer.subscription.deleted": {
         const sub = event.data.object;
         await pool.query(
-          `UPDATE users SET is_premium = false, cancel_at_period_end = false
+          `UPDATE users SET is_premium = false, cancel_at_period_end = false, plan = 'bronze'
            WHERE stripe_customer_id = $1`,
           [sub.customer]
         );
@@ -384,13 +421,49 @@ app.post("/stripe/webhook", async (req, res) => {
 // PREISE ROUTE
 // ═══════════════════════════════════════════════════════════════════════════
 
-app.get("/prices", requireAuth, requirePremium, async (req, res) => {
+app.get("/prices", requireAuth, async (req, res) => {
   const { set: setSlug, cardNumber } = req.query;
 
   if (!setSlug || !cardNumber)
     return res.status(400).json({ error: "Parameter 'set' und 'cardNumber' erforderlich." });
 
   try {
+    // ── Check & increment request counter ──────────────────────────────────
+    const userRow = await getUserById(req.user.id);
+    const plan = userRow.plan || 'bronze';
+    const limit = PLAN_LIMITS[plan] || 20;
+
+    // Reset counter if new month
+    const resetAt = userRow.requests_reset_at ? new Date(userRow.requests_reset_at) : new Date();
+    const now = new Date();
+    const needsReset = resetAt.getFullYear() !== now.getFullYear() ||
+                       resetAt.getMonth() !== now.getMonth();
+
+    if (needsReset) {
+      await pool.query(
+        "UPDATE users SET monthly_requests = 0, requests_reset_at = NOW() WHERE id = $1",
+        [req.user.id]
+      );
+      userRow.monthly_requests = 0;
+    }
+
+    const used = userRow.monthly_requests || 0;
+
+    if (used >= limit) {
+      return res.status(429).json({
+        error: "LIMIT_REACHED",
+        plan,
+        used,
+        limit,
+      });
+    }
+
+    // Increment counter
+    await pool.query(
+      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
+      [req.user.id]
+    );
+
     const dbCardNumber =
       /^\d+$/.test(cardNumber) && cardNumber.length < 3
         ? cardNumber.padStart(3, "0")
@@ -415,7 +488,7 @@ app.get("/prices", requireAuth, requirePremium, async (req, res) => {
     const { trend, history } = extractTrendAndHistory(justTcgData);
 
     res.json({
-      user: { plan: "premium" },
+      user: { plan, used: used + 1, limit },
       card: { name: cardName, tcgPlayerId },
       prices,
       trend,
