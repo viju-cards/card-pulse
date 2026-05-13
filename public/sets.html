@@ -3,200 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Language" content="en"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Language" content="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Supported Sets – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--accent-dim:rgba(108,99,255,0.12);--text:#e8e8f0;--muted:#6b6b80}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
-  nav{display:flex;justify-content:space-between;align-items:center;padding:20px 48px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(7,7,13,0.9);backdrop-filter:blur(16px);z-index:100}
-  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;text-decoration:none;color:#fff}
-  .logo span{color:var(--accent)}
-  .nav-links{display:flex;gap:8px;align-items:center}
-  .btn-ghost{padding:9px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;text-decoration:none;transition:.2s}
-  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
-  .btn-primary{padding:9px 18px;border-radius:9px;background:var(--accent);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none}
-  .main{max-width:1100px;margin:0 auto;padding:64px 24px;flex:1;width:100%}
-  .section-label{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px}
-  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:clamp(32px,5vw,56px);font-weight:800;letter-spacing:-1.5px;margin-bottom:12px}
-  .page-sub{color:var(--muted);font-size:16px;margin-bottom:40px}
-  .search-row{display:flex;gap:12px;margin-bottom:40px;flex-wrap:wrap}
-  .search-input{flex:1;min-width:200px;padding:12px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:.2s}
-  .search-input:focus{border-color:var(--accent)}
-  .search-input::placeholder{color:var(--muted)}
-  .filter-btn{padding:12px 20px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:.2s}
-  .filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
-  .count{font-size:14px;color:var(--muted);margin-bottom:24px}
-  .count span{color:var(--accent);font-weight:700}
-  .era-section{margin-bottom:48px}
-  .era-title{font-family:'Cabinet Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-  .sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-  .set-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;transition:.2s;text-decoration:none;display:block}
-  .set-card:hover{border-color:var(--accent);background:#131325;transform:translateY(-2px)}
-  .set-code{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);margin-bottom:8px}
-  .set-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;line-height:1.3}
-  .set-link{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
-  .set-link::after{content:'→'}
-  .set-card:hover .set-link{color:var(--accent)}
-  #noResults{display:none;text-align:center;padding:60px;color:var(--muted)}
-
-  /* ── Mobile ─────────────────────────────── */
-  @media (max-width: 640px) {
-    nav { padding: 14px 16px; }
-    .main { padding: 40px 16px; }
-    h1 { font-size: 32px; letter-spacing: -1px; }
-    .page-sub { font-size: 14px; margin-bottom: 28px; }
-
-    .search-row {
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 24px;
-    }
-    .search-input { min-width: unset; }
-
-    /* Horizontal scroll for filter buttons */
-    .filter-row {
-      display: flex;
-      overflow-x: auto;
-      gap: 8px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      padding-bottom: 4px;
-    }
-    .filter-row::-webkit-scrollbar { display: none; }
-    .filter-btn { white-space: nowrap; flex-shrink: 0; padding: 10px 16px; }
-
-    .sets-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-    .set-card { padding: 14px; }
-    .set-name { font-size: 13px; }
-    .era-title { font-size: 12px; }
-  }
-
-  @media (max-width: 380px) {
-    .sets-grid { grid-template-columns: 1fr; }
-  }
-.lang-flag-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s ease}
-  .lang-flag-btn:hover{color:var(--text);background:rgba(255,255,255,0.05)}
-  .lang-flag-btn.active{color:var(--text);background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.25)}
-  </style>
+:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:8px;align-items:center}
+.main{flex:1;position:relative;z-index:1;max-width:800px;margin:0 auto;width:100%;padding:64px 48px}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:20px}
+h2{font-family:"Barlow Condensed",sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin:36px 0 12px;color:var(--text)}
+h3{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;margin:24px 0 8px;color:var(--accent)}
+p{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:14px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+strong{color:var(--text);font-weight:500}
+.updated{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:32px;display:block}
+.section-label{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:20px;display:block}
+.section-label::before{content:"> "}
+.page-sub{font-size:15px;margin-bottom:40px;color:var(--muted)}
+.block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+.block p{margin:0;line-height:1.7}
+.block strong{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:.5px;display:block;margin-bottom:8px;color:var(--accent)}
+hr{border:none;border-top:1px solid var(--border);margin:32px 0}
+#sets-grid{display:none}
+@media(max-width:768px){nav{padding:10px 16px}.main{padding:48px 20px}h1{font-size:40px}}
+</style>
 </head>
 <body>
 <nav>
   <a href="/" class="logo">card<span>pulse</span></a>
-  <div class="nav-links">
-    <a href="/login.html" class="btn-ghost" data-i18n="nav_login">Sign in</a>
-    <a href="/register.html" class="btn-primary" data-i18n="nav_register">Get started</a>
-  </div>
+  <div class="nav-links"></div>
 </nav>
 <div class="main">
-  <div class="section-label" data-i18n="sets_page_label">Compatibility</div>
-  <h1 data-i18n="sets_page_h1">Supported Sets</h1>
-  <p class="page-sub" data-i18n="sets_page_sub">All card sets for which TCGPlayer prices are displayed.</p>
-  <div class="search-row">
-    <input type="text" class="search-input" id="search" data-i18n-placeholder="sets_search">
-    <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="sets_filter_all">All</button>
-    <button class="filter-btn" onclick="setFilter('sv',this)">Scarlet & Violet</button>
-    <button class="filter-btn" onclick="setFilter('swsh',this)">Sword & Shield</button>
-    <button class="filter-btn" onclick="setFilter('sm',this)">Sun & Moon</button>
-    <button class="filter-btn" onclick="setFilter('xy',this)">XY</button>
+<span class="section-label" data-i18n="sets_page_label">Compatibility</span>
+  <h1 data-i18n="sets_page_h1">Supported<br>Sets.</h1>
+  <p class="page-sub" data-i18n="sets_page_sub">All Pokémon TCG sets currently supported by CardPulse.</p>
+
+  <div id="sets-loading" style="font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;padding:40px 0">
+    > LOADING SETS...
   </div>
-  <p class="count" id="countText">...</p>
-  <div id="setsContainer"></div>
-  <div id="noResults" data-i18n="sets_no_results">No sets found for this search.</div>
+  <div id="sets-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;display:none"></div>
+  <div id="sets-error" style="display:none;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">
+    Could not load sets. Please try again later.
+  </div>
 </div>
 <script src="/i18n.js"></script>
 <script src="/shared.js"></script>
 <script>
-const SETS=[
-  {code:'DRI',name:'Destined Rivals',era:'sv',cm:'Destined-Rivals'},
-  {code:'JTG',name:'Journey Together',era:'sv',cm:'Journey-Together'},
-  {code:'PRE',name:'Prismatic Evolutions',era:'sv',cm:'Prismatic-Evolutions'},
-  {code:'SSP',name:'Surging Sparks',era:'sv',cm:'Surging-Sparks'},
-  {code:'SCR',name:'Stellar Crown',era:'sv',cm:'Stellar-Crown'},
-  {code:'WHT',name:'White Flare',era:'sv',cm:'White-Flare'},
-  {code:'sv8a',name:'Terastal Fest ex',era:'sv',cm:'Terastal-Fest-ex'},
-  {code:'sv7',name:'Stellar Miracle',era:'sv',cm:'Stellar-Miracle'},
-  {code:'sv7a',name:'Paradise Dragona',era:'sv',cm:'Paradise-Dragona'},
-  {code:'sv6a',name:'Night Wanderer',era:'sv',cm:'Night-Wanderer'},
-  {code:'sv5M',name:'Cyber Judge',era:'sv',cm:'Cyber-Judge'},
-  {code:'sv5K',name:'Wild Force',era:'sv',cm:'Wild-Force'},
-  {code:'sv5a',name:'Crimson Haze',era:'sv',cm:'Crimson-Haze'},
-  {code:'sv4a',name:'Shiny Treasure ex',era:'sv',cm:'Shiny-Treasure-ex'},
-  {code:'sv4K',name:'Ancient Roar',era:'sv',cm:'Ancient-Roar'},
-  {code:'sv4M',name:'Future Flash',era:'sv',cm:'Future-Flash'},
-  {code:'sv3a',name:'Raging Surf',era:'sv',cm:'Raging-Surf'},
-  {code:'sv2a',name:'Pokémon Card 151',era:'sv',cm:'Pokemon-Card-151'},
-  {code:'sv2D',name:'Clay Burst',era:'sv',cm:'Clay-Burst'},
-  {code:'sv2P',name:'Snow Hazard',era:'sv',cm:'Snow-Hazard'},
-  {code:'sv1S',name:'Scarlet ex',era:'sv',cm:'Scarlet-ex'},
-  {code:'sv1V',name:'Violet ex',era:'sv',cm:'Violet-ex'},
-  {code:'sv1a',name:'Triplet Beat',era:'sv',cm:'Triplet-Beat'},
-  {code:'SV-P',name:'SV Promo',era:'sv',cm:'SV-P-Promotional-Cards'},
-  {code:'SSH',name:'Sword & Shield Base',era:'swsh',cm:'Sword-and-Shield'},
-  {code:'s12a',name:'VSTAR Universe',era:'swsh',cm:'VSTAR-Universe'},
-  {code:'s12',name:'Paradigm Trigger',era:'swsh',cm:'Paradigm-Trigger'},
-  {code:'s11a',name:'Incandescent Arcana',era:'swsh',cm:'Incandescent-Arcana'},
-  {code:'s11',name:'Lost Abyss',era:'swsh',cm:'Lost-Abyss'},
-  {code:'s10P',name:'Space Juggler',era:'swsh',cm:'Space-Juggler'},
-  {code:'s10D',name:'Time Gazer',era:'swsh',cm:'Time-Gazer'},
-  {code:'s10a',name:'Dark Phantasma',era:'swsh',cm:'Dark-Phantasma'},
-  {code:'s9a',name:'Battle Region',era:'swsh',cm:'Battle-Region'},
-  {code:'s9',name:'Star Birth',era:'swsh',cm:'Star-Birth'},
-  {code:'s8b',name:'VMAX Climax',era:'swsh',cm:'VMAX-Climax'},
-  {code:'s8a',name:'25th Anniversary Collection',era:'swsh',cm:'25th-Anniversary-Collection'},
-  {code:'s7R',name:'Blue Sky Stream',era:'swsh',cm:'Blue-Sky-Stream'},
-  {code:'s6a',name:'Eevee Heroes',era:'swsh',cm:'Eevee-Heroes'},
-  {code:'s4a',name:'Shiny Star V',era:'swsh',cm:'Shiny-Star-V'},
-  {code:'sI100',name:'Start Deck 100',era:'swsh',cm:'Start-Deck-100'},
-  {code:'sm12a',name:'Tag Team GX All Stars',era:'sm',cm:'TAG-TEAM-GX-Tag-All-Stars'},
-  {code:'sm12',name:'Alter Genesis',era:'sm',cm:'Alter-Genesis'},
-  {code:'sm11b',name:'Dream League',era:'sm',cm:'Dream-League'},
-  {code:'sm11',name:'Miracle Twin',era:'sm',cm:'Miracle-Twin'},
-  {code:'sm10b',name:'Sky Legend',era:'sm',cm:'Sky-Legend'},
-  {code:'sm10',name:'Double Blaze',era:'sm',cm:'Double-Blaze'},
-  {code:'sm9b',name:'Full Metal Wall',era:'sm',cm:'Full-Metal-Wall'},
-  {code:'sm9a',name:'Night Unison',era:'sm',cm:'Night-Unison'},
-  {code:'sm9',name:'Tag Bolt',era:'sm',cm:'Tag-Bolt'},
-  {code:'sm8b',name:'GX Ultra Shiny',era:'sm',cm:'GX-Ultra-Shiny'},
-  {code:'sm5s',name:'Ultra Sun',era:'sm',cm:'Ultra-Sun'},
-  {code:'sm5m',name:'Ultra Moon',era:'sm',cm:'Ultra-Moon'},
-  {code:'XY9',name:'Rage of the Broken Heavens',era:'xy',cm:'Rage-of-the-Broken-Heavens'},
-  {code:'XY8r',name:'Red Flash',era:'xy',cm:'Red-Flash'},
-  {code:'XY8b',name:'Blue Shock',era:'xy',cm:'Blue-Shock'},
-  {code:'XY7',name:'Bandit Ring',era:'xy',cm:'Bandit-Ring'},
-  {code:'XY6',name:'Emerald Break',era:'xy',cm:'Emerald-Break'},
-  {code:'XY4',name:'Phantom Gate',era:'xy',cm:'Phantom-Gate'},
-  {code:'XY3',name:'Rising Fist',era:'xy',cm:'Rising-Fist'},
-  {code:'XY2',name:'Wild Blaze',era:'xy',cm:'Wild-Blaze'},
-];
-const CM_BASE='https://www.cardmarket.com/en/Pokemon/Products/Singles/';
-let currentFilter='all',currentSearch='';
-function render(){
-  const q=currentSearch.toLowerCase();
-  const filtered=SETS.filter(s=>(currentFilter==='all'||s.era===currentFilter)&&(!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)));
-  document.getElementById('countText').innerHTML=`<span>${filtered.length}</span> ${i18n.t('sets_count_found')}`;
-  const noRes=document.getElementById('noResults');
-  if(!filtered.length){document.getElementById('setsContainer').innerHTML='';noRes.style.display='block';return}
-  noRes.style.display='none';
-  const grouped={};filtered.forEach(s=>{if(!grouped[s.era])grouped[s.era]=[];grouped[s.era].push(s)});
-  document.getElementById('setsContainer').innerHTML=Object.entries(grouped).map(([era,sets])=>`
-    <div class="era-section">
-      <div class="era-title">${i18n.t('era_'+era)||era}</div>
-      <div class="sets-grid">${sets.map(s=>`
-        <a class="set-card" href="${CM_BASE}${s.cm}" target="_blank">
-          <div class="set-code">${s.code}</div>
-          <div class="set-name">${s.name}</div>
-          <div class="set-link">${i18n.t('sets_cm_link')}</div>
-        </a>`).join('')}
-      </div>
-    </div>`).join('');
-}
-function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render()}
-document.getElementById('search').addEventListener('input',e=>{currentSearch=e.target.value;render()});
-document.addEventListener('DOMContentLoaded',render);
+fetch('/sets')
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('sets-loading').style.display = 'none';
+    const grid = document.getElementById('sets-grid');
+    grid.style.display = 'grid';
+    const sets = data.sets || [];
+    if (!sets.length) { grid.innerHTML = '<p style="font-family:var(--mono);color:var(--muted)">No sets found.</p>'; return; }
+    grid.innerHTML = sets.map(s => {
+      const name = s.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+      const code = s.split('-').map(w=>w[0]?.toUpperCase()||'').join('').slice(0,4);
+      return `<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:var(--accent);background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);border-radius:5px;padding:6px 8px;min-width:40px;text-align:center;flex-shrink:0">${code}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);line-height:1.4">${name}</div>
+      </div>`;
+    }).join('');
+  })
+  .catch(() => {
+    document.getElementById('sets-loading').style.display = 'none';
+    document.getElementById('sets-error').style.display = 'block';
+  });
 </script>
 </body>
 </html>
