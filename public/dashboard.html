@@ -197,7 +197,7 @@ function renderDashboard(user){
   const used    = user.used ?? user.monthly_requests ?? 0;
   const limit   = user.limit ?? cfg.limit;
   const pct     = Math.min(100, Math.round((used/limit)*100));
-  const isDE    = i18n.lang === 'de';
+  const isDE    = (localStorage.getItem('cp_lang') || i18n.lang || 'en') === 'de';
   const isPaid  = plan !== 'bronze';
 
   // ── Status card ──
