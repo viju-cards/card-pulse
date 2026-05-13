@@ -229,9 +229,17 @@ function renderDashboard(user){
   document.getElementById('infoPlan').style.color   = cfg.color;
   document.getElementById('infoStatus').textContent = isDE ? 'Aktiv' : 'Active';
   document.getElementById('infoStatus').style.color = 'var(--green)';
-  if(user.cancel_at_period_end){
+  if(user.cancel_at_period_end && user.premium_until){
+    const endDate = new Date(user.premium_until).toLocaleDateString(isDE?'de-DE':'en-GB');
     document.getElementById('infoStatus').textContent = isDE ? 'Gekündigt' : 'Canceled';
     document.getElementById('infoStatus').style.color = 'var(--red)';
+    // Update plan title + desc to show end date prominently
+    document.getElementById('planTitle').textContent = cfg.label + ' Plan – ' + (isDE ? 'läuft ab' : 'canceling');
+    document.getElementById('planDesc').textContent = isDE
+      ? `Aktiv bis ${endDate}. Danach wechsel auf Bronze.`
+      : `Active until ${endDate}. Reverts to Bronze after.`;
+    // Show end date in red in the info grid
+    document.getElementById('infoUntil').style.color = 'var(--red)';
   }
   if(user.premium_until){
     document.getElementById('infoUntil').textContent =
