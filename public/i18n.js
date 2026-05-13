@@ -126,6 +126,7 @@ const TRANSLATIONS = {
     dash_danger_title: "Danger zone",
     dash_danger_desc: "Sign out on all devices.",
     dash_logout_all: "Sign out everywhere",
+    dash_cancel_sub: "Cancel subscription",
     dash_loading: "Loading dashboard...",
 
     // SETS
@@ -303,6 +304,7 @@ const TRANSLATIONS = {
     dash_danger_title: "Gefahrenzone",
     dash_danger_desc: "Hier kannst du dich auf allen Geräten abmelden.",
     dash_logout_all: "Überall abmelden",
+    dash_cancel_sub: "Abo kündigen",
     dash_loading: "Lade Dashboard...",
 
     sets_page_label: "Kompatibilität",
