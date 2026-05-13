@@ -23,7 +23,7 @@
 
     const wrap = document.createElement('div');
     wrap.id = 'langSwitcher';
-    wrap.style.cssText = 'display:flex;gap:4px;align-items:center;margin-left:16px';
+    wrap.style.cssText = 'display:flex;gap:4px;align-items:center';
 
     const btnEn = document.createElement('button');
     btnEn.id = 'langBtnEn';
@@ -40,14 +40,16 @@
     wrap.appendChild(btnEn);
     wrap.appendChild(btnDe);
 
-    // Insert after logo (first element in nav)
-    const nav = document.querySelector('nav');
-    if (nav) {
-      const logo = nav.querySelector('a.logo, .logo');
-      if (logo) {
-        logo.insertAdjacentElement('afterend', wrap);
-      } else {
-        nav.prepend(wrap);
+    // Append to nav-links or nav-right (right side of nav)
+    const container = document.querySelector('.nav-links, .nav-right');
+    if (container) {
+      container.appendChild(wrap);
+    } else {
+      // Fallback: append to nav with auto left margin to push right
+      const nav = document.querySelector('nav');
+      if (nav) {
+        wrap.style.marginLeft = 'auto';
+        nav.appendChild(wrap);
       }
     }
   }
@@ -153,10 +155,11 @@
       .lang-flag-btn {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
         padding: 6px 11px;
         border-radius: 7px;
-        border: none;
+        border: 1px solid transparent;
         background: transparent;
         color: #6b6b80;
         font-family: 'DM Sans', sans-serif;
@@ -165,12 +168,23 @@
         cursor: pointer;
         transition: all .18s ease;
         white-space: nowrap;
+        vertical-align: middle;
+        line-height: 1;
       }
       .lang-flag-btn:hover { color: #e8e8f0; background: rgba(255,255,255,0.05); }
       .lang-flag-btn.active {
         color: #e8e8f0;
         background: rgba(108,99,255,0.15);
-        border: 1px solid rgba(108,99,255,0.25);
+        border-color: rgba(108,99,255,0.25);
+      }
+      #langSwitcher {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(13,13,31,0.6);
+        border: 1px solid rgba(108,99,255,0.15);
+        border-radius: 10px;
+        padding: 3px;
       }
     `;
     document.head.appendChild(style);
