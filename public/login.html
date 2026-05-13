@@ -3,60 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Language" content="en"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign in – CardPulse</title>
+<meta http-equiv="Content-Language" content="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#09090f;--surface:#0f0f1c;--card:#13131f;
-    --border:rgba(255,255,255,0.06);--accent:#6c63ff;
-    --yellow:#ffd700;--red:#ef4444;--green:#22c55e;
-    --text:#e8e8f0;--muted:#5a5a78;
-    --pixel:"Press Start 2P",monospace;
-    --mono:"DM Mono",monospace;
-    --cond:"Barlow Condensed",sans-serif;
-    --sans:"DM Sans",sans-serif;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
-  nav{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-bottom:1px solid var(--border)}
-  .logo{font-family:var(--pixel);font-size:10px;font-weight:400;letter-spacing:.5px;line-height:1.6;text-decoration:none;color:#fff}
-  .logo span{color:var(--accent)}
-  .nav-links{display:flex;gap:8px;align-items:center}
-  .main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:48px;width:100%;max-width:420px}
-  h1{font-family:var(--cond);font-size:40px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:8px}
-  .subtitle{color:var(--muted);font-size:14px;margin-bottom:36px}
-  .field{margin-bottom:18px}
-  label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px}
-  input{width:100%;padding:14px 16px;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;transition:.2s;outline:none}
-  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.12)}
-  .btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:.2s;margin-top:8px}
-  .btn:hover{opacity:.85}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-top:16px;display:none}
-  .msg.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--error);display:block}
-  .msg.success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green);display:block}
-  .divider{text-align:center;color:var(--muted);font-size:13px;margin:24px 0}
-  .link{color:var(--accent);text-decoration:none;font-weight:500}
-  .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-
-  /* ── Mobile ─────────────────────────────── */
-  @media (max-width: 480px) {
-    nav { padding: 14px 16px; }
-    .main { padding: 24px 16px; align-items: flex-start; }
-    .card {
-      padding: 28px 20px;
-      border-radius: 18px;
-    }
-    h1 { font-size: 24px; }
-    input { padding: 13px 14px; font-size: 15px; }
-    .btn { padding: 14px; font-size: 15px; }
-  }
-@media(max-width:640px){nav{padding:10px 16px}.main{padding:32px 16px}}
+:root{--bg:#09090f;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78;--red:#ef4444;--green:#22c55e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:8px;align-items:center}
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 20px;position:relative;z-index:1}
+.wrap{width:100%;max-width:400px}
+.eyebrow{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:20px}
+.eyebrow::before{content:"> "}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:52px;font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:8px}
+.subtitle{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);margin-bottom:36px;line-height:1.7}
+.subtitle a{color:var(--accent);text-decoration:none}
+.field{margin-bottom:18px}
+label{display:block;font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+input{width:100%;padding:14px 16px;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:"DM Mono",monospace;font-size:14px;outline:none;transition:.2s}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
+.btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:"DM Mono",monospace;font-size:13px;font-weight:500;cursor:pointer;transition:.2s;margin-top:4px}
+.btn:hover{opacity:.85}.btn:disabled{opacity:.4;cursor:not-allowed}
+.divider{text-align:center;font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);margin:24px 0}
+.divider a{color:var(--accent);text-decoration:none}
+.link{color:var(--accent);font-family:"DM Mono",monospace;font-size:12px;text-decoration:none;display:block;text-align:right;margin-top:8px}
+.link:hover{text-decoration:underline}
+.msg{padding:12px 16px;border-radius:8px;font-size:12px;font-family:"DM Mono",monospace;margin-top:16px;display:none;line-height:1.6}
+.msg.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:var(--red);display:block}
+.msg.success{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:var(--green);display:block}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:480px){nav{padding:10px 16px}.main{padding:40px 16px}h1{font-size:40px}}
 </style>
 </head>
 <body>
@@ -65,53 +49,53 @@
   <div class="nav-links"></div>
 </nav>
 <div class="main">
-  <div class="card">
-    <h1 data-i18n="login_title">Welcome back</h1>
-    <p class="subtitle" data-i18n="login_sub">Sign in to view your prices.</p>
+  <div class="wrap">
+    <div class="eyebrow" data-i18n="login_eyebrow">Sign in</div>
+    <h1 data-i18n="login_h1">Welcome<br>back.</h1>
+    <p class="subtitle">
+      <span data-i18n="login_no_account">No account yet?</span>
+      <a href="/register.html" data-i18n="login_register_link"> Register now</a>
+    </p>
+
     <div class="field">
       <label data-i18n="login_email">Email</label>
-      <input type="email" id="email" data-i18n-placeholder="login_email" autocomplete="email">
+      <input type="email" id="email" autocomplete="email">
     </div>
     <div class="field">
-      <label data-i18n="login_password">Password</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      <label data-i18n="login_pw">Password</label>
+      <input type="password" id="password" autocomplete="current-password">
+      <a href="/forgot-password.html" class="link" data-i18n="forgot_back_link">Forgot password?</a>
     </div>
     <button class="btn" id="loginBtn" data-i18n="login_btn">Sign in</button>
     <div class="msg" id="msg"></div>
-    <div style="text-align:right;margin-top:8px">
-      <a href="/forgot-password.html" class="link" style="font-size:13px" data-i18n="forgot_back_link">Forgot password?</a>
-    </div>
-    <div class="divider"><span data-i18n="login_no_account">No account yet?</span> <a href="/register.html" class="link" data-i18n="login_register_link">Register now</a></div>
   </div>
 </div>
 <script src="/i18n.js"></script>
 <script src="/shared.js"></script>
 <script>
 const API='';
-document.getElementById('loginBtn').addEventListener('click',login);
-document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
-async function login(){
+const EXT_ID='jofegljhkmoppkaiecbidoapponkjbld';
+async function doLogin(){
   const email=document.getElementById('email').value.trim();
   const password=document.getElementById('password').value;
   const btn=document.getElementById('loginBtn');
   const msg=document.getElementById('msg');
   msg.className='msg';
-  if(!email||!password){showMsg(i18n.t('login_error_fields'),'error');return}
-  btn.disabled=true;btn.innerHTML=`<span class="spin"></span>${i18n.t('login_connecting')}`;
+  if(!email||!password){msg.textContent=window.i18n?.t('login_error_fields')||'Please fill all fields.';msg.className='msg error';return}
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>...';
   try{
     const res=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
     const data=await res.json();
-    if(!res.ok){showMsg(data.error||i18n.t('login_error_failed'),'error');return}
+    if(!res.ok){msg.textContent=data.error||'Login failed.';msg.className='msg error';return}
     localStorage.setItem('cp_token',data.token);
-    localStorage.setItem('cp_user',JSON.stringify(data.user));
-    try{chrome.runtime.sendMessage('jofegljhkmoppkaiecbidoapponkjbld',{type:'LOGIN_SUCCESS',token:data.token})}catch(e){}
-    showMsg(i18n.t('login_success'),'success');
-    setTimeout(()=>window.location.href='/dashboard.html',1000);
-  }catch(err){showMsg(i18n.t('login_error_connection'),'error')}
-  finally{btn.disabled=false;btn.textContent=i18n.t('login_btn')}
+    try{chrome.runtime.sendMessage(EXT_ID,{type:'LOGIN_SUCCESS',token:data.token})}catch(e){}
+    window.location.href='/dashboard.html';
+  }catch(e){msg.textContent=window.i18n?.t('login_error_connection')||'Connection error.';msg.className='msg error'}
+  finally{btn.disabled=false;btn.textContent=window.i18n?.t('login_btn')||'Sign in'}
 }
-function showMsg(text,type){const m=document.getElementById('msg');m.textContent=text;m.className=`msg ${type}`}
-if(localStorage.getItem('cp_token'))window.location.href='/dashboard.html';
+document.getElementById('loginBtn').onclick=doLogin;
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+document.getElementById('email').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 </script>
 </body>
 </html>
