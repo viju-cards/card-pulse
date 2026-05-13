@@ -138,6 +138,20 @@ const TRANSLATIONS = {
 
     // LANGUAGE SWITCHER
     lang_label: "EN",
+    forgot_title: "Forgot password?",
+    forgot_sub: "Enter your email and we'll send you a reset link.",
+    forgot_btn: "Send reset link",
+    forgot_sending: "Sending...",
+    forgot_success: "✅ If this email exists, you'll receive a reset link shortly. Check your spam folder too.",
+    forgot_back: "← Back to login",
+    forgot_back_link: "Forgot password?",
+    reset_title: "Set new password",
+    reset_sub: "Choose a new password for your account.",
+    reset_btn: "Set new password",
+    reset_saving: "Saving...",
+    reset_success: "✅ Password changed! Redirecting to login...",
+    reset_invalid: "This reset link is invalid or has expired.",
+    reset_request_new: "Request new link",
 
     // suggest.html
     suggest_eyebrow:   "Missing data",
@@ -280,6 +294,20 @@ const TRANSLATIONS = {
     privacy_updated: "Zuletzt aktualisiert: Mai 2026",
 
     lang_label: "DE",
+    forgot_title: "Passwort vergessen?",
+    forgot_sub: "Gib deine E-Mail ein und wir schicken dir einen Reset-Link.",
+    forgot_btn: "Reset-Link senden",
+    forgot_sending: "Wird gesendet...",
+    forgot_success: "✅ Falls diese E-Mail existiert, erhältst du gleich einen Link. Schau auch im Spam-Ordner nach.",
+    forgot_back: "← Zurück zum Login",
+    forgot_back_link: "Passwort vergessen?",
+    reset_title: "Neues Passwort setzen",
+    reset_sub: "Wähle ein neues Passwort für dein Konto.",
+    reset_btn: "Passwort setzen",
+    reset_saving: "Wird gespeichert...",
+    reset_success: "✅ Passwort geändert! Weiterleitung zum Login...",
+    reset_invalid: "Dieser Reset-Link ist ungültig oder abgelaufen.",
+    reset_request_new: "Neuen Link anfordern",
 
     // suggest.html
     suggest_eyebrow:   "Fehlende Daten",
