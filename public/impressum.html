@@ -1,45 +1,42 @@
 <!DOCTYPE html>
-<html lang="de" translate="no">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Language" content="en"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Language" content="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Impressum – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--text:#e8e8f0;--muted:#6b6b80}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
-  nav{display:flex;justify-content:space-between;align-items:center;padding:24px 48px;border-bottom:1px solid var(--border)}
-  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;text-decoration:none;color:#fff}
-  .logo span{color:var(--accent)}
-  .nav-links{display:flex;gap:8px;align-items:center}
-  .main{max-width:720px;margin:0 auto;padding:64px 24px;flex:1;width:100%}
-  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:36px;font-weight:800;margin-bottom:48px}
-  h2{font-family:'Cabinet Grotesk',sans-serif;font-size:16px;font-weight:700;margin:36px 0 12px;color:var(--accent);text-transform:uppercase;letter-spacing:1px}
-  p{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:8px}
-  a{color:var(--accent);text-decoration:none}
-  a:hover{opacity:.8}
-  .block{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 32px;margin-bottom:16px}
-  .block p{margin:0}
-  .block p+p{margin-top:6px}
-  strong{color:var(--text)}
+:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:8px;align-items:center}
+.main{flex:1;position:relative;z-index:1;max-width:800px;margin:0 auto;width:100%;padding:64px 48px}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:20px}
+h2{font-family:"Barlow Condensed",sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin:36px 0 12px;color:var(--text)}
+h3{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;margin:24px 0 8px;color:var(--accent)}
+p{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:14px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+strong{color:var(--text);font-weight:500}
+.updated{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:32px;display:block}
+.section-label{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:20px;display:block}
+.section-label::before{content:"> "}
+.page-sub{font-size:15px;margin-bottom:40px;color:var(--muted)}
+.block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+.block p{margin:0;line-height:1.7}
+.block strong{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:.5px;display:block;margin-bottom:8px;color:var(--accent)}
+hr{border:none;border-top:1px solid var(--border);margin:32px 0}
 
-  /* ── Mobile ─────────────────────────────── */
-  @media (max-width: 640px) {
-    nav { padding: 14px 16px; }
-    .main { padding: 40px 16px; }
-    h1 { font-size: 28px; margin-bottom: 28px; }
-    h2 { font-size: 14px; margin: 28px 0 10px; }
-    p, li { font-size: 14px; }
-    .block { padding: 18px 16px; border-radius: 12px; }
-  }
-.lang-flag-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s ease}
-  .lang-flag-btn:hover{color:var(--text);background:rgba(255,255,255,0.05)}
-  .lang-flag-btn.active{color:var(--text);background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.25)}
-  </style>
+@media(max-width:768px){nav{padding:10px 16px}.main{padding:48px 20px}h1{font-size:40px}}
+</style>
 </head>
 <body>
 <nav>
@@ -47,35 +44,39 @@
   <div class="nav-links"></div>
 </nav>
 <div class="main">
-  <h1>Impressum</h1>
-  <h2>Angaben gemäß § 5 TMG</h2>
+<div class="main">
+  <span class="section-label">Legal</span>
+  <h1>Impressum.</h1>
+  <h2 style="margin-top:32px">Angaben gemäß § 5 TMG</h2>
   <div class="block">
     <p><strong>Julian Sarbacher</strong></p>
     <p>Gartenstr. 30</p>
     <p>76332 Bad Herrenalb</p>
     <p>Deutschland</p>
   </div>
-  <h2>Kontakt</h2>
+  <h2 style="margin-top:32px">Kontakt</h2>
   <div class="block">
     <p>E-Mail: <a href="mailto:info@card-pulse.com">info@card-pulse.com</a></p>
     <p>Website: <a href="https://www.card-pulse.com">www.card-pulse.com</a></p>
   </div>
-  <h2>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h2>
+  <h2 style="margin-top:32px">Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h2>
   <div class="block">
     <p>Julian Sarbacher</p>
     <p>Gartenstr. 30</p>
     <p>76332 Bad Herrenalb</p>
   </div>
-  <h2>Haftungsausschluss</h2>
+  <h2 style="margin-top:32px">Haftungsausschluss</h2>
   <p>Die Inhalte dieser Webseite wurden mit größtmöglicher Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte kann jedoch keine Gewähr übernommen werden.</p>
-  <h2>Urheberrecht</h2>
+  <h2 style="margin-top:32px">Urheberrecht</h2>
   <p>Die durch den Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht.</p>
-  <h2>Hinweis zu externen Links und Markennamen</h2>
+  <h2 style="margin-top:32px">Hinweis zu externen Links und Markennamen</h2>
   <p>CardPulse steht in keiner Verbindung zu Cardmarket (Marktplaats BV), TCGPlayer (eBay Inc.) oder The Pokémon Company. Alle genannten Markennamen sind Eigentum ihrer jeweiligen Inhaber.</p>
-  <h2>Streitschlichtung</h2>
+  <h2 style="margin-top:32px">Streitschlichtung</h2>
   <p>Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit: <a href="https://ec.europa.eu/consumers/odr" target="_blank">ec.europa.eu/consumers/odr</a>. Wir nehmen nicht an Streitbeilegungsverfahren vor Verbraucherschlichtungsstellen teil.</p>
+</div>
 </div>
 <script src="/i18n.js"></script>
 <script src="/shared.js"></script>
+
 </body>
-</html>
+</html>S
