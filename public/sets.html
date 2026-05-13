@@ -1,224 +1,202 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unterstützte Sets – CardPulse</title>
+<meta name="google" content="notranslate">
+<meta http-equiv="Content-Language" content="en"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supported Sets – CardPulse</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#07070d; --surface:#0f0f1a; --border:rgba(108,99,255,0.15);
-    --accent:#6c63ff; --accent-dim:rgba(108,99,255,0.12);
-    --text:#e8e8f0; --muted:#6b6b80; --green:#22c55e;
+  :root{--bg:#07070d;--surface:#0f0f1a;--border:rgba(108,99,255,0.15);--accent:#6c63ff;--accent-dim:rgba(108,99,255,0.12);--text:#e8e8f0;--muted:#6b6b80}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  nav{display:flex;justify-content:space-between;align-items:center;padding:20px 48px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(7,7,13,0.9);backdrop-filter:blur(16px);z-index:100}
+  .logo{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;text-decoration:none;color:#fff}
+  .logo span{color:var(--accent)}
+  .nav-links{display:flex;gap:8px;align-items:center}
+  .btn-ghost{padding:9px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;text-decoration:none;transition:.2s}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-primary{padding:9px 18px;border-radius:9px;background:var(--accent);border:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none}
+  .main{max-width:1100px;margin:0 auto;padding:64px 24px;flex:1;width:100%}
+  .section-label{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px}
+  h1{font-family:'Cabinet Grotesk',sans-serif;font-size:clamp(32px,5vw,56px);font-weight:800;letter-spacing:-1.5px;margin-bottom:12px}
+  .page-sub{color:var(--muted);font-size:16px;margin-bottom:40px}
+  .search-row{display:flex;gap:12px;margin-bottom:40px;flex-wrap:wrap}
+  .search-input{flex:1;min-width:200px;padding:12px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:.2s}
+  .search-input:focus{border-color:var(--accent)}
+  .search-input::placeholder{color:var(--muted)}
+  .filter-btn{padding:12px 20px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:.2s}
+  .filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+  .count{font-size:14px;color:var(--muted);margin-bottom:24px}
+  .count span{color:var(--accent);font-weight:700}
+  .era-section{margin-bottom:48px}
+  .era-title{font-family:'Cabinet Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+  .sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .set-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;transition:.2s;text-decoration:none;display:block}
+  .set-card:hover{border-color:var(--accent);background:#131325;transform:translateY(-2px)}
+  .set-code{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);margin-bottom:8px}
+  .set-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;line-height:1.3}
+  .set-link{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+  .set-link::after{content:'→'}
+  .set-card:hover .set-link{color:var(--accent)}
+  #noResults{display:none;text-align:center;padding:60px;color:var(--muted)}
+
+  /* ── Mobile ─────────────────────────────── */
+  @media (max-width: 640px) {
+    nav { padding: 14px 16px; }
+    .main { padding: 40px 16px; }
+    h1 { font-size: 32px; letter-spacing: -1px; }
+    .page-sub { font-size: 14px; margin-bottom: 28px; }
+
+    .search-row {
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .search-input { min-width: unset; }
+
+    /* Horizontal scroll for filter buttons */
+    .filter-row {
+      display: flex;
+      overflow-x: auto;
+      gap: 8px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-btn { white-space: nowrap; flex-shrink: 0; padding: 10px 16px; }
+
+    .sets-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .set-card { padding: 14px; }
+    .set-name { font-size: 13px; }
+    .era-title { font-size: 12px; }
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
-  nav { display:flex; justify-content:space-between; align-items:center; padding:20px 48px; border-bottom:1px solid var(--border); position:sticky; top:0; background:rgba(7,7,13,0.9); backdrop-filter:blur(16px); z-index:100; }
-  .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; text-decoration:none; color:#fff; }
-  .logo span { color:var(--accent); }
-  .nav-links { display:flex; gap:8px; }
-  .btn-ghost { padding:9px 18px; border-radius:9px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; text-decoration:none; transition:.2s; }
-  .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
-  .btn-primary { padding:9px 18px; border-radius:9px; background:var(--accent); border:none; color:#fff; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; cursor:pointer; text-decoration:none; }
-  .main { max-width:1100px; margin:0 auto; padding:64px 24px; }
-  .page-header { margin-bottom:48px; }
-  .section-label { font-size:12px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:2px; margin-bottom:16px; }
-  h1 { font-family:'Syne',sans-serif; font-size:clamp(32px,5vw,56px); font-weight:800; letter-spacing:-1.5px; margin-bottom:12px; }
-  .page-sub { color:var(--muted); font-size:16px; }
 
-  /* SEARCH */
-  .search-row { display:flex; gap:12px; margin-bottom:40px; flex-wrap:wrap; }
-  .search-input { flex:1; min-width:200px; padding:12px 18px; background:var(--surface); border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:.2s; }
-  .search-input:focus { border-color:var(--accent); }
-  .search-input::placeholder { color:var(--muted); }
-  .filter-btn { padding:12px 20px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:.2s; }
-  .filter-btn.active { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
-
-  /* SETS GRID */
-  .era-section { margin-bottom:48px; }
-  .era-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
-  .sets-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
-  .set-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; cursor:pointer; transition:.2s; text-decoration:none; display:block; }
-  .set-card:hover { border-color:var(--accent); background:#131325; transform:translateY(-2px); }
-  .set-code { font-family:'DM Mono',monospace; font-size:11px; color:var(--accent); margin-bottom:8px; }
-  .set-name { font-size:14px; font-weight:500; color:var(--text); margin-bottom:6px; line-height:1.3; }
-  .set-link { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:4px; }
-  .set-link::after { content:'→'; }
-  .set-card:hover .set-link { color:var(--accent); }
-
-  .count { font-size:14px; color:var(--muted); margin-bottom:24px; }
-  .count span { color:var(--accent); font-weight:700; }
-
-  #noResults { display:none; text-align:center; padding:60px; color:var(--muted); }
-</style>
+  @media (max-width: 380px) {
+    .sets-grid { grid-template-columns: 1fr; }
+  }
+.lang-flag-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s ease}
+  .lang-flag-btn:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+  .lang-flag-btn.active{color:var(--text);background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.25)}
+  </style>
 </head>
 <body>
-
 <nav>
   <a href="/" class="logo">card<span>pulse</span></a>
   <div class="nav-links">
-    <a href="/login.html" class="btn-ghost">Anmelden</a>
-    <a href="/register.html" class="btn-primary">Kostenlos starten</a>
+    <a href="/login.html" class="btn-ghost" data-i18n="nav_login">Sign in</a>
+    <a href="/register.html" class="btn-primary" data-i18n="nav_register">Get started</a>
   </div>
 </nav>
-
 <div class="main">
-  <div class="page-header">
-    <div class="section-label">Kompatibilität</div>
-    <h1>Unterstützte Sets</h1>
-    <p class="page-sub">Alle Kartensätze für die TCGPlayer-Preise angezeigt werden.</p>
-  </div>
-
+  <div class="section-label" data-i18n="sets_page_label">Compatibility</div>
+  <h1 data-i18n="sets_page_h1">Supported Sets</h1>
+  <p class="page-sub" data-i18n="sets_page_sub">All card sets for which TCGPlayer prices are displayed.</p>
   <div class="search-row">
-    <input type="text" class="search-input" id="search" placeholder="Set suchen... z.B. Surging Sparks, sv08">
-    <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">Alle</button>
-    <button class="filter-btn" data-filter="sv" onclick="setFilter('sv',this)">Scarlet & Violet</button>
-    <button class="filter-btn" data-filter="swsh" onclick="setFilter('swsh',this)">Sword & Shield</button>
-    <button class="filter-btn" data-filter="sm" onclick="setFilter('sm',this)">Sun & Moon</button>
-    <button class="filter-btn" data-filter="xy" onclick="setFilter('xy',this)">XY</button>
+    <input type="text" class="search-input" id="search" data-i18n-placeholder="sets_search">
+    <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="sets_filter_all">All</button>
+    <button class="filter-btn" onclick="setFilter('sv',this)">Scarlet & Violet</button>
+    <button class="filter-btn" onclick="setFilter('swsh',this)">Sword & Shield</button>
+    <button class="filter-btn" onclick="setFilter('sm',this)">Sun & Moon</button>
+    <button class="filter-btn" onclick="setFilter('xy',this)">XY</button>
   </div>
-
-  <p class="count" id="countText">Lade Sets...</p>
+  <p class="count" id="countText">...</p>
   <div id="setsContainer"></div>
-  <div id="noResults">Keine Sets für diese Suche gefunden.</div>
+  <div id="noResults" data-i18n="sets_no_results">No sets found for this search.</div>
 </div>
-
+<script src="/i18n.js"></script>
+<script src="/shared.js"></script>
 <script>
-// Alle bekannten Sets mit Namen und Cardmarket-URL
-const SETS = [
-  // Scarlet & Violet
-  { code:'DRI', name:'Destined Rivals', era:'sv', slug:'sv10-destined-rivals', cm:'Destined-Rivals' },
-  { code:'JTG', name:'Journey Together', era:'sv', slug:'sv09-journey-together', cm:'Journey-Together' },
-  { code:'PRE', name:'Prismatic Evolutions', era:'sv', slug:'sv-prismatic-evolutions', cm:'Prismatic-Evolutions' },
-  { code:'SSP', name:'Surging Sparks', era:'sv', slug:'sv08-surging-sparks', cm:'Surging-Sparks' },
-  { code:'SCR', name:'Stellar Crown', era:'sv', slug:'sv07-stellar-crown', cm:'Stellar-Crown' },
-  { code:'WHT', name:'White Flare', era:'sv', slug:'sv-white-flare', cm:'White-Flare' },
-  { code:'sv8a', name:'Terastal Fest ex', era:'sv', slug:'sv8a-terastal-fest-ex', cm:'Terastal-Fest-ex' },
-  { code:'sv7', name:'Stellar Miracle', era:'sv', slug:'sv7-stellar-miracle', cm:'Stellar-Miracle' },
-  { code:'sv7a', name:'Paradise Dragona', era:'sv', slug:'sv7a-paradise-dragona', cm:'Paradise-Dragona' },
-  { code:'sv6a', name:'Night Wanderer', era:'sv', slug:'sv6a-night-wanderer', cm:'Night-Wanderer' },
-  { code:'sv5M', name:'Cyber Judge', era:'sv', slug:'sv5m-cyber-judge', cm:'Cyber-Judge' },
-  { code:'sv5K', name:'Wild Force', era:'sv', slug:'sv5k-wild-force', cm:'Wild-Force' },
-  { code:'sv5a', name:'Crimson Haze', era:'sv', slug:'sv5a-crimson-haze', cm:'Crimson-Haze' },
-  { code:'sv4a', name:'Shiny Treasure ex', era:'sv', slug:'sv4a-shiny-treasure-ex', cm:'Shiny-Treasure-ex' },
-  { code:'sv4K', name:'Ancient Roar', era:'sv', slug:'sv4k-ancient-roar', cm:'Ancient-Roar' },
-  { code:'sv4M', name:'Future Flash', era:'sv', slug:'sv4m-future-flash', cm:'Future-Flash' },
-  { code:'sv3a', name:'Raging Surf', era:'sv', slug:'sv3a-raging-surf', cm:'Raging-Surf' },
-  { code:'sv2a', name:'Pokémon Card 151', era:'sv', slug:'sv2a-pokemon-card-151', cm:'Pokemon-Card-151' },
-  { code:'sv2D', name:'Clay Burst', era:'sv', slug:'sv2d-clay-burst', cm:'Clay-Burst' },
-  { code:'sv2P', name:'Snow Hazard', era:'sv', slug:'sv2p-snow-hazard', cm:'Snow-Hazard' },
-  { code:'sv1S', name:'Scarlet ex', era:'sv', slug:'sv1s-scarlet-ex', cm:'Scarlet-ex' },
-  { code:'sv1V', name:'Violet ex', era:'sv', slug:'sv1v-violet-ex', cm:'Violet-ex' },
-  { code:'sv1a', name:'Triplet Beat', era:'sv', slug:'sv1a-triplet-beat', cm:'Triplet-Beat' },
-  { code:'SV-P', name:'SV Promo', era:'sv', slug:'sv-p-promotional-cards', cm:'SV-P-Promotional-Cards' },
-  // Sword & Shield
-  { code:'SSH', name:'Sword & Shield Base', era:'swsh', slug:'swsh01-sword-and-shield-base-set', cm:'Sword-and-Shield' },
-  { code:'s12a', name:'VSTAR Universe', era:'swsh', slug:'s12a-vstar-universe', cm:'VSTAR-Universe' },
-  { code:'s12', name:'Paradigm Trigger', era:'swsh', slug:'s12-paradigm-trigger', cm:'Paradigm-Trigger' },
-  { code:'s11a', name:'Incandescent Arcana', era:'swsh', slug:'s11a-incandescent-arcana', cm:'Incandescent-Arcana' },
-  { code:'s11', name:'Lost Abyss', era:'swsh', slug:'s11-lost-abyss', cm:'Lost-Abyss' },
-  { code:'s10P', name:'Space Juggler', era:'swsh', slug:'s10p-space-juggler', cm:'Space-Juggler' },
-  { code:'s10D', name:'Time Gazer', era:'swsh', slug:'s10d-time-gazer', cm:'Time-Gazer' },
-  { code:'s10a', name:'Dark Phantasma', era:'swsh', slug:'s10a-dark-phantasma', cm:'Dark-Phantasma' },
-  { code:'s9a', name:'Battle Region', era:'swsh', slug:'s9a-battle-region', cm:'Battle-Region' },
-  { code:'s9', name:'Star Birth', era:'swsh', slug:'s9-star-birth', cm:'Star-Birth' },
-  { code:'s8b', name:'VMAX Climax', era:'swsh', slug:'s8b-vmax-climax', cm:'VMAX-Climax' },
-  { code:'s8a', name:'25th Anniversary Collection', era:'swsh', slug:'s8a-25th-anniversary-collection', cm:'25th-Anniversary-Collection' },
-  { code:'s7R', name:'Blue Sky Stream', era:'swsh', slug:'s7r-blue-sky-stream', cm:'Blue-Sky-Stream' },
-  { code:'s6a', name:'Eevee Heroes', era:'swsh', slug:'s6a-eevee-heroes', cm:'Eevee-Heroes' },
-  { code:'s4a', name:'Shiny Star V', era:'swsh', slug:'s4a-shiny-star-v', cm:'Shiny-Star-V' },
-  { code:'sI100', name:'Start Deck 100', era:'swsh', slug:'si-start-deck-100', cm:'Start-Deck-100' },
-  // Sun & Moon
-  { code:'sm12a', name:'Tag Team GX All Stars', era:'sm', slug:'sm12a-tag-team-gx-tag-all-stars', cm:'TAG-TEAM-GX-Tag-All-Stars' },
-  { code:'sm12', name:'Alter Genesis', era:'sm', slug:'sm12-alter-genesis', cm:'Alter-Genesis' },
-  { code:'sm11b', name:'Dream League', era:'sm', slug:'sm11b-dream-league', cm:'Dream-League' },
-  { code:'sm11', name:'Miracle Twin', era:'sm', slug:'sm11-miracle-twin', cm:'Miracle-Twin' },
-  { code:'sm10b', name:'Sky Legend', era:'sm', slug:'sm10b-sky-legend', cm:'Sky-Legend' },
-  { code:'sm10', name:'Double Blaze', era:'sm', slug:'sm10-double-blaze', cm:'Double-Blaze' },
-  { code:'sm9b', name:'Full Metal Wall', era:'sm', slug:'sm9b-full-metal-wall', cm:'Full-Metal-Wall' },
-  { code:'sm9a', name:'Night Unison', era:'sm', slug:'sm9a-night-unison', cm:'Night-Unison' },
-  { code:'sm9', name:'Tag Bolt', era:'sm', slug:'sm9-tag-bolt', cm:'Tag-Bolt' },
-  { code:'sm8b', name:'GX Ultra Shiny', era:'sm', slug:'sm8b-gx-ultra-shiny', cm:'GX-Ultra-Shiny' },
-  { code:'sm5s', name:'Ultra Sun', era:'sm', slug:'sm5s-ultra-sun', cm:'Ultra-Sun' },
-  { code:'sm5m', name:'Ultra Moon', era:'sm', slug:'sm5m-ultra-moon', cm:'Ultra-Moon' },
-  // XY
-  { code:'XY9', name:'Rage of the Broken Heavens', era:'xy', slug:'xy9-rage-of-the-broken-heavens', cm:'Rage-of-the-Broken-Heavens' },
-  { code:'XY8r', name:'Red Flash', era:'xy', slug:'xy8-br-red-flash', cm:'Red-Flash' },
-  { code:'XY8b', name:'Blue Shock', era:'xy', slug:'xy8-bb-blue-shock', cm:'Blue-Shock' },
-  { code:'XY7', name:'Bandit Ring', era:'xy', slug:'xy7-bandit-ring', cm:'Bandit-Ring' },
-  { code:'XY6', name:'Emerald Break', era:'xy', slug:'xy6-emerald-break', cm:'Emerald-Break' },
-  { code:'XY4', name:'Phantom Gate', era:'xy', slug:'xy4-phantom-gate', cm:'Phantom-Gate' },
-  { code:'XY3', name:'Rising Fist', era:'xy', slug:'xy3-rising-fist', cm:'Rising-Fist' },
-  { code:'XY2', name:'Wild Blaze', era:'xy', slug:'xy2-wild-blaze', cm:'Wild-Blaze' },
+const SETS=[
+  {code:'DRI',name:'Destined Rivals',era:'sv',cm:'Destined-Rivals'},
+  {code:'JTG',name:'Journey Together',era:'sv',cm:'Journey-Together'},
+  {code:'PRE',name:'Prismatic Evolutions',era:'sv',cm:'Prismatic-Evolutions'},
+  {code:'SSP',name:'Surging Sparks',era:'sv',cm:'Surging-Sparks'},
+  {code:'SCR',name:'Stellar Crown',era:'sv',cm:'Stellar-Crown'},
+  {code:'WHT',name:'White Flare',era:'sv',cm:'White-Flare'},
+  {code:'sv8a',name:'Terastal Fest ex',era:'sv',cm:'Terastal-Fest-ex'},
+  {code:'sv7',name:'Stellar Miracle',era:'sv',cm:'Stellar-Miracle'},
+  {code:'sv7a',name:'Paradise Dragona',era:'sv',cm:'Paradise-Dragona'},
+  {code:'sv6a',name:'Night Wanderer',era:'sv',cm:'Night-Wanderer'},
+  {code:'sv5M',name:'Cyber Judge',era:'sv',cm:'Cyber-Judge'},
+  {code:'sv5K',name:'Wild Force',era:'sv',cm:'Wild-Force'},
+  {code:'sv5a',name:'Crimson Haze',era:'sv',cm:'Crimson-Haze'},
+  {code:'sv4a',name:'Shiny Treasure ex',era:'sv',cm:'Shiny-Treasure-ex'},
+  {code:'sv4K',name:'Ancient Roar',era:'sv',cm:'Ancient-Roar'},
+  {code:'sv4M',name:'Future Flash',era:'sv',cm:'Future-Flash'},
+  {code:'sv3a',name:'Raging Surf',era:'sv',cm:'Raging-Surf'},
+  {code:'sv2a',name:'Pokémon Card 151',era:'sv',cm:'Pokemon-Card-151'},
+  {code:'sv2D',name:'Clay Burst',era:'sv',cm:'Clay-Burst'},
+  {code:'sv2P',name:'Snow Hazard',era:'sv',cm:'Snow-Hazard'},
+  {code:'sv1S',name:'Scarlet ex',era:'sv',cm:'Scarlet-ex'},
+  {code:'sv1V',name:'Violet ex',era:'sv',cm:'Violet-ex'},
+  {code:'sv1a',name:'Triplet Beat',era:'sv',cm:'Triplet-Beat'},
+  {code:'SV-P',name:'SV Promo',era:'sv',cm:'SV-P-Promotional-Cards'},
+  {code:'SSH',name:'Sword & Shield Base',era:'swsh',cm:'Sword-and-Shield'},
+  {code:'s12a',name:'VSTAR Universe',era:'swsh',cm:'VSTAR-Universe'},
+  {code:'s12',name:'Paradigm Trigger',era:'swsh',cm:'Paradigm-Trigger'},
+  {code:'s11a',name:'Incandescent Arcana',era:'swsh',cm:'Incandescent-Arcana'},
+  {code:'s11',name:'Lost Abyss',era:'swsh',cm:'Lost-Abyss'},
+  {code:'s10P',name:'Space Juggler',era:'swsh',cm:'Space-Juggler'},
+  {code:'s10D',name:'Time Gazer',era:'swsh',cm:'Time-Gazer'},
+  {code:'s10a',name:'Dark Phantasma',era:'swsh',cm:'Dark-Phantasma'},
+  {code:'s9a',name:'Battle Region',era:'swsh',cm:'Battle-Region'},
+  {code:'s9',name:'Star Birth',era:'swsh',cm:'Star-Birth'},
+  {code:'s8b',name:'VMAX Climax',era:'swsh',cm:'VMAX-Climax'},
+  {code:'s8a',name:'25th Anniversary Collection',era:'swsh',cm:'25th-Anniversary-Collection'},
+  {code:'s7R',name:'Blue Sky Stream',era:'swsh',cm:'Blue-Sky-Stream'},
+  {code:'s6a',name:'Eevee Heroes',era:'swsh',cm:'Eevee-Heroes'},
+  {code:'s4a',name:'Shiny Star V',era:'swsh',cm:'Shiny-Star-V'},
+  {code:'sI100',name:'Start Deck 100',era:'swsh',cm:'Start-Deck-100'},
+  {code:'sm12a',name:'Tag Team GX All Stars',era:'sm',cm:'TAG-TEAM-GX-Tag-All-Stars'},
+  {code:'sm12',name:'Alter Genesis',era:'sm',cm:'Alter-Genesis'},
+  {code:'sm11b',name:'Dream League',era:'sm',cm:'Dream-League'},
+  {code:'sm11',name:'Miracle Twin',era:'sm',cm:'Miracle-Twin'},
+  {code:'sm10b',name:'Sky Legend',era:'sm',cm:'Sky-Legend'},
+  {code:'sm10',name:'Double Blaze',era:'sm',cm:'Double-Blaze'},
+  {code:'sm9b',name:'Full Metal Wall',era:'sm',cm:'Full-Metal-Wall'},
+  {code:'sm9a',name:'Night Unison',era:'sm',cm:'Night-Unison'},
+  {code:'sm9',name:'Tag Bolt',era:'sm',cm:'Tag-Bolt'},
+  {code:'sm8b',name:'GX Ultra Shiny',era:'sm',cm:'GX-Ultra-Shiny'},
+  {code:'sm5s',name:'Ultra Sun',era:'sm',cm:'Ultra-Sun'},
+  {code:'sm5m',name:'Ultra Moon',era:'sm',cm:'Ultra-Moon'},
+  {code:'XY9',name:'Rage of the Broken Heavens',era:'xy',cm:'Rage-of-the-Broken-Heavens'},
+  {code:'XY8r',name:'Red Flash',era:'xy',cm:'Red-Flash'},
+  {code:'XY8b',name:'Blue Shock',era:'xy',cm:'Blue-Shock'},
+  {code:'XY7',name:'Bandit Ring',era:'xy',cm:'Bandit-Ring'},
+  {code:'XY6',name:'Emerald Break',era:'xy',cm:'Emerald-Break'},
+  {code:'XY4',name:'Phantom Gate',era:'xy',cm:'Phantom-Gate'},
+  {code:'XY3',name:'Rising Fist',era:'xy',cm:'Rising-Fist'},
+  {code:'XY2',name:'Wild Blaze',era:'xy',cm:'Wild-Blaze'},
 ];
-
-const ERA_LABELS = { sv:'Scarlet & Violet', swsh:'Sword & Shield', sm:'Sun & Moon', xy:'XY' };
-const CM_BASE = 'https://www.cardmarket.com/en/Pokemon/Products/Singles/';
-
-let currentFilter = 'all';
-let currentSearch = '';
-
-function render() {
-  const container = document.getElementById('setsContainer');
-  const noResults = document.getElementById('noResults');
-  const searchLower = currentSearch.toLowerCase();
-
-  const filtered = SETS.filter(s => {
-    const matchesFilter = currentFilter === 'all' || s.era === currentFilter;
-    const matchesSearch = !searchLower ||
-      s.name.toLowerCase().includes(searchLower) ||
-      s.code.toLowerCase().includes(searchLower) ||
-      s.slug.toLowerCase().includes(searchLower);
-    return matchesFilter && matchesSearch;
-  });
-
-  document.getElementById('countText').innerHTML =
-    `<span>${filtered.length}</span> Sets gefunden`;
-
-  if (filtered.length === 0) {
-    container.innerHTML = '';
-    noResults.style.display = 'block';
-    return;
-  }
-  noResults.style.display = 'none';
-
-  // Nach Era gruppieren
-  const grouped = {};
-  filtered.forEach(s => {
-    if (!grouped[s.era]) grouped[s.era] = [];
-    grouped[s.era].push(s);
-  });
-
-  container.innerHTML = Object.entries(grouped).map(([era, sets]) => `
+const CM_BASE='https://www.cardmarket.com/en/Pokemon/Products/Singles/';
+let currentFilter='all',currentSearch='';
+function render(){
+  const q=currentSearch.toLowerCase();
+  const filtered=SETS.filter(s=>(currentFilter==='all'||s.era===currentFilter)&&(!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q)));
+  document.getElementById('countText').innerHTML=`<span>${filtered.length}</span> ${i18n.t('sets_count_found')}`;
+  const noRes=document.getElementById('noResults');
+  if(!filtered.length){document.getElementById('setsContainer').innerHTML='';noRes.style.display='block';return}
+  noRes.style.display='none';
+  const grouped={};filtered.forEach(s=>{if(!grouped[s.era])grouped[s.era]=[];grouped[s.era].push(s)});
+  document.getElementById('setsContainer').innerHTML=Object.entries(grouped).map(([era,sets])=>`
     <div class="era-section">
-      <div class="era-title">${ERA_LABELS[era] || era}</div>
-      <div class="sets-grid">
-        ${sets.map(s => `
-          <a class="set-card" href="${CM_BASE}${s.cm}" target="_blank">
-            <div class="set-code">${s.code}</div>
-            <div class="set-name">${s.name}</div>
-            <div class="set-link">Auf Cardmarket ansehen</div>
-          </a>
-        `).join('')}
+      <div class="era-title">${i18n.t('era_'+era)||era}</div>
+      <div class="sets-grid">${sets.map(s=>`
+        <a class="set-card" href="${CM_BASE}${s.cm}" target="_blank">
+          <div class="set-code">${s.code}</div>
+          <div class="set-name">${s.name}</div>
+          <div class="set-link">${i18n.t('sets_cm_link')}</div>
+        </a>`).join('')}
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
-function setFilter(filter, btn) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  render();
-}
-
-document.getElementById('search').addEventListener('input', e => {
-  currentSearch = e.target.value;
-  render();
-});
-
-render();
+function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render()}
+document.getElementById('search').addEventListener('input',e=>{currentSearch=e.target.value;render()});
+document.addEventListener('DOMContentLoaded',render);
 </script>
 </body>
 </html>
