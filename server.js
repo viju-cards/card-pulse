@@ -575,6 +575,30 @@ app.post("/suggest", async (req, res) => {
   res.json({ success: true });
 });
 
+// GET /debug/stripe – TEMPORARY
+app.get("/debug/stripe", requireAuth, async (req, res) => {
+  try {
+    const key = process.env.STRIPE_SECRET_KEY || '';
+    const silverPrice = process.env.STRIPE_PRICE_SILVER || 'NOT SET';
+    // Try to retrieve the silver price from Stripe
+    let priceInfo = null;
+    let error = null;
+    try {
+      priceInfo = await stripe.prices.retrieve(silverPrice);
+    } catch(e) {
+      error = e.message;
+    }
+    res.json({
+      keyPrefix: key.substring(0, 14) + '...',
+      silverPriceId: silverPrice,
+      stripeResult: priceInfo ? 'FOUND ✅' : 'NOT FOUND ❌',
+      stripeError: error,
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // PASSWORD RESET ROUTES
 // ═══════════════════════════════════════════════════════════════════════════
