@@ -23,20 +23,7 @@
 
     const wrap = document.createElement('div');
     wrap.id = 'langSwitcher';
-    wrap.style.cssText = [
-      'position:fixed',
-      'top:16px',
-      'right:20px',
-      'z-index:9999',
-      'display:flex',
-      'gap:5px',
-      'align-items:center',
-      'background:rgba(13,13,31,0.85)',
-      'border:1px solid rgba(108,99,255,0.2)',
-      'border-radius:10px',
-      'padding:4px',
-      'backdrop-filter:blur(12px)',
-    ].join(';');
+    wrap.style.cssText = 'display:flex;gap:4px;align-items:center;margin-left:16px';
 
     const btnEn = document.createElement('button');
     btnEn.id = 'langBtnEn';
@@ -52,7 +39,17 @@
 
     wrap.appendChild(btnEn);
     wrap.appendChild(btnDe);
-    document.body.appendChild(wrap);
+
+    // Insert after logo (first element in nav)
+    const nav = document.querySelector('nav');
+    if (nav) {
+      const logo = nav.querySelector('a.logo, .logo');
+      if (logo) {
+        logo.insertAdjacentElement('afterend', wrap);
+      } else {
+        nav.prepend(wrap);
+      }
+    }
   }
 
   function switchLang(l) {
@@ -76,6 +73,7 @@
         <a href="/sets.html" data-i18n="footer_sets">Sets</a>
         <a href="/privacy.html" data-i18n="footer_privacy">Privacy Policy</a>
         <a href="/impressum.html" data-i18n="footer_imprint">Imprint</a>
+        <a href="/suggest.html" data-i18n="footer_suggest">Report missing card</a>
       </div>
     `;
     document.body.appendChild(footer);
