@@ -156,6 +156,43 @@ const TRANSLATIONS = {
 
     // LANGUAGE SWITCHER
     lang_label: "EN",
+
+    // Auth pages
+    login_eyebrow: "Sign in",
+    login_h1: "Welcome back.",
+    register_eyebrow: "Create account",
+    register_h1: "Join the collectors.",
+
+    // Dashboard
+    dash_eyebrow: "Account",
+    dash_title: "Dashboard.",
+    dash_info_email: "E-Mail",
+    dash_info_plan: "Plan",
+    dash_info_until: "Valid until",
+    dash_info_status: "Status",
+    dash_plans_title: "Plans",
+    dash_plans_sub: "Upgrade or change your plan anytime.",
+    dash_ext_title: "Browser Extension",
+    dash_ext_sub: "Connect CardPulse to your browser.",
+    dash_ext_step1: "Open the Chrome Web Store and search for CardPulse.",
+    dash_ext_step2: "Install and click the CardPulse icon in your browser toolbar.",
+    dash_ext_step3: "You\'re already signed in — your token is forwarded automatically.",
+    nav_logout: "Sign out",
+
+    // Forgot/reset
+    forgot_h1_short: "Reset password.",
+    reset_h1_short: "New password.",
+
+    // Sets
+    sets_page_label: "Compatibility",
+    sets_page_h1: "Supported Sets.",
+    sets_page_sub: "All Pokémon TCG sets currently supported by CardPulse.",
+
+    // Privacy
+    privacy_label: "Legal",
+
+    // Enterprise
+    enterprise_h3_short: "Custom quote.",
     forgot_title: "Forgot password?",
     forgot_sub: "Enter your email and we'll send you a reset link.",
     forgot_btn: "Send reset link",
@@ -330,6 +367,43 @@ const TRANSLATIONS = {
     privacy_updated: "Zuletzt aktualisiert: Mai 2026",
 
     lang_label: "DE",
+
+    // Auth pages
+    login_eyebrow: "Anmelden",
+    login_h1: "Willkommen zurück.",
+    register_eyebrow: "Konto erstellen",
+    register_h1: "Join the collectors.",
+
+    // Dashboard
+    dash_eyebrow: "Konto",
+    dash_title: "Dashboard.",
+    dash_info_email: "E-Mail",
+    dash_info_plan: "Plan",
+    dash_info_until: "Gültig bis",
+    dash_info_status: "Status",
+    dash_plans_title: "Pläne",
+    dash_plans_sub: "Jederzeit upgraden oder wechseln.",
+    dash_ext_title: "Browser Extension",
+    dash_ext_sub: "Verbinde CardPulse mit deinem Browser.",
+    dash_ext_step1: "Öffne den Chrome Web Store und suche nach CardPulse.",
+    dash_ext_step2: "Installiere die Extension und klicke auf das CardPulse-Icon.",
+    dash_ext_step3: "Du bist bereits eingeloggt — dein Token wird automatisch weitergegeben.",
+    nav_logout: "Abmelden",
+
+    // Forgot/reset
+    forgot_h1_short: "Passwort zurücksetzen.",
+    reset_h1_short: "Neues Passwort.",
+
+    // Sets
+    sets_page_label: "Kompatibilität",
+    sets_page_h1: "Unterstützte Sets.",
+    sets_page_sub: "Alle Pokémon TCG Sets die CardPulse aktuell unterstützt.",
+
+    // Privacy
+    privacy_label: "Rechtliches",
+
+    // Enterprise
+    enterprise_h3_short: "Individuelles Angebot.",
     forgot_title: "Passwort vergessen?",
     forgot_sub: "Gib deine E-Mail ein und wir schicken dir einen Reset-Link.",
     forgot_btn: "Reset-Link senden",
