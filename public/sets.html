@@ -36,13 +36,15 @@ h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font
 .era-heading{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .era-title{font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:800;text-transform:uppercase}
 .era-count{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px}
-.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:7px}
-.set-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;transition:.15s}
-.set-card:hover{border-color:rgba(108,99,255,0.2);background:rgba(108,99,255,0.03)}
-.set-code{font-family:"Press Start 2P",monospace;font-size:6px;letter-spacing:.5px;padding:5px 7px;border-radius:4px;min-width:38px;text-align:center;flex-shrink:0;line-height:1.8}
+.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:7px}
+.set-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;transition:.15s;text-decoration:none;color:inherit}
+.set-card:hover{border-color:rgba(108,99,255,0.3);background:rgba(108,99,255,0.04);transform:translateY(-1px)}
+.set-code{font-family:"Press Start 2P",monospace;font-size:6px;letter-spacing:.5px;padding:5px 7px;border-radius:4px;min-width:42px;text-align:center;flex-shrink:0;line-height:1.8;white-space:nowrap}
+.set-info{min-width:0}
 .set-name{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);line-height:1.4}
+
 #no-results{display:none;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--muted);letter-spacing:1px;padding:60px 0;text-align:center}
-@media(max-width:768px){nav{padding:10px 16px}.main{padding:40px 20px}h1{font-size:40px}.sets-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.era-filters{gap:6px}}
+@media(max-width:768px){nav{padding:10px 16px}.main{padding:40px 20px}h1{font-size:40px}.sets-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.era-filters{gap:6px}}
 </style>
 </head>
 <body>
@@ -53,9 +55,9 @@ h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font
 <div class="main">
   <span class="section-label" data-i18n="sets_page_label">Compatibility</span>
   <h1 data-i18n="sets_page_h1">Supported Sets.</h1>
-  <p class="subtitle"><strong style="color:var(--accent)">75</strong> sets · <span data-i18n="sets_page_sub">all currently supported by CardPulse</span></p>
+  <p class="subtitle"><strong style="color:var(--accent)">76</strong> sets · <span data-i18n="sets_page_sub">click any set to browse on Cardmarket</span></p>
   <div class="search-wrap">
-    <input type="text" id="search" placeholder="Search sets..." oninput="doSearch(this.value)">
+    <input type="text" id="search" placeholder="Search sets or codes..." oninput="doSearch(this.value)">
   </div>
   <div class="era-filters">
     <button class="era-btn all-btn active" data-era="all" onclick="filterEra(this)">All eras</button>
@@ -66,7 +68,7 @@ h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font
     <button class="era-btn" data-era="Black & White" data-color="#7c3aed" onclick="filterEra(this)">Black & White</button>
     <button class="era-btn" data-era="Other" data-color="#5a5a78" onclick="filterEra(this)">Other</button>
   </div>
-  <div class="stats-bar">Showing <strong id="visibleCount">75</strong> sets</div>
+  <div class="stats-bar">Showing <strong id="visibleCount">76</strong> sets</div>
   <div id="no-results">> NO SETS FOUND</div>
   <div id="sets-container"></div>
 </div>
@@ -74,8 +76,10 @@ h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font
 <script src="/shared.js"></script>
 <script>
 var COLORS = {"Scarlet & Violet": "#dc2626", "Sword & Shield": "#2563eb", "Sun & Moon": "#f59e0b", "XY": "#16a34a", "Black & White": "#7c3aed", "Other": "#5a5a78"};
-var SETS = {"Scarlet & Violet": [{"code": "SSP", "name": "Surging Sparks"}, {"code": "SCR", "name": "Stellar Crown"}, {"code": "PRE", "name": "Prismatic Evolutions"}, {"code": "JTG", "name": "Journey Together"}, {"code": "DRI", "name": "Destined Rivals"}, {"code": "TWM", "name": "Twilight Masquerade"}, {"code": "TEF", "name": "Temporal Forces"}, {"code": "OBF", "name": "Obsidian Flames"}, {"code": "PAR", "name": "Paradox Rift"}, {"code": "PAF", "name": "Paldean Fates"}, {"code": "NWA", "name": "Night Wanderer"}, {"code": "STM", "name": "Stellar Miracle"}, {"code": "TFE", "name": "Terastal Fest ex"}, {"code": "CRH", "name": "Crimson Haze"}, {"code": "WFO", "name": "Wild Force"}, {"code": "CYJ", "name": "Cyber Judge"}, {"code": "RGS", "name": "Raging Surf"}, {"code": "MEW", "name": "Pok\u00e9mon Card 151"}, {"code": "CLB", "name": "Clay Burst"}, {"code": "SNH", "name": "Snow Hazard"}, {"code": "TRB", "name": "Triplet Beat"}, {"code": "SXE", "name": "Scarlet ex"}, {"code": "VXE", "name": "Violet ex"}, {"code": "SV-P", "name": "SV Promos"}], "Sword & Shield": [{"code": "SSH", "name": "Sword & Shield"}, {"code": "SSV", "name": "Shiny Star V"}, {"code": "BSS", "name": "Blue Sky Stream"}, {"code": "25A", "name": "25th Anniversary"}, {"code": "VMC", "name": "VMAX Climax"}, {"code": "STB", "name": "Star Birth"}, {"code": "BTR", "name": "Battle Region"}, {"code": "LST", "name": "Lost Abyss"}, {"code": "DKP", "name": "Dark Phantasma"}, {"code": "TMG", "name": "Time Gazer"}, {"code": "SPJ", "name": "Space Juggler"}, {"code": "ICA", "name": "Incandescent Arcana"}, {"code": "PGT", "name": "Paradigm Trigger"}, {"code": "VSU", "name": "VSTAR Universe"}], "Sun & Moon": [{"code": "TEU", "name": "Team Up"}, {"code": "DBL", "name": "Double Blaze"}, {"code": "SKL", "name": "Sky Legend"}, {"code": "MRT", "name": "Miracle Twin"}, {"code": "DRL", "name": "Dream League"}, {"code": "ALG", "name": "Alter Genesis"}, {"code": "TAS", "name": "Tag All Stars"}, {"code": "TGB", "name": "Tag Bolt"}, {"code": "NTU", "name": "Night Unison"}, {"code": "FMW", "name": "Full Metal Wall"}, {"code": "GXU", "name": "GX Ultra Shiny"}, {"code": "ULM", "name": "Ultra Moon"}, {"code": "ULS", "name": "Ultra Sun"}], "XY": [{"code": "WLB", "name": "Wild Blaze"}, {"code": "RSF", "name": "Rising Fist"}, {"code": "PHG", "name": "Phantom Gate"}, {"code": "GVO", "name": "Gaia Volcano"}, {"code": "EMB", "name": "Emerald Break"}, {"code": "BDR", "name": "Bandit Ring"}, {"code": "BSH", "name": "Blue Shock"}, {"code": "RBH", "name": "Rage of Broken Heavens"}, {"code": "CTR", "name": "Cruel Traitor"}, {"code": "FBF", "name": "Fever Burst Fighter"}], "Black & White": [{"code": "FRB", "name": "Freeze Bolt"}, {"code": "CLF", "name": "Cold Flare"}, {"code": "PLG", "name": "Plasma Gale"}, {"code": "SPF", "name": "Spiral Force"}, {"code": "TNK", "name": "Thunder Knuckle"}, {"code": "MEC", "name": "Megalo Cannon"}], "Other": [{"code": "MEG", "name": "Mega Evolution"}, {"code": "PFL", "name": "Phantasmal Flames"}, {"code": "BLK", "name": "Black Bolt"}, {"code": "BW-P", "name": "BW Promos"}, {"code": "CP4", "name": "Premium Champion Pack"}, {"code": "CP6", "name": "20th Anniversary Pack"}, {"code": "BXY", "name": "Best of XY"}, {"code": "SD100", "name": "Start Deck 100"}]};
+var SETS = {"Scarlet & Violet": [{"code": "sv08", "name": "Surging Sparks", "slug": "Surging-Sparks"}, {"code": "sv07", "name": "Stellar Crown", "slug": "Stellar-Crown"}, {"code": "PRE", "name": "Prismatic Evolutions", "slug": "Prismatic-Evolutions"}, {"code": "sv09", "name": "Journey Together", "slug": "Journey-Together"}, {"code": "sv10", "name": "Destined Rivals", "slug": "Destined-Rivals"}, {"code": "sv06", "name": "Twilight Masquerade", "slug": "Twilight-Masquerade"}, {"code": "sv05", "name": "Temporal Forces", "slug": "Temporal-Forces"}, {"code": "sv4a", "name": "Shiny Treasure ex", "slug": "Shiny-Treasure-ex"}, {"code": "sv4k", "name": "Paradox Rift", "slug": "Paradox-Rift"}, {"code": "sv4m", "name": "Paldean Fates", "slug": "Paldean-Fates"}, {"code": "sv03", "name": "Obsidian Flames", "slug": "Obsidian-Flames"}, {"code": "sv6a", "name": "Night Wanderer", "slug": "Night-Wanderer"}, {"code": "sv7", "name": "Stellar Miracle", "slug": "Stellar-Miracle"}, {"code": "sv7a", "name": "Paradise Dragona", "slug": "Paradise-Dragona"}, {"code": "sv8a", "name": "Terastal Fest ex", "slug": "Terastal-Fest-ex"}, {"code": "sv5a", "name": "Crimson Haze", "slug": "Crimson-Haze"}, {"code": "sv5k", "name": "Wild Force", "slug": "Wild-Force"}, {"code": "sv5m", "name": "Cyber Judge", "slug": "Cyber-Judge"}, {"code": "sv3a", "name": "Raging Surf", "slug": "Raging-Surf"}, {"code": "sv2a", "name": "Pok\u00e9mon Card 151", "slug": "Pokemon-Card-151"}, {"code": "sv2d", "name": "Clay Burst", "slug": "Clay-Burst"}, {"code": "sv2p", "name": "Snow Hazard", "slug": "Snow-Hazard"}, {"code": "sv1a", "name": "Triplet Beat", "slug": "Triplet-Beat"}, {"code": "sv1s", "name": "Scarlet ex", "slug": "Scarlet-ex"}, {"code": "sv1v", "name": "Violet ex", "slug": "Violet-ex"}, {"code": "sv-P", "name": "SV Promos", "slug": "SV-Black-Star-Promos"}], "Sword & Shield": [{"code": "swsh1", "name": "Sword & Shield", "slug": "Sword-and-Shield"}, {"code": "s4a", "name": "Shiny Star V", "slug": "Shiny-Star-V"}, {"code": "s7r", "name": "Blue Sky Stream", "slug": "Blue-Sky-Stream"}, {"code": "s8a", "name": "25th Anniversary", "slug": "25th-Anniversary-Collection"}, {"code": "s8b", "name": "VMAX Climax", "slug": "VMAX-Climax"}, {"code": "s9", "name": "Star Birth", "slug": "Star-Birth"}, {"code": "s9a", "name": "Battle Region", "slug": "Battle-Region"}, {"code": "s10", "name": "Lost Abyss", "slug": "Lost-Abyss"}, {"code": "s10a", "name": "Dark Phantasma", "slug": "Dark-Phantasma"}, {"code": "s10d", "name": "Time Gazer", "slug": "Time-Gazer"}, {"code": "s10p", "name": "Space Juggler", "slug": "Space-Juggler"}, {"code": "s11a", "name": "Incandescent Arcana", "slug": "Incandescent-Arcana"}, {"code": "s12", "name": "Paradigm Trigger", "slug": "Paradigm-Trigger"}, {"code": "s12a", "name": "VSTAR Universe", "slug": "VSTAR-Universe"}], "Sun & Moon": [{"code": "sm9", "name": "Tag Bolt", "slug": "Tag-Bolt"}, {"code": "sm9a", "name": "Night Unison", "slug": "Night-Unison"}, {"code": "sm9b", "name": "Full Metal Wall", "slug": "Full-Metal-Wall"}, {"code": "sm10", "name": "Double Blaze", "slug": "Double-Blaze"}, {"code": "sm10b", "name": "Sky Legend", "slug": "Sky-Legend"}, {"code": "sm11", "name": "Miracle Twin", "slug": "Miracle-Twin"}, {"code": "sm11b", "name": "Dream League", "slug": "Dream-League"}, {"code": "sm12", "name": "Alter Genesis", "slug": "Alter-Genesis"}, {"code": "sm12a", "name": "Tag All Stars", "slug": "Tag-All-Stars"}, {"code": "sm8b", "name": "GX Ultra Shiny", "slug": "GX-Ultra-Shiny"}, {"code": "sm5m", "name": "Ultra Moon", "slug": "Ultra-Moon"}, {"code": "sm5s", "name": "Ultra Sun", "slug": "Ultra-Sun"}], "XY": [{"code": "xy2", "name": "Wild Blaze", "slug": "Wild-Blaze"}, {"code": "xy3", "name": "Rising Fist", "slug": "Rising-Fist"}, {"code": "xy4", "name": "Phantom Gate", "slug": "Phantom-Gate"}, {"code": "xy5g", "name": "Gaia Volcano", "slug": "Gaia-Volcano"}, {"code": "xy6", "name": "Emerald Break", "slug": "Emerald-Break"}, {"code": "xy7", "name": "Bandit Ring", "slug": "Bandit-Ring"}, {"code": "xy8b", "name": "Blue Shock", "slug": "Blue-Shock"}, {"code": "xy9", "name": "Rage of Broken Heavens", "slug": "Rage-of-the-Broken-Heavens"}, {"code": "xy11c", "name": "Cruel Traitor", "slug": "Cruel-Traitor"}, {"code": "xy11f", "name": "Fever Burst Fighter", "slug": "Fever-Burst-Fighter"}], "Black & White": [{"code": "bw6f", "name": "Freeze Bolt", "slug": "Freeze-Bolt"}, {"code": "bw6c", "name": "Cold Flare", "slug": "Cold-Flare"}, {"code": "bw7", "name": "Plasma Gale", "slug": "Plasma-Gale"}, {"code": "bw8s", "name": "Spiral Force", "slug": "Spiral-Force"}, {"code": "bw8t", "name": "Thunder Knuckle", "slug": "Thunder-Knuckle"}, {"code": "bw9", "name": "Megalo Cannon", "slug": "Megalo-Cannon"}], "Other": [{"code": "me01", "name": "Mega Evolution", "slug": "Mega-Evolution-Special"}, {"code": "me02", "name": "Phantasmal Flames", "slug": "Phantasmal-Flames"}, {"code": "BLK", "name": "Black Bolt", "slug": "Black-Bolt"}, {"code": "BW-P", "name": "BW Promos", "slug": "BW-Black-Star-Promos"}, {"code": "cp4", "name": "Premium Champion Pack", "slug": "Premium-Champion-Pack"}, {"code": "cp6", "name": "20th Anniversary Pack", "slug": "Expansion-Pack-20th-Anniversary"}, {"code": "bxy", "name": "Best of XY", "slug": "The-Best-of-XY"}, {"code": "si100", "name": "Start Deck 100", "slug": "Start-Deck-100"}]};
 var era = 'all', q = '';
+var CM_BASE = 'https://www.cardmarket.com/en/Pokemon/Products/Singles/';
+
 function build() {
   var box = document.getElementById('sets-container');
   box.innerHTML = '';
@@ -91,13 +95,20 @@ function build() {
     sec.className = 'era-section';
     sec.innerHTML = '<div class="era-heading"><div class="era-title" style="color:'+c+'">'+e+'</div><div class="era-count">'+list.length+' SETS</div></div>'
       +'<div class="sets-grid">'+list.map(function(s) {
-        return '<div class="set-card"><div class="set-code" style="background:rgba(0,0,0,0.4);border:1px solid '+c+'44;color:'+c+'">'+s.code+'</div><div class="set-name">'+s.name+'</div></div>';
+        var url = CM_BASE + s.slug;
+        return '<a class="set-card" href="'+url+'" target="_blank" rel="noopener">'
+          +'<div class="set-code" style="background:rgba(0,0,0,0.4);border:1px solid '+c+'44;color:'+c+'">'+s.code+'</div>'
+          +'<div class="set-info">'
+          +'<div class="set-name">'+s.name+'</div>'
+          +''
+          +'</div></a>';
       }).join('')+'</div>';
     box.appendChild(sec);
   });
   document.getElementById('visibleCount').textContent = n;
   document.getElementById('no-results').style.display = n ? 'none' : 'block';
 }
+
 function filterEra(btn) {
   document.querySelectorAll('.era-btn').forEach(function(b){ b.classList.remove('active'); b.style.cssText=''; });
   btn.classList.add('active');
@@ -106,14 +117,17 @@ function filterEra(btn) {
   if (c) { btn.style.background=c+'1a'; btn.style.borderColor=c; btn.style.color=c; }
   build();
 }
+
 function doSearch(v) {
   q = v.toLowerCase().trim();
   if (q) {
     document.querySelectorAll('.era-btn').forEach(function(b){ b.classList.remove('active'); b.style.cssText=''; });
-    var ab=document.querySelector('.all-btn'); ab.classList.add('active'); era='all';
+    document.querySelector('.all-btn').classList.add('active');
+    era = 'all';
   }
   build();
 }
+
 document.querySelectorAll('.era-btn[data-era]').forEach(function(btn) {
   var c = COLORS[btn.dataset.era];
   if (!c) return;
