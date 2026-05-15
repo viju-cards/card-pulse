@@ -157,6 +157,42 @@ const TRANSLATIONS = {
     // LANGUAGE SWITCHER
     lang_label: "EN",
 
+    // Index page
+    index_badge: "NOW AVAILABLE FOR CHROME",
+    index_h1_1: "TCGPlayer",
+    index_h1_2: "Prices",
+    index_h1_3: "On Cardmarket",
+    index_sub: "See live market prices from TCGPlayer directly while browsing Cardmarket. All conditions, EUR conversion, 30-day price history. For the serious collector.",
+    index_install: "INSTALL FREE",
+    index_sets_link: "View supported sets →",
+    index_how_label: "How it works",
+    index_how_h2_1: "THREE STEPS.",
+    index_how_h2_2: "ONE EXTENSION.",
+    index_step1_title: "Install Extension",
+    index_step1_desc: "Add CardPulse from the Chrome Web Store. Free. One click. No config needed.",
+    index_step2_title: "Browse Cardmarket",
+    index_step2_desc: "Open any Pokémon card page on Cardmarket. The overlay loads automatically.",
+    index_step3_title: "See The Data",
+    index_step3_desc: "Live TCGPlayer prices, all 5 conditions, EUR conversion and 30-day history appear instantly.",
+    index_features_label: "Features",
+    index_features_h2: "EVERYTHING A COLLECTOR NEEDS.",
+    index_pricing_label: "Pricing",
+    index_pricing_h2_1: "CHOOSE YOUR",
+    index_pricing_h2_2: "RARITY.",
+    index_enterprise_secret: "SECRET RARE",
+    index_enterprise_h: "Platin not enough?",
+    index_enterprise_sub: "Custom request volume · Individual pricing · Priority support",
+
+    // Impressum
+    imprint_label: "Legal",
+    imprint_h1: "Impressum.",
+    imprint_operator: "Operator",
+    imprint_contact: "Contact",
+    imprint_responsible: "Responsible for content",
+    imprint_dispute: "Dispute Resolution",
+    imprint_dispute_text: "The European Commission provides a platform for online dispute resolution (OS):",
+    imprint_dispute_text2: "We are not obliged to participate in dispute resolution proceedings before a consumer arbitration board.",
+
     // Auth pages
     login_eyebrow: "Sign in",
     login_h1: "Welcome back.",
@@ -367,6 +403,45 @@ const TRANSLATIONS = {
     privacy_updated: "Zuletzt aktualisiert: Mai 2026",
 
     lang_label: "DE",
+
+    // Index page
+    index_badge: "JETZT FÜR CHROME VERFÜGBAR",
+    index_h1_1: "TCGPlayer",
+    index_h1_2: "Preise",
+    index_h1_3: "Auf Cardmarket",
+    index_sub: "Sieh live Marktpreise von TCGPlayer direkt beim Surfen auf Cardmarket. Alle Konditionen, EUR-Umrechnung, 30-Tage-Preishistorie. Für ernsthafte Sammler.",
+    index_install: "KOSTENLOS INSTALLIEREN",
+    index_sets_link: "Unterstützte Sets ansehen →",
+    index_how_label: "So funktioniert es",
+    index_how_h2_1: "DREI SCHRITTE.",
+    index_how_h2_2: "EINE EXTENSION.",
+    index_step1_title: "Extension installieren",
+    index_step1_desc: "CardPulse im Chrome Web Store hinzufügen. Kostenlos. Ein Klick. Keine Konfiguration nötig.",
+    index_step2_title: "Cardmarket besuchen",
+    index_step2_desc: "Öffne eine beliebige Pokémon-Karte auf Cardmarket. Das Overlay lädt automatisch.",
+    index_step3_title: "Daten sehen",
+    index_step3_desc: "Live TCGPlayer-Preise, alle 5 Konditionen, EUR-Umrechnung und 30-Tage-Verlauf erscheinen sofort.",
+    index_features_label: "Features",
+    index_features_h2: "ALLES WAS EIN SAMMLER BRAUCHT.",
+    index_pricing_label: "Preise",
+    index_pricing_h2_1: "WÄHLE DEINE",
+    index_pricing_h2_2: "RARITÄT.",
+    index_enterprise_secret: "SECRET RARE",
+    index_enterprise_h: "Platin reicht nicht?",
+    index_enterprise_sub: "Individuelle Anfragen · Eigene Preise · Priority Support",
+
+    // Impressum
+    imprint_label: "Rechtliches",
+    imprint_h1: "Impressum.",
+    imprint_operator: "Betreiber",
+    imprint_contact: "Kontakt",
+    imprint_responsible: "Verantwortlich für den Inhalt",
+    imprint_dispute: "Streitschlichtung",
+    imprint_dispute_text: "Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:",
+    imprint_dispute_text2: "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+
+    // Sets
+    sets_page_sub: "Klick auf ein Set um es auf Cardmarket zu öffnen",
 
     // Auth pages
     login_eyebrow: "Anmelden",
