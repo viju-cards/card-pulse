@@ -30,8 +30,7 @@ h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font
 .lang-btn:hover:not(.active){background:rgba(255,255,255,0.04)}
 
 .search-wrap{position:relative;margin-bottom:16px;max-width:480px}
-.search-wrap::before{content:">";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-family:"Press Start 2P",monospace;font-size:9px;color:var(--accent);pointer-events:none}
-#search{width:100%;padding:13px 14px 13px 34px;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:"DM Mono",monospace;font-size:13px;outline:none;transition:.2s}
+#search{width:100%;padding:13px 14px;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:"DM Mono",monospace;font-size:13px;outline:none;transition:.2s}
 #search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
 #search::placeholder{color:var(--muted)}
 .era-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:24px}
@@ -65,16 +64,16 @@ h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font
 
   <!-- Language toggle -->
   <div class="lang-toggle">
-    <button class="lang-btn active" id="btn-en" onclick="switchLang('en')">🇺🇸 ENGLISH</button>
-    <button class="lang-btn" id="btn-jp" onclick="switchLang('jp')">🇯🇵 JAPANESE</button>
+    <button class="lang-btn active" id="btn-en" onclick="switchLang('en')" data-i18n-attr="ENGLISH">🇺🇸 ENGLISH</button>
+    <button class="lang-btn" id="btn-jp" onclick="switchLang('jp')" data-i18n-attr="JAPANESE">🇯🇵 JAPANESE</button>
   </div>
 
   <div class="search-wrap">
-    <input type="text" id="search" placeholder="Search sets or codes..." oninput="doSearch(this.value)">
+    <input type="text" id="search" placeholder="Search sets or codes..." oninput="doSearch(this.value)" id="search">
   </div>
 
   <div class="era-filters" id="era-filters">
-    <button class="era-btn all-btn active" data-era="all" onclick="filterEra(this)">All eras</button>
+    <button class="era-btn all-btn active" data-era="all" id="allErasBtn" onclick="filterEra(this)">All eras</button>
   </div>
 
   <div class="stats-bar">Showing <strong id="visibleCount">0</strong> sets</div>
@@ -165,17 +164,40 @@ function doSearch(v) {
 }
 
 function switchLang(l) {
+  // Update search placeholder
+  var searchEl = document.getElementById('search');
+  if (searchEl) searchEl.placeholder = l === 'jp' ? 'Sets oder Codes suchen...' : (document.documentElement.lang === 'de' ? 'Sets oder Codes suchen...' : 'Search sets or codes...');
   lang = l;
   era = 'all';
   q = '';
   document.getElementById('search').value = '';
   document.getElementById('btn-en').classList.toggle('active', l==='en');
+  var allBtn = document.getElementById('allErasBtn');
+  if (allBtn) allBtn.textContent = l === 'jp' ? 'Alle Eras' : (l === 'en' ? 'All eras' : 'Alle Eras');
   document.getElementById('btn-jp').classList.toggle('active', l==='jp');
+  document.getElementById('btn-jp').innerHTML = (l === 'en' ? '🇯🇵 JAPANESE' : '🇯🇵 JAPANISCH');
+  document.getElementById('btn-en').innerHTML = '🇺🇸 ENGLISH';
   document.getElementById('total-count').textContent = l==='en' ? TOTAL_EN : TOTAL_JP;
+  var sub = document.getElementById('sets-subtitle');
+  if (sub) sub.textContent = l === 'en' ? 'click any set to browse on Cardmarket' : 'Klick auf ein Set um es auf Cardmarket zu öffnen';
+  var searchEl = document.getElementById('search');
+  if (searchEl) searchEl.placeholder = l === 'en' ? 'Search sets or codes...' : 'Sets oder Codes suchen...';
+  var allBtn = document.getElementById('allErasBtn');
+  if (allBtn) allBtn.textContent = l === 'en' ? 'All eras' : 'Alle Eras';
   buildEraFilters();
   build();
 }
 
+// Apply translations on load
+var initLang = localStorage.getItem('cp_lang') || 'en';
+if (initLang === 'de') {
+  var sub = document.getElementById('sets-subtitle');
+  if (sub) sub.textContent = 'Klick auf ein Set um es auf Cardmarket zu öffnen';
+  var searchEl = document.getElementById('search');
+  if (searchEl) searchEl.placeholder = 'Sets oder Codes suchen...';
+  var allBtn = document.getElementById('allErasBtn');
+  if (allBtn) allBtn.textContent = 'Alle Eras';
+}
 buildEraFilters();
 build();
 </script>
