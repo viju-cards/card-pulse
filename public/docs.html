@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CardPulse – Dokumentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--teal:#00d4aa;--red:#ff4040;--green:#22c55e;--text:#e8e8f0;--muted:#5a5a78}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:"DM Mono",monospace;min-height:100vh;position:relative}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
+
+/* LAYOUT */
+.layout{display:flex;min-height:100vh;position:relative;z-index:1}
+.sidebar{width:280px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;background:rgba(9,9,15,0.95);border-right:1px solid var(--border);padding:32px 20px;backdrop-filter:blur(20px)}
+.content{flex:1;padding:60px 64px;max-width:900px}
+
+/* SIDEBAR */
+.sidebar-logo{font-family:"Press Start 2P",monospace;font-size:10px;color:var(--text);margin-bottom:4px;letter-spacing:1px}
+.sidebar-logo span{color:var(--accent)}
+.sidebar-sub{font-size:9px;color:var(--muted);margin-bottom:32px;letter-spacing:1px}
+.sidebar-section{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--accent);letter-spacing:2px;margin:24px 0 10px;text-transform:uppercase}
+.sidebar-section::before{content:"> "}
+.sidebar-link{display:block;padding:7px 10px;border-radius:6px;color:var(--muted);font-size:11px;text-decoration:none;transition:.2s;margin-bottom:2px;border:1px solid transparent}
+.sidebar-link:hover{color:var(--text);background:rgba(255,255,255,0.03);border-color:var(--border)}
+.sidebar-link.active{color:var(--accent);background:rgba(108,99,255,0.08);border-color:rgba(108,99,255,0.2)}
+.sidebar-version{margin-top:auto;padding-top:24px;border-top:1px solid var(--border);font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px}
+
+/* TYPOGRAPHY */
+.eyebrow{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;display:block;margin-bottom:16px}
+.eyebrow::before{content:"> "}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:16px}
+h2{font-family:"Barlow Condensed",sans-serif;font-size:36px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin:56px 0 20px;color:var(--text);display:flex;align-items:center;gap:12px}
+h2::before{content:"//";font-family:"Press Start 2P",monospace;font-size:9px;color:var(--accent)}
+h3{font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin:32px 0 12px;color:var(--accent)}
+p{font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:14px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* HERO */
+.hero{margin-bottom:64px;padding-bottom:48px;border-bottom:1px solid var(--border)}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:"Press Start 2P",monospace;font-size:7px;letter-spacing:1px;color:var(--yellow);border:1px solid rgba(255,215,0,0.3);background:rgba(255,215,0,0.05);padding:8px 14px;border-radius:4px;margin-bottom:24px}
+.hero-meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:24px}
+.meta-item{font-size:11px;color:var(--muted)}
+.meta-item strong{color:var(--text);font-weight:500}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;position:relative}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0;background:linear-gradient(90deg,var(--accent),var(--teal))}
+
+/* TABLE */
+.table-wrap{border-radius:10px;overflow:hidden;border:1px solid var(--border);margin-bottom:24px}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(108,99,255,0.12)}
+thead th{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--accent);letter-spacing:1px;padding:14px 16px;text-align:left;border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.03);transition:.15s}
+tbody tr:hover{background:rgba(255,255,255,0.02)}
+tbody tr:last-child{border-bottom:none}
+td{padding:12px 16px;font-size:12px;color:var(--muted);line-height:1.6}
+td:first-child{color:var(--text);font-weight:500}
+.badge{display:inline-block;font-family:"Press Start 2P",monospace;font-size:7px;padding:4px 8px;border-radius:4px;letter-spacing:.5px}
+.badge.purple{background:rgba(108,99,255,0.15);color:var(--accent);border:1px solid rgba(108,99,255,0.3)}
+.badge.green{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
+.badge.yellow{background:rgba(255,215,0,0.1);color:var(--yellow);border:1px solid rgba(255,215,0,0.3)}
+.badge.red{background:rgba(255,64,64,0.1);color:var(--red);border:1px solid rgba(255,64,64,0.3)}
+.badge.teal{background:rgba(0,212,170,0.1);color:var(--teal);border:1px solid rgba(0,212,170,0.3)}
+
+/* CODE */
+pre,code{font-family:"DM Mono",monospace}
+.code-block{background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:16px;overflow-x:auto}
+.code-block code{font-size:12px;color:var(--teal);line-height:1.8}
+.code-label{font-family:"Press Start 2P",monospace;font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase}
+
+/* CHECKLIST */
+.checklist{list-style:none;margin-bottom:24px}
+.checklist li{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-radius:8px;margin-bottom:6px;border:1px solid var(--border);background:var(--card);font-size:12px;color:var(--muted);transition:.2s;cursor:pointer}
+.checklist li:hover{border-color:rgba(108,99,255,0.2)}
+.checklist li.done{color:#4a4a6a}
+.check-box{flex-shrink:0;width:18px;height:18px;border-radius:4px;border:1px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:10px;margin-top:1px}
+.checklist li.done .check-box{background:rgba(34,197,94,0.15);border-color:var(--green);color:var(--green)}
+.check-prio{font-family:"Press Start 2P",monospace;font-size:6px;padding:3px 6px;border-radius:3px;flex-shrink:0;margin-top:2px}
+
+/* PRIORITY COLORS */
+.p-high{background:rgba(255,64,64,0.1);color:var(--red)}
+.p-mid{background:rgba(255,215,0,0.1);color:var(--yellow)}
+.p-low{background:rgba(34,197,94,0.1);color:var(--green)}
+
+/* FLOW DIAGRAM */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:16px 0 24px;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.flow-step{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--text);background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.2);border-radius:6px;padding:8px 12px;letter-spacing:.5px}
+.flow-arrow{color:var(--accent);font-size:16px;font-weight:700}
+
+/* LINKS TABLE */
+.links-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.link-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;transition:.2s}
+.link-card:hover{border-color:rgba(108,99,255,0.3)}
+.link-card-label{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px}
+.link-card-url{font-size:11px;color:var(--accent)}
+
+/* SECTION DIVIDER */
+.section-div{height:1px;background:var(--border);margin:48px 0}
+
+/* PRINT */
+@media print{
+  body::after{display:none}
+  .sidebar{display:none}
+  .content{padding:24px;max-width:100%}
+}
+@media(max-width:900px){
+  .layout{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:relative;display:none}
+  .content{padding:32px 20px}
+  .links-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">card<span>pulse</span></div>
+  <div class="sidebar-sub">DOCS v1.0</div>
+
+  <div class="sidebar-section">Übersicht</div>
+  <a href="#overview" class="sidebar-link active">Projektübersicht</a>
+  <a href="#stack" class="sidebar-link">Tech Stack</a>
+
+  <div class="sidebar-section">Architektur</div>
+  <a href="#arch-ext" class="sidebar-link">Extension</a>
+  <a href="#arch-stripe" class="sidebar-link">Stripe</a>
+  <a href="#arch-sets" class="sidebar-link">Set-Mapping</a>
+
+  <div class="sidebar-section">Datenbank</div>
+  <a href="#db-schema" class="sidebar-link">Schema</a>
+  <a href="#db-plans" class="sidebar-link">Plan-Limits</a>
+  <a href="#db-env" class="sidebar-link">Env Variables</a>
+
+  <div class="sidebar-section">Deployment</div>
+  <a href="#deploy" class="sidebar-link">Deployment Guide</a>
+  <a href="#links" class="sidebar-link">Alle Links</a>
+
+  <div class="sidebar-section">Checkliste</div>
+  <a href="#check-store" class="sidebar-link">Chrome Web Store</a>
+  <a href="#check-update" class="sidebar-link">Extension v1.0.1</a>
+  <a href="#check-web" class="sidebar-link">Website</a>
+  <a href="#check-infra" class="sidebar-link">Infrastruktur</a>
+  <a href="#check-later" class="sidebar-link">Langfristig</a>
+
+  <div class="sidebar-version">Mai 2026 · v1.0</div>
+</aside>
+
+<!-- CONTENT -->
+<main class="content">
+
+  <!-- HERO -->
+  <section class="hero" id="overview">
+    <div class="hero-badge">★ TECHNISCHE DOKUMENTATION</div>
+    <h1>CardPulse<br><span style="color:var(--accent)">Docs.</span></h1>
+    <p>Browser-Extension + Backend + Website für TCGPlayer-Preise direkt auf Cardmarket. Dieses Dokument beschreibt Tech Stack, Architektur, Deployment und offene Aufgaben.</p>
+    <div class="hero-meta">
+      <div class="meta-item"><strong>Website</strong> · card-pulse.com</div>
+      <div class="meta-item"><strong>API</strong> · pokescout.onrender.com</div>
+      <div class="meta-item"><strong>Extension ID</strong> · jofegljhkmoppkaiecbidoapponkjbld</div>
+      <div class="meta-item"><strong>Version</strong> · 1.0.0</div>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section id="stack">
+    <span class="eyebrow">Tech Stack</span>
+    <h2>Stack</h2>
+
+    <h3>Backend</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Komponente</th><th>Technologie</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr><td>Server</td><td>Node.js / Express</td><td>Render (Free + Cron-Job Keepalive auf cron-job.org)</td></tr>
+          <tr><td>Datenbank</td><td>PostgreSQL (Neon)</td><td>Tabellen: users, card_mapping</td></tr>
+          <tr><td>Auth</td><td>JWT</td><td>jsonwebtoken, bcrypt für Passwort-Hashing</td></tr>
+          <tr><td>Zahlungen</td><td>Stripe Live</td><td>Checkout, Portal, Webhook auf /webhook</td></tr>
+          <tr><td>E-Mail</td><td>Resend</td><td>Password Reset, Suggest, Enterprise-Kontakt</td></tr>
+          <tr><td>Preisdaten</td><td>JustTCG API</td><td>TCGPlayer Preise + Trend + 30d-Historie</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Browser Extension</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Datei</th><th>Funktion</th></tr></thead>
+        <tbody>
+          <tr><td>manifest.json</td><td>MV3, stabile ID via key-Feld, PNG Icons 16/48/128, kein type:module</td></tr>
+          <tr><td>background.js</td><td>Service Worker – fetcht Preise via async/await, schreibt cp_result in Storage</td></tr>
+          <tr><td>content.js</td><td>Injiziert Overlay, liest cp_result via 100ms-Polling, 223 Set-Mappings</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Website (card-pulse.com)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Datei</th><th>Inhalt</th></tr></thead>
+        <tbody>
+          <tr><td>index.html</td><td>Landing Page – Ticker, Hero, Pricing (Rarität-Tiers), Features, How it works</td></tr>
+          <tr><td>dashboard.html</td><td>Plan-Übersicht, Usage-Bar, Stripe Checkout / Portal</td></tr>
+          <tr><td>login.html / register.html</td><td>Auth-Seiten</td></tr>
+          <tr><td>sets.html</td><td>130 EN + 128 JP Sets, Suche, Era-Filter, CM-Links</td></tr>
+          <tr><td>shared.js</td><td>Design-System CSS, Flaggen-Switcher EN/DE, Footer-Injection</td></tr>
+          <tr><td>i18n.js</td><td>EN/DE Übersetzungen für alle Seiten (data-i18n Attribute)</td></tr>
+          <tr><td>favicon.svg</td><td>Smooth C arc + Pulse line, exportiert als PNG 16/32/48/128/512</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="section-div"></div>
+
+  <!-- ARCHITEKTUR -->
+  <section id="arch-ext">
+    <span class="eyebrow">Architektur</span>
+    <h2>Extension Kommunikation</h2>
+
+    <div class="card">
+      <div class="code-label">Problem</div>
+      <p>MV3 Service Worker schläft ein und schließt den Message-Channel bevor <code>sendResponse</code> aufgerufen wird → Uncaught Error in content.js.</p>
+    </div>
+
+    <div class="card">
+      <div class="code-label">Lösung – Storage Polling Pattern</div>
+      <div class="flow">
+        <span class="flow-step">content.js<br>sendMessage</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">background.js<br>fetch(API)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">storage.set<br>cp_result</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">content.js<br>poll 100ms</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">buildOverlay<br>(cp_result)</span>
+      </div>
+      <div class="code-block">
+        <code>// content.js – Storage Polling (MV3-safe)
+var poll = setInterval(function() {
+  chrome.storage.local.get(['cp_result'], function(r) {
+    if (r.cp_result !== undefined) {
+      clearInterval(poll);
+      buildOverlay(r.cp_result);
+    }
+  });
+}, 100); // alle 100ms, max 10 Sekunden</code>
+      </div>
+    </div>
+
+    <h3>Stabile Extension ID</h3>
+    <div class="card">
+      <p>Der <code>key</code>-Feld in manifest.json enthält den Public Key aus <strong>extension_PRIVATE_KEY_KEEP_SAFE.pem</strong>. Damit bleibt die Extension-ID in Chrome und Edge identisch.</p>
+      <div class="code-block"><code>Extension ID: jofegljhkmoppkaiecbidoapponkjbld</code></div>
+      <p style="margin-bottom:0">⚠️ Für Chrome Web Store ZIP: key-Feld entfernen (Google vergibt eigene ID nach Genehmigung).</p>
+    </div>
+  </section>
+
+  <section id="arch-stripe">
+    <h2>Stripe Integration</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Endpoint</th><th>Methode</th><th>Funktion</th></tr></thead>
+        <tbody>
+          <tr><td>/stripe/checkout</td><td>POST</td><td>Erstellt Checkout Session, redirect zu Stripe</td></tr>
+          <tr><td>/stripe/portal</td><td>POST</td><td>Öffnet Billing Portal für Abo-Verwaltung</td></tr>
+          <tr><td>/webhook</td><td>POST</td><td>Empfängt Stripe Events, setzt Plan in DB</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="code-label">Wichtige Stripe Einstellungen</div>
+      <p>Modus: <span class="badge purple">LIVE</span> &nbsp; Webhook-Pfad: <code>/webhook</code> (nicht /stripe/webhook) &nbsp; Locale: <code>auto</code> (Browsersprache)</p>
+      <p style="margin-bottom:0">Zahlungsmethoden: Kreditkarte ✓ · SEPA ✓ · Apple/Google Pay ✓ · PayPal (ausstehend)</p>
+    </div>
+  </section>
+
+  <section id="arch-sets">
+    <h2>Set-Mapping</h2>
+    <div class="card">
+      <p><strong>content.js</strong> enthält 223 Mappings von Cardmarket-Anzeigekürzeln auf TCGPlayer-Slugs (wie sie in der DB stehen).</p>
+      <div class="code-block"><code>// Cardmarket H1 Code → DB cardmarket_slug
+"MEW"  → "sv-scarlet-and-violet-151"
+"SSH"  → "swsh01-sword-and-shield-base-set"
+"SUM"  → "sm-base-set"
+"B2"   → "base-set-2"</code></div>
+      <p><strong>Kartennummer-Padding:</strong> Rein numerische Nummern werden auf 3 Stellen aufgefüllt (3 → 003). Sonderformate wie Z-28, SL9, TWO werden unverändert weitergegeben.</p>
+    </div>
+  </section>
+
+  <div class="section-div"></div>
+
+  <!-- DATENBANK -->
+  <section id="db-schema">
+    <span class="eyebrow">Datenbank</span>
+    <h2>Schema</h2>
+
+    <h3>Tabelle: users</h3>
+    <div class="code-block"><code>id               serial PRIMARY KEY
+email            varchar UNIQUE
+password_hash    varchar
+stripe_customer_id varchar
+is_premium       boolean DEFAULT false
+plan             varchar(10) DEFAULT 'bronze'
+monthly_requests int DEFAULT 0
+requests_reset_at timestamp DEFAULT NOW()
+premium_until    timestamp
+cancel_at_period_end boolean
+custom_request_limit int DEFAULT NULL
+reset_token      varchar(255)
+reset_token_expires timestamp
+created_at       timestamp DEFAULT NOW()</code></div>
+
+    <h3>Tabelle: card_mapping</h3>
+    <div class="code-block"><code>id               serial PRIMARY KEY
+cardmarket_slug  varchar   -- eigentlich TCGPlayer Slug (z.B. sv-scarlet-and-violet-151)
+card_number      varchar(10)
+tcg_player_id    integer</code></div>
+  </section>
+
+  <section id="db-plans">
+    <h2>Plan-Limits</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Plan</th><th>Limit/Monat</th><th>Preis</th><th>Env Variable</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge" style="background:rgba(205,127,50,0.1);color:#cd7f32;border:1px solid rgba(205,127,50,0.3)">BRONZE</span></td><td>20</td><td>Kostenlos</td><td>—</td></tr>
+          <tr><td><span class="badge" style="background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.3)">SILVER</span></td><td>400</td><td>€3,99/mo</td><td>STRIPE_PRICE_SILVER</td></tr>
+          <tr><td><span class="badge yellow">GOLD</span></td><td>1.000</td><td>€7,99/mo</td><td>STRIPE_PRICE_GOLD</td></tr>
+          <tr><td><span class="badge purple">PLATIN</span></td><td>5.000</td><td>€24,99/mo</td><td>STRIPE_PRICE_PLATIN</td></tr>
+          <tr><td><span class="badge teal">ENTERPRISE</span></td><td>custom_request_limit</td><td>individuell</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="db-env">
+    <h2>Render Env Variables</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Variable</th><th>Beschreibung</th></tr></thead>
+        <tbody>
+          <tr><td>DATABASE_URL</td><td>Neon PostgreSQL Connection String</td></tr>
+          <tr><td>JWT_SECRET</td><td>Geheimer Schlüssel für JWT-Tokens</td></tr>
+          <tr><td>STRIPE_SECRET_KEY</td><td>sk_live_... (Live Modus)</td></tr>
+          <tr><td>STRIPE_WEBHOOK_SECRET</td><td>whsec_... aus Stripe Webhook-Einstellungen</td></tr>
+          <tr><td>STRIPE_PRICE_SILVER</td><td>price_... (Live Price ID für Silver)</td></tr>
+          <tr><td>STRIPE_PRICE_GOLD</td><td>price_... (Live Price ID für Gold)</td></tr>
+          <tr><td>STRIPE_PRICE_PLATIN</td><td>price_... (Live Price ID für Platin)</td></tr>
+          <tr><td>RESEND_API_KEY</td><td>re_... für E-Mail-Versand via Resend</td></tr>
+          <tr><td>FRONTEND_URL</td><td>https://www.card-pulse.com (optional)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="section-div"></div>
+
+  <!-- DEPLOYMENT -->
+  <section id="deploy">
+    <span class="eyebrow">Deployment</span>
+    <h2>Deployment Guide</h2>
+
+    <h3>Website & Server Update</h3>
+    <div class="code-block"><code># Änderungen in GitHub pushen → Render deployt automatisch
+# Bei Env-Var-Änderungen: Render → Manual Deploy erforderlich!</code></div>
+
+    <h3>Extension Update (z.B. v1.0.1)</h3>
+    <div class="card">
+      <div class="flow" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px"><span class="flow-step">01</span><span style="font-size:12px;color:var(--muted)">Version in manifest.json erhöhen (1.0.0 → 1.0.1)</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="flow-step">02</span><span style="font-size:12px;color:var(--muted)">ZIP ohne key-Feld erstellen (cardpulse-store.zip)</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="flow-step">03</span><span style="font-size:12px;color:var(--muted)">Chrome Web Store Developer Console → Artikel → Neues Paket</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="flow-step">04</span><span style="font-size:12px;color:var(--muted)">Einreichen → Review 1–3 Werktage</span></div>
+      </div>
+    </div>
+
+    <h3>Testaccount verwalten</h3>
+    <div class="code-block"><code>-- Plan manuell in Neon setzen
+UPDATE users
+SET plan = 'gold',
+    is_premium = true,
+    premium_until = '2099-01-01',
+    monthly_requests = 0
+WHERE email = 'test@card-pulse.com';</code></div>
+  </section>
+
+  <section id="links">
+    <h2>Alle Links</h2>
+    <div class="links-grid">
+      <a href="https://card-pulse.com" target="_blank" class="link-card">
+        <div class="link-card-label">WEBSITE</div>
+        <div class="link-card-url">card-pulse.com</div>
+      </a>
+      <a href="https://dashboard.render.com" target="_blank" class="link-card">
+        <div class="link-card-label">RENDER (BACKEND)</div>
+        <div class="link-card-url">dashboard.render.com</div>
+      </a>
+      <a href="https://console.neon.tech" target="_blank" class="link-card">
+        <div class="link-card-label">NEON (DATENBANK)</div>
+        <div class="link-card-url">console.neon.tech</div>
+      </a>
+      <a href="https://dashboard.stripe.com" target="_blank" class="link-card">
+        <div class="link-card-label">STRIPE (ZAHLUNGEN)</div>
+        <div class="link-card-url">dashboard.stripe.com</div>
+      </a>
+      <a href="https://resend.com" target="_blank" class="link-card">
+        <div class="link-card-label">RESEND (E-MAIL)</div>
+        <div class="link-card-url">resend.com</div>
+      </a>
+      <a href="https://chrome.google.com/webstore/devconsole" target="_blank" class="link-card">
+        <div class="link-card-label">CHROME WEB STORE</div>
+        <div class="link-card-url">chrome.google.com/webstore/devconsole</div>
+      </a>
+      <a href="https://cron-job.org" target="_blank" class="link-card">
+        <div class="link-card-label">CRON-JOB (KEEPALIVE)</div>
+        <div class="link-card-url">cron-job.org</div>
+      </a>
+      <a href="https://card-pulse.com/privacy.html" target="_blank" class="link-card">
+        <div class="link-card-label">PRIVACY POLICY</div>
+        <div class="link-card-url">card-pulse.com/privacy.html</div>
+      </a>
+    </div>
+  </section>
+
+  <div class="section-div"></div>
+
+  <!-- CHECKLISTE -->
+  <section id="check-store">
+    <span class="eyebrow">Checkliste</span>
+    <h2>Chrome Web Store</h2>
+    <ul class="checklist">
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Google-Review abwarten (1–3 Werktage) – Status: Überprüfung ausstehend</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Bei Genehmigung: Extension in Chrome testen (ID korrekt?)</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Stripe Webhook Live-Test: echter Kauf → Plan-Update in DB prüfen</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Bei Ablehnung: Fehlermeldung analysieren, beheben, erneut einreichen</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+    </ul>
+  </section>
+
+  <section id="check-update">
+    <h2>Extension v1.0.1</h2>
+    <ul class="checklist">
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Alle Sets testen – prüfen ob Preisdaten vom API kommen</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Fehlerhafte Set-Slugs in content.js korrigieren</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Fehlende Sets in card_mapping DB hochladen</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>manifest.json: version auf 1.0.1 setzen</span>
+        <span class="check-prio p-mid">MID</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>ZIP ohne key-Feld erstellen und als Update einreichen</span>
+        <span class="check-prio p-mid">MID</span>
+      </li>
+    </ul>
+  </section>
+
+  <section id="check-web">
+    <h2>Website-Prüfung</h2>
+    <ul class="checklist">
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Alle 258 Links in sets.html zu Cardmarket prüfen (EN + JP)</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Alle Übersetzungen EN → DE prüfen (i18n.js)</span>
+        <span class="check-prio p-high">HIGH</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Passwort-Reset Flow testen (E-Mail kommt an, Link funktioniert)</span>
+        <span class="check-prio p-mid">MID</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Dashboard: Stripe Portal-Button + Plan-Anzeige nach echtem Kauf testen</span>
+        <span class="check-prio p-mid">MID</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Mobile-Ansicht aller Seiten prüfen</span>
+        <span class="check-prio p-mid">MID</span>
+      </li>
+    </ul>
+  </section>
+
+  <section id="check-infra">
+    <h2>Infrastruktur</h2>
+    <ul class="checklist">
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Cron-Job läuft auf cron-job.org alle 10 Min (pokescout.onrender.com/sets)</span>
+        <span class="check-prio p-mid">MID</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>PayPal Business-Konto mit Stripe verknüpfen</span>
+        <span class="check-prio p-mid">MID</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Klarna aktivieren (Stripe-Genehmigung ausstehend)</span>
+        <span class="check-prio p-low">LOW</span>
+      </li>
+    </ul>
+  </section>
+
+  <section id="check-later">
+    <h2>Langfristig</h2>
+    <ul class="checklist">
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Firefox Extension portieren (~1–2 Tage Aufwand)</span>
+        <span class="check-prio p-low">LOW</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Railway Migration (~$5/mo, kein Einschlafen) wenn Render-Limits erreicht</span>
+        <span class="check-prio p-low">LOW</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Safari Extension (Mac + Xcode + Apple Dev Account $99/Jahr)</span>
+        <span class="check-prio p-low">LOW</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Google Search Console für card-pulse.com einrichten</span>
+        <span class="check-prio p-low">LOW</span>
+      </li>
+      <li onclick="this.classList.toggle('done');this.querySelector('.check-box').textContent=this.classList.contains('done')?'✓':''">
+        <div class="check-box"></div>
+        <span>Analytics einbauen (z.B. Plausible)</span>
+        <span class="check-prio p-low">LOW</span>
+      </li>
+    </ul>
+  </section>
+
+  <div class="section-div"></div>
+  <p style="text-align:center;font-family:'Press Start 2P',monospace;font-size:7px;color:var(--muted);letter-spacing:2px;padding-bottom:48px">© 2026 CARDPULSE · DOCS v1.0</p>
+
+</main>
+</div>
+
+<script>
+// Active sidebar link on scroll
+const sections = document.querySelectorAll('section[id]');
+const links = document.querySelectorAll('.sidebar-link');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  links.forEach(l => {
+    l.classList.remove('active');
+    if (l.getAttribute('href') === '#' + current) l.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
