@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Language" content="en">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Privacy Policy – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78}
+:root{--bg:#09090f;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--text:#e8e8f0;--muted:#5a5a78}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
 body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
@@ -18,29 +17,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 .logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
 .logo span{color:var(--accent)}
 .nav-links{display:flex;gap:8px;align-items:center}
-.main{flex:1;position:relative;z-index:1;max-width:800px;margin:0 auto;width:100%;padding:64px 48px}
+.main{flex:1;position:relative;z-index:1;max-width:800px;margin:0 auto;width:100%;padding:60px 48px}
+.section-label{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:20px;display:block}
+.section-label::before{content:"> "}
 h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:20px}
-h2{font-family:"Barlow Condensed",sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin:36px 0 12px;color:var(--text)}
-h3{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;margin:24px 0 8px;color:var(--accent)}
+h2{font-family:"Barlow Condensed",sans-serif;font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin:36px 0 12px;color:var(--text)}
 p{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:14px}
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 strong{color:var(--text);font-weight:500}
+ul,ol{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);line-height:1.9;margin:0 0 14px 20px}
+li{margin-bottom:4px}
 .updated{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:32px;display:block}
-.section-label{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:20px;display:block}
-.section-label::before{content:"> "}
-.page-sub{font-size:15px;margin-bottom:40px;color:var(--muted)}
-.block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
-.block p{margin:0;line-height:1.7}
-.block strong{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:.5px;display:block;margin-bottom:8px;color:var(--accent)}
 hr{border:none;border-top:1px solid var(--border);margin:32px 0}
-
-ul, ol { font-family: "DM Mono", monospace; font-size: 13px; color: var(--muted); line-height: 1.9; margin: 0 0 14px 20px; }
-li { margin-bottom: 4px; }
-strong { color: var(--text); font-weight: 500; }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-@media(max-width:768px){nav{padding:10px 16px}.main{padding:48px 20px}h1{font-size:40px}}
+@media(max-width:768px){nav{padding:10px 16px}.main{padding:40px 20px}h1{font-size:40px}}
 </style>
 </head>
 <body>
@@ -48,57 +38,77 @@ a:hover { text-decoration: underline; }
   <a href="/" class="logo">card<span>pulse</span></a>
   <div class="nav-links"></div>
 </nav>
-<div class="main">
+
 <div class="main">
   <span class="section-label" data-i18n="privacy_label">Legal</span>
-  <h1 data-i18n="privacy_title">Privacy<br>Policy.</h1>
-  <p class="updated" data-i18n="privacy_updated">Last updated: May 2026</p>
-  <div class="highlight"><p>CardPulse does not collect personal data beyond what is necessary for the service to function. We do not sell data to third parties.</p></div>
-  <h2>1. Who we are</h2>
-  <p>CardPulse is a service that displays TCGPlayer prices on cardmarket.com. Available at <a href="https://www.card-pulse.com">card-pulse.com</a>.</p>
-  <h2>2. Data we collect</h2>
-  <p>We collect only the following data required to operate the service:</p>
+  <h1 data-i18n="privacy_title">Privacy Policy.</h1>
+  <span class="updated" data-i18n="privacy_updated">Last updated: May 2026</span>
+
+  <p data-i18n="privacy_intro">CardPulse does not collect personal data beyond what is necessary for the service to function. We do not sell data to third parties.</p>
+
+  <h2 data-i18n="privacy_s1_title">1. Who We Are</h2>
+  <p data-i18n="privacy_s1_text">CardPulse is a service that displays TCGPlayer prices on cardmarket.com. Available at <a href="https://card-pulse.com">card-pulse.com</a>.</p>
+
+  <h2 data-i18n="privacy_s2_title">2. Data We Collect</h2>
+  <p data-i18n="privacy_s2_intro">We collect only the following data required to operate the service:</p>
   <ul>
-    <li><strong>Email address</strong> – to create and manage your account</li>
-    <li><strong>Password (hashed)</strong> – for secure authentication (never stored in plain text)</li>
-    <li><strong>Payment data</strong> – processed exclusively by Stripe; we store no credit card data</li>
-    <li><strong>Stripe Customer ID</strong> – to link your account to your subscription</li>
-    <li><strong>Subscription status & period</strong> – to verify whether your account has premium access</li>
+    <li><strong data-i18n="privacy_s2_li1_bold">Email address</strong> <span data-i18n="privacy_s2_li1_text">– to create and manage your account</span></li>
+    <li><strong data-i18n="privacy_s2_li2_bold">Password (hashed)</strong> <span data-i18n="privacy_s2_li2_text">– for secure authentication (never stored in plain text)</span></li>
+    <li><strong data-i18n="privacy_s2_li3_bold">Payment data</strong> <span data-i18n="privacy_s2_li3_text">– processed exclusively by Stripe; we store no credit card data</span></li>
+    <li><strong data-i18n="privacy_s2_li4_bold">Stripe Customer ID</strong> <span data-i18n="privacy_s2_li4_text">– to link your account to your subscription</span></li>
+    <li><strong data-i18n="privacy_s2_li5_bold">Subscription status &amp; period</strong> <span data-i18n="privacy_s2_li5_text">– to verify whether your account has premium access</span></li>
   </ul>
-  <h2>3. What we do not collect</h2>
+
+  <h2 data-i18n="privacy_s3_title">3. What We Do Not Collect</h2>
   <ul>
-    <li>We do not track which cards you view on Cardmarket</li>
-    <li>We do not store search queries or browsing data</li>
-    <li>We do not use third-party advertising trackers or analytics services</li>
-    <li>We do not share data with third parties, except Stripe for payment processing</li>
+    <li data-i18n="privacy_s3_li1">We do not track which cards you view on Cardmarket</li>
+    <li data-i18n="privacy_s3_li2">We do not store search queries or browsing data</li>
+    <li data-i18n="privacy_s3_li3">We do not use third-party advertising trackers or analytics services</li>
+    <li data-i18n="privacy_s3_li4">We do not share data with third parties, except Stripe for payment processing</li>
   </ul>
-  <h2>4. How the browser extension works</h2>
-  <p>The CardPulse browser extension:</p>
+
+  <h2 data-i18n="privacy_s4_title">4. How the Browser Extension Works</h2>
+  <p data-i18n="privacy_s4_intro">The CardPulse browser extension:</p>
   <ul>
-    <li>Reads the page title on Cardmarket.com to identify the set abbreviation and card number</li>
-    <li>Sends only this anonymous card data (e.g. "sv08 / 067") to our server</li>
-    <li>Stores your JWT token locally in Chrome Extension Storage</li>
-    <li>Does not access any other tabs, cookies or personal browsing data</li>
+    <li data-i18n="privacy_s4_li1">Reads the card name and set code from Cardmarket pages to fetch price data</li>
+    <li data-i18n="privacy_s4_li2">Sends requests to our API at pokescout.onrender.com</li>
+    <li data-i18n="privacy_s4_li3">Stores your authentication token locally in your browser (chrome.storage.local)</li>
+    <li data-i18n="privacy_s4_li4">Does not transmit any browsing history or personal data</li>
   </ul>
-  <h2>5. Cookies & local storage</h2>
-  <p>The website stores your login token in your browser's <code>localStorage</code> to keep you signed in. You can sign out at any time, which deletes the token.</p>
-  <h2>6. Third parties</h2>
+
+  <h2 data-i18n="privacy_s5_title">5. Third-Party Services</h2>
+  <div>
+    <p><strong>Stripe</strong> <span data-i18n="privacy_stripe_text">– processes payments. Stripe's privacy policy applies to payment data. We never see or store your full card details.</span></p>
+    <p><strong>Neon</strong> <span data-i18n="privacy_neon_text">– hosts our PostgreSQL database in the EU.</span></p>
+    <p><strong>Render</strong> <span data-i18n="privacy_render_text">– hosts our backend server.</span></p>
+    <p><strong>Resend</strong> <span data-i18n="privacy_resend_text">– sends transactional emails (password reset, contact forms).</span></p>
+  </div>
+
+  <h2 data-i18n="privacy_s6_title">6. Data Storage &amp; Security</h2>
+  <p data-i18n="privacy_s6_text">Your data is stored in a PostgreSQL database hosted in the EU. Passwords are hashed using bcrypt. We use HTTPS for all connections. We retain your data for as long as your account exists. You can request deletion at any time.</p>
+
+  <h2 data-i18n="privacy_s7_title">7. Your Rights</h2>
+  <p data-i18n="privacy_s7_intro">Under GDPR, you have the right to:</p>
   <ul>
-    <li><strong>Stripe</strong> – Payment processing. Privacy policy: <a href="https://stripe.com/privacy" target="_blank">stripe.com/privacy</a></li>
-    <li><strong>Neon (PostgreSQL)</strong> – Database hosting in the EU</li>
-    <li><strong>Render</strong> – Server hosting</li>
-    <li><strong>JustTCG API</strong> – Price data source (we only send the card ID, no personal data)</li>
+    <li data-i18n="privacy_s7_li1">Access the personal data we hold about you</li>
+    <li data-i18n="privacy_s7_li2">Correct inaccurate data</li>
+    <li data-i18n="privacy_s7_li3">Request deletion of your account and data</li>
+    <li data-i18n="privacy_s7_li4">Object to or restrict processing</li>
+    <li data-i18n="privacy_s7_li5">Data portability</li>
   </ul>
-  <h2>7. Data security</h2>
-  <p>All connections between the extension, website and server are SSL/TLS encrypted (HTTPS). Passwords are hashed with bcrypt and never stored in plain text. JWT tokens expire after 30 days.</p>
-  <h2>8. Your rights (GDPR)</h2>
-  <p>You have the right to access, correct, delete, and port your data. For all requests: <a href="mailto:info@card-pulse.com">info@card-pulse.com</a></p>
-  <h2>9. Contact</h2>
-  <p>Questions about privacy: <a href="mailto:info@card-pulse.com">info@card-pulse.com</a></p>
+  <p><span data-i18n="privacy_s7_contact">To exercise these rights, contact us at</span> <a href="mailto:info@card-pulse.com">info@card-pulse.com</a>.</p>
+
+  <h2 data-i18n="privacy_s8_title">8. Cookies</h2>
+  <p data-i18n="privacy_s8_text">We do not use cookies. Authentication uses JWT tokens stored in your browser's local storage, not cookies.</p>
+
+  <h2 data-i18n="privacy_s9_title">9. Changes to This Policy</h2>
+  <p data-i18n="privacy_s9_text">We may update this policy occasionally. Changes will be posted on this page with an updated date.</p>
+
+  <h2 data-i18n="privacy_s10_title">10. Contact</h2>
+  <p><span data-i18n="privacy_s10_text">For privacy-related questions:</span> <a href="mailto:info@card-pulse.com">info@card-pulse.com</a></p>
 </div>
-</div>
+
 <script src="/i18n.js"></script>
 <script src="/shared.js"></script>
-
 </body>
 </html>
