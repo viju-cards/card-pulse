@@ -60,7 +60,7 @@ h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font
 <div class="main">
   <span class="section-label" data-i18n="sets_page_label">Compatibility</span>
   <h1 data-i18n="sets_page_h1">Supported Sets.</h1>
-  <p class="subtitle" id="subtitle-text"><strong style="color:var(--accent)" id="total-count">195</strong> sets · <span>click any set to browse on Cardmarket</span></p>
+  <p class="subtitle" id="subtitle-text"><strong style="color:var(--accent)" id="total-count">195</strong> sets · <span id="sets-subtitle">click any set to browse on Cardmarket</span></p>
 
   <!-- Language toggle -->
   <div class="lang-toggle">
@@ -104,6 +104,10 @@ function updateUI() {
   var s = document.getElementById('search');
   if (s) s.placeholder = sl === 'de' ? 'Sets oder Codes suchen...' : 'Search sets or codes...';
   document.querySelectorAll('.all-btn').forEach(function(b) { b.textContent = sl === 'de' ? 'Alle Eras' : 'All eras'; });
+  var sc = document.getElementById('showingCount');
+  if (sc) sc.textContent = sl === 'de' ? 'Zeige' : 'Showing';
+  var ss = document.getElementById('showingSuffix');
+  if (ss) ss.textContent = sl === 'de' ? 'Sets' : 'sets';
 }
 
 function switchSetsLang(l) {
@@ -172,6 +176,19 @@ function doSearch(v) {
   build();
 }
 
-updateUI(); buildEraFilters(); build();
-window.addEventListener('cp_lang_change', function() { updateUI(); buildEraFilters(); });
+buildEraFilters(); build();
+// Call updateUI after i18n.js/shared.js have applied translations
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(updateUI, 50);
+});
+updateUI();
+window.addEventListener('storage', function(e) {
+  if (e.key === 'cp_lang') { updateUI(); buildEraFilters(); }
+});
+// Override i18n apply to also call updateUI
+var _origApply = window.i18n && window.i18n.apply;
+if (window.i18n) {
+  var _origApply = window.i18n.apply;
+  window.i18n.apply = function() { _origApply.call(window.i18n); updateUI(); };
+}
 </script>
