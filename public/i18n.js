@@ -161,7 +161,7 @@ const TRANSLATIONS = {
     dash_ext_step3: "You're already signed in — open any card on Cardmarket.",
     enterprise_h3_short: "Custom quote.",
     forgot_h1_short: "Reset password.",
-    imprint_h1: "Imprint."
+    imprint_h1: "Imprint.",
     imprint_dispute_text2: "We are not obliged to participate in dispute resolution proceedings.",
     index_h1_1: "TCGPlayer",
     index_h1_2: "Prices",
@@ -224,7 +224,7 @@ const TRANSLATIONS = {
 
     // Impressum
     imprint_label: "Legal",
-    imprint_h1: "Imprint."
+    imprint_h1: "Imprint.",
     imprint_operator: "Operator",
     imprint_contact: "Contact",
     imprint_responsible: "Responsible for content",
@@ -495,7 +495,7 @@ const TRANSLATIONS = {
     dash_ext_step3: "Du bist bereits eingeloggt — öffne eine Karte auf Cardmarket.",
     enterprise_h3_short: "Individuelles Angebot.",
     forgot_h1_short: "Passwort zurücksetzen.",
-    imprint_h1: "Impressum."
+    imprint_h1: "Impressum.",
     imprint_dispute_text2: "Wir sind nicht verpflichtet, an Streitbeilegungsverfahren teilzunehmen.",
     login_h1: "Willkommen zurück.",
     login_pw: "Passwort",
@@ -550,7 +550,7 @@ const TRANSLATIONS = {
 
     // Impressum
     imprint_label: "Rechtliches",
-    imprint_h1: "Imprint."
+    imprint_h1: "Imprint.",
     imprint_operator: "Betreiber",
     imprint_contact: "Kontakt",
     imprint_responsible: "Verantwortlich für den Inhalt",
