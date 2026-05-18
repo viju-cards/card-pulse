@@ -583,7 +583,7 @@ app.post("/suggest", async (req, res) => {
 
 
 // GET /debug/sealed – TEMPORARY
-app.get("/debug/sealed", requireAuth, async (req, res) => {
+app.get("/debug/sealed", async (req, res) => {
   try {
     const url = "https://api.justtcg.com/v1/cards?tcgPlayerId=672398";
     const response = await fetch(url, {
