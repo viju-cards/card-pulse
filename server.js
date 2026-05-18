@@ -585,7 +585,7 @@ app.post("/suggest", async (req, res) => {
 // GET /debug/sealed – TEMPORARY
 app.get("/debug/sealed", async (req, res) => {
   try {
-    const url = "https://api.justtcg.com/v1/cards?tcgPlayerId=672398&set=me03-perfect-order";
+    const url = "https://api.justtcg.com/v1/cards?tcgPlayerId=672398&game=pokemon";
     const response = await fetch(url, {
       headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY }
     });
