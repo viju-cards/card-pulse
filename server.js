@@ -1,7 +1,7 @@
 // server.js – CardPulse Backend (Finale Version)
 // Routes: /auth/register, /auth/login, /auth/me
 //         /stripe/checkout, /stripe/portal, /webhook
-//         /prices, /sets
+//         /prices, /sets, /prices/sealed
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -326,7 +326,6 @@ app.post("/stripe/checkout", requireAuth, async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
-      // No payment_method_types = Stripe shows all enabled in dashboard
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
@@ -387,9 +386,8 @@ app.post("/webhook", async (req, res) => {
         const premiumUntil = new Date(sub.current_period_end * 1000);
         const cancelAtEnd = sub.cancel_at_period_end;
 
-        // Determine plan from price ID
         const priceId = sub.items?.data?.[0]?.price?.id;
-        let planName = 'silver'; // default paid plan
+        let planName = 'silver'; 
         if (priceId === process.env.STRIPE_PRICE_GOLD)   planName = 'gold';
         if (priceId === process.env.STRIPE_PRICE_PLATIN) planName = 'platin';
         if (priceId === process.env.STRIPE_PRICE_SILVER) planName = 'silver';
@@ -436,12 +434,10 @@ app.get("/prices", requireAuth, async (req, res) => {
     return res.status(400).json({ error: "Parameter 'set' und 'cardNumber' erforderlich." });
 
   try {
-    // ── Check & increment request counter ──────────────────────────────────
     const userRow = await getUserById(req.user.id);
     const plan = userRow.plan || 'bronze';
     const limit = userRow.custom_request_limit || PLAN_LIMITS[plan] || 20;
 
-    // Reset counter if new month
     const resetAt = userRow.requests_reset_at ? new Date(userRow.requests_reset_at) : new Date();
     const now = new Date();
     const needsReset = resetAt.getFullYear() !== now.getFullYear() ||
@@ -466,7 +462,6 @@ app.get("/prices", requireAuth, async (req, res) => {
       });
     }
 
-    // Increment counter
     await pool.query(
       "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
       [req.user.id]
@@ -511,7 +506,6 @@ app.get("/prices", requireAuth, async (req, res) => {
 
 // ═══════════════════════════════════════════════════════════════════════════
 
-// POST /enterprise-contact
 app.post("/enterprise-contact", async (req, res) => {
   const { firstname, lastname, email, requests, note } = req.body;
   if (!firstname || !lastname || !email || !requests) {
@@ -543,7 +537,6 @@ app.post("/enterprise-contact", async (req, res) => {
   res.json({ success: true });
 });
 
-// POST /suggest – Fehlende Karte melden → E-Mail an info@card-pulse.com
 app.post("/suggest", async (req, res) => {
   const { url, note } = req.body;
   if (!url || !url.includes('cardmarket.com')) {
@@ -582,48 +575,35 @@ app.post("/suggest", async (req, res) => {
 });
 
 
-
 // ═══════════════════════════════════════════════════════════════════════════
-// SEALED PRICES
+// SEALED PRICES (FIXED & TIMEOUT PROTECTION)
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get("/prices/sealed", requireAuth, async (req, res) => {
+  const { name, type } = req.query;
+  if (!name) return res.status(400).json({ error: "Missing name parameter" });
+
   try {
-    // Load full user record (req.user only has JWT payload: id, email, is_premium)
-    const user = await getUserById(req.user.id);
-    if (!user) return res.status(401).json({ error: "LOGIN_REQUIRED" });
+    // 1. Hole User sauber aus der DB statt aus dem Token, um Endlos-Updates zu stoppen!
+    const userRow = await getUserById(req.user.id);
+    if (!userRow) return res.status(404).json({ error: "USER_NOT_FOUND" });
 
-    // Plan limit check (consistent with /prices)
-    const plan = user.plan || "bronze";
-    const limit = user.custom_request_limit ?? PLAN_LIMITS[plan] ?? 20;
+    const planLimits = { bronze: 20, silver: 400, gold: 1000, platin: 5000, enterprise: 999999 };
+    const plan = userRow.plan || "bronze";
+    const limit = userRow.custom_request_limit ?? planLimits[plan] ?? 20;
 
-    // Reset counter if new month
-    const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date();
     const now = new Date();
-    const needsReset = resetAt.getFullYear() !== now.getFullYear() ||
-                       resetAt.getMonth() !== now.getMonth();
-    if (needsReset) {
-      await pool.query(
-        "UPDATE users SET monthly_requests = 0, requests_reset_at = NOW() WHERE id = $1",
-        [user.id]
-      );
-      user.monthly_requests = 0;
-    }
+    const resetAt = userRow.requests_reset_at ? new Date(userRow.requests_reset_at) : new Date(0);
+    let used = userRow.monthly_requests || 0;
 
-    const used = user.monthly_requests || 0;
+    if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
+      used = 0;
+      await pool.query("UPDATE users SET monthly_requests=0, requests_reset_at=NOW() WHERE id=$1", [userRow.id]);
+    }
 
     if (used >= limit) {
       return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
     }
-
-    // Increment counter up-front (consistent with /prices)
-    await pool.query(
-      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
-      [user.id]
-    );
-
-    const { name, type } = req.query;
-    if (!name) return res.status(400).json({ error: "Missing name parameter" });
 
     // Check cache in sealed_mapping table
     const cached = await pool.query(
@@ -650,181 +630,19 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
       const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
       justTcgData = await resp.json();
 
-      // Cache the best match (first product that has a "Sealed" variant)
+      // Cache the best match
       const match = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
       if (match?.tcgplayerId) {
         tcgPlayerId = parseInt(match.tcgplayerId);
         await pool.query(
           `INSERT INTO sealed_mapping (product_name_normalized, product_name, product_type, tcg_player_id)
-           VALUES ($1,$2,$3,$4) ON CONFLICT (product_name_normalized) DO UPDATE SET tcg_player_id=$4, updated_at=NOW()`,
+           VALUES ($1,$2,$3,$4) ON CONFLICT (product_name_normalized) DO UPDATE SET tcg_player_id=$4`,
           [name.toLowerCase().trim(), match.name, type || "unknown", tcgPlayerId]
         );
       }
     }
 
-    // Find the sealed variant on the matched product
+    // Find sealed variant
     const product = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
     if (!product) {
-      return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
-    }
-
-    const variant = product.variants.find(v => v.condition === "Sealed");
-    const usdPrice = variant.price / 100;
-
-    // EUR conversion (with fallback)
-    let eurRate = 0.92;
-    try {
-      const fx = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR");
-      const fxData = await fx.json();
-      eurRate = fxData.rates?.EUR || 0.92;
-    } catch (_) {}
-
-    const history = (variant.priceHistory || []).map(p => ({
-      date: new Date(p.t * 1000).toISOString().split("T")[0],
-      price: +(p.p / 100).toFixed(2)
-    }));
-
-    res.json({
-      name: product.name,
-      set: product.set_name,
-      type: type || "sealed",
-      tcgPlayerId: product.tcgplayerId,
-      price: { usd: +usdPrice.toFixed(2), eur: +(usdPrice * eurRate).toFixed(2) },
-      change7d: variant.priceChange7d,
-      change30d: variant.priceChange30d,
-      trendSlope7d: variant.trendSlope7d,
-      history,
-      plan,
-      used: used + 1,
-      limit
-    });
-
-  } catch (err) {
-    console.error("Sealed price error:", err);
-    res.status(500).json({ error: "SERVER_ERROR", message: err.message });
-  }
-});
-// ═══════════════════════════════════════════════════════════════════════════
-// PASSWORD RESET ROUTES
-// ═══════════════════════════════════════════════════════════════════════════
-
-// POST /auth/forgot-password
-app.post("/auth/forgot-password", async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: "E-Mail erforderlich." });
-
-  try {
-    const result = await pool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
-    // Always return success to prevent email enumeration
-    if (result.rows.length === 0) {
-      return res.json({ success: true });
-    }
-
-    const userId = result.rows[0].id;
-    const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-    await pool.query(
-      "UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3",
-      [token, expires, userId]
-    );
-
-    const resetUrl = `${process.env.FRONTEND_URL || 'https://www.card-pulse.com'}/reset-password.html?token=${token}`;
-
-    if (process.env.RESEND_API_KEY) {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "CardPulse <info@card-pulse.com>",
-          to: [email.toLowerCase()],
-          subject: "CardPulse – Passwort zurücksetzen",
-          text: `Hallo,
-
-du hast eine Passwort-Zurücksetzen-Anfrage gestellt.
-
-Klicke auf diesen Link um dein Passwort zurückzusetzen (gültig 1 Stunde):
-${resetUrl}
-
-Falls du das nicht angefordert hast, ignoriere diese E-Mail.
-
-Dein CardPulse Team`,
-          html: `<p>Hallo,</p><p>du hast eine Passwort-Zurücksetzen-Anfrage gestellt.</p><p><a href="${resetUrl}" style="background:#6c63ff;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Passwort zurücksetzen</a></p><p style="color:#888;font-size:13px">Link gültig für 1 Stunde. Falls du das nicht angefordert hast, ignoriere diese E-Mail.</p><p>Dein CardPulse Team</p>`,
-        }),
-      });
-      console.log(`[RESET] E-Mail gesendet an ${email}`);
-    }
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("[/auth/forgot-password]", err.message);
-    res.status(500).json({ error: "SERVER_ERROR" });
-  }
-});
-
-// POST /auth/reset-password
-app.post("/auth/reset-password", async (req, res) => {
-  const { token, password } = req.body;
-  if (!token || !password) return res.status(400).json({ error: "Token und Passwort erforderlich." });
-  if (password.length < 8) return res.status(400).json({ error: "Passwort muss mindestens 8 Zeichen haben." });
-
-  try {
-    const result = await pool.query(
-      "SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()",
-      [token]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(400).json({ error: "INVALID_TOKEN" });
-    }
-
-    const userId = result.rows[0].id;
-    const password_hash = await bcrypt.hash(password, 10);
-
-    await pool.query(
-      "UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2",
-      [password_hash, userId]
-    );
-
-    console.log(`[RESET] Passwort geändert für User ${userId}`);
-    res.json({ success: true });
-  } catch (err) {
-    console.error("[/auth/reset-password]", err.message);
-    res.status(500).json({ error: "SERVER_ERROR" });
-  }
-});
-
-// SETS ROUTE
-// ═══════════════════════════════════════════════════════════════════════════
-
-app.get("/sets", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT DISTINCT cardmarket_slug FROM card_mapping ORDER BY cardmarket_slug ASC"
-    );
-    res.json({ sets: result.rows.map((r) => r.cardmarket_slug) });
-  } catch (err) {
-    console.error("[/sets]", err.message);
-    res.status(500).json({ error: "SERVER_ERROR" });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SERVER START
-// ═══════════════════════════════════════════════════════════════════════════
-
-app.get("/", (req, res) => res.send("CardPulse API läuft. ✅"));
-
-app.listen(PORT, async () => {
-  console.log(`✅ CardPulse Server läuft auf Port ${PORT}`);
-  try {
-    await pool.query("SELECT NOW()");
-    console.log("✅ Neon DB verbunden.");
-  } catch (err) {
-    console.error("❌ Neon DB Verbindungsfehler:", err.message);
-  }
-});
+      return res
