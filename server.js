@@ -588,28 +588,43 @@ app.post("/suggest", async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get("/prices/sealed", requireAuth, async (req, res) => {
-  const user = req.user;
-
-  // Plan limit check (same as /prices/card)
-  const planLimits = { bronze: 20, silver: 400, gold: 1000, platin: 5000 };
-  const plan = user.plan || "bronze";
-  const limit = user.custom_request_limit ?? planLimits[plan] ?? 20;
-
-  const now = new Date();
-  const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date(0);
-  let used = user.monthly_requests || 0;
-  if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
-    used = 0;
-    await pool.query("UPDATE users SET monthly_requests=0, requests_reset_at=NOW() WHERE id=$1", [user.id]);
-  }
-  if (used >= limit) {
-    return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
-  }
-
-  const { name, type } = req.query;
-  if (!name) return res.status(400).json({ error: "Missing name parameter" });
-
   try {
+    // Load full user record (req.user only has JWT payload: id, email, is_premium)
+    const user = await getUserById(req.user.id);
+    if (!user) return res.status(401).json({ error: "LOGIN_REQUIRED" });
+
+    // Plan limit check (consistent with /prices)
+    const plan = user.plan || "bronze";
+    const limit = user.custom_request_limit ?? PLAN_LIMITS[plan] ?? 20;
+
+    // Reset counter if new month
+    const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date();
+    const now = new Date();
+    const needsReset = resetAt.getFullYear() !== now.getFullYear() ||
+                       resetAt.getMonth() !== now.getMonth();
+    if (needsReset) {
+      await pool.query(
+        "UPDATE users SET monthly_requests = 0, requests_reset_at = NOW() WHERE id = $1",
+        [user.id]
+      );
+      user.monthly_requests = 0;
+    }
+
+    const used = user.monthly_requests || 0;
+
+    if (used >= limit) {
+      return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
+    }
+
+    // Increment counter up-front (consistent with /prices)
+    await pool.query(
+      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
+      [user.id]
+    );
+
+    const { name, type } = req.query;
+    if (!name) return res.status(400).json({ error: "Missing name parameter" });
+
     // Check cache in sealed_mapping table
     const cached = await pool.query(
       "SELECT tcg_player_id FROM sealed_mapping WHERE product_name_normalized=$1 LIMIT 1",
@@ -635,19 +650,19 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
       const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
       justTcgData = await resp.json();
 
-      // Cache the best match
+      // Cache the best match (first product that has a "Sealed" variant)
       const match = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
       if (match?.tcgplayerId) {
         tcgPlayerId = parseInt(match.tcgplayerId);
         await pool.query(
           `INSERT INTO sealed_mapping (product_name_normalized, product_name, product_type, tcg_player_id)
-           VALUES ($1,$2,$3,$4) ON CONFLICT (product_name_normalized) DO UPDATE SET tcg_player_id=$4`,
+           VALUES ($1,$2,$3,$4) ON CONFLICT (product_name_normalized) DO UPDATE SET tcg_player_id=$4, updated_at=NOW()`,
           [name.toLowerCase().trim(), match.name, type || "unknown", tcgPlayerId]
         );
       }
     }
 
-    // Find sealed variant
+    // Find the sealed variant on the matched product
     const product = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
     if (!product) {
       return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
@@ -656,7 +671,7 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
     const variant = product.variants.find(v => v.condition === "Sealed");
     const usdPrice = variant.price / 100;
 
-    // EUR conversion
+    // EUR conversion (with fallback)
     let eurRate = 0.92;
     try {
       const fx = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR");
@@ -668,12 +683,6 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
       date: new Date(p.t * 1000).toISOString().split("T")[0],
       price: +(p.p / 100).toFixed(2)
     }));
-
-    // Increment usage
-    await pool.query(
-      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
-      [user.id]
-    );
 
     res.json({
       name: product.name,
