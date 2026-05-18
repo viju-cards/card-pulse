@@ -1,7 +1,7 @@
 // server.js – CardPulse Backend (Finale Version)
 // Routes: /auth/register, /auth/login, /auth/me
 //         /stripe/checkout, /stripe/portal, /webhook
-//         /prices, /sets, /prices/sealed
+//         /prices, /sets, /prices/sealed, /enterprise-contact, /suggest
 
 const express = require("express");
 const fetch = require("node-fetch");
@@ -24,7 +24,7 @@ const REQUIRED_ENVS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "STRIPE_PRICE_ID",
-  "FRONTEND_URL",          // https://www.card-pulse.com
+  "FRONTEND_URL",
 ];
 
 for (const key of REQUIRED_ENVS) {
@@ -42,88 +42,81 @@ const pool = new Pool({
 
 // ─── Plan Limits ─────────────────────────────────────────────────────────────
 const PLAN_LIMITS = {
-  bronze:     20,
-  silver:     400,
-  gold:       1000,
-  platin:     5000,
-  enterprise: 999999, // fallback – overridden by custom_request_limit
+  bronze: 20,
+  silver: 400,
+  gold: 1000,
+  platin: 5000,
+  enterprise: 999999,
 };
 
-const STRIPE_PLANS = {
-  silver: process.env.STRIPE_PRICE_SILVER,
-  gold:   process.env.STRIPE_PRICE_GOLD,
-  platin: process.env.STRIPE_PRICE_PLATIN,
-};
-
-// ─── CORS ────────────────────────────────────────────────────────────────────
+// ─── Middleware ──────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") return res.sendStatus(200);
+  if (req.originalUrl === "/webhook") {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
+
+// CORS Middleware
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "https://card-pulse.com",
+    "https://www.card-pulse.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,content-type,Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
   next();
 });
 
-// ─── Statische Dateien (Webseite aus /public Ordner) ─────────────────────────
-app.use(express.static('public'));
-
-// ─── Body Parser ─────────────────────────────────────────────────────────────
-app.use("/webhook", express.raw({ type: "application/json" }));
-app.use(express.json());
-
-// ─── JWT Middleware ───────────────────────────────────────────────────────────
+// Auth Middleware
 function requireAuth(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if (!token) return res.status(401).json({ error: "LOGIN_REQUIRED" });
+  if (!token) return res.status(401).json({ error: "TOKEN_MISSING" });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
-  } catch {
-    return res.status(401).json({ error: "LOGIN_REQUIRED" });
+  } catch (err) {
+    return res.status(403).json({ error: "TOKEN_INVALID" });
   }
 }
 
-function requirePremium(req, res, next) {
-  if (!req.user.is_premium && req.user.plan === 'bronze') {
-    // Bronze still allowed – limit checked in route
-  }
-  next();
-}
-
-// ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
+// ─── Helper Functions ────────────────────────────────────────────────────────
 async function getUserById(id) {
   const result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
-  return result.rows[0] || null;
+  return result.rows[0];
 }
 
 function generateToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, is_premium: user.is_premium },
+    { id: user.id, email: user.email, plan: user.plan },
     process.env.JWT_SECRET,
     { expiresIn: "30d" }
   );
 }
 
 async function fetchJustTcg(tcgPlayerId) {
-  const params = new URLSearchParams({
-    tcgplayerId: tcgPlayerId,
-    include_price_history: 'true',
-    priceHistoryDuration: '30d',
-    include_statistics: '7d,30d',
-  });
-  const url = `https://api.justtcg.com/v1/cards?${params}`;
-  const response = await fetch(url, {
+  const url = `https://api.justtcg.com/v1/cards?tcgPlayerId=${tcgPlayerId}&game=pokemon`;
+  const res = await fetch(url, {
     headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY },
   });
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`JustTCG Fehler (${response.status}): ${err}`);
-  }
-  return response.json();
+  if (!res.ok) throw new Error(`JustTCG API Error: ${res.status}`);
+  return res.json();
 }
 
 function mapPrices(data) {
@@ -144,24 +137,22 @@ function mapPrices(data) {
   }
 
   return {
-    MARKET_PRICE:      conditionPrices["NEAR MINT"] ?? null,
-    NEAR_MINT:         conditionPrices["NEAR MINT"] ?? null,
-    LIGHTLY_PLAYED:    conditionPrices["LIGHTLY PLAYED"] ?? null,
+    MARKET_PRICE: conditionPrices["NEAR MINT"] ?? null,
+    NEAR_MINT: conditionPrices["NEAR MINT"] ?? null,
+    LIGHTLY_PLAYED: conditionPrices["LIGHTLY PLAYED"] ?? null,
     MODERATELY_PLAYED: conditionPrices["MODERATELY PLAYED"] ?? null,
-    HEAVILY_PLAYED:    conditionPrices["HEAVILY PLAYED"] ?? null,
-    DAMAGED:           conditionPrices["DAMAGED"] ?? conditionPrices["POOR"] ?? null,
-    LOW:               allPrices.length ? Math.min(...allPrices) : null,
-    HIGH:              allPrices.length ? Math.max(...allPrices) : null,
+    HEAVILY_PLAYED: conditionPrices["HEAVILY PLAYED"] ?? null,
+    DAMAGED: conditionPrices["DAMAGED"] ?? conditionPrices["POOR"] ?? null,
+    LOW: allPrices.length ? Math.min(...allPrices) : null,
+    HIGH: allPrices.length ? Math.max(...allPrices) : null,
   };
 }
 
-// Extract trend + history from the best (NM Normal English) variant
 function extractTrendAndHistory(data) {
   const variants = data.data?.[0]?.variants ?? [];
 
-  // Priority: NM Normal English → NM Holofoil English → any NM → first variant
   const nmVariant =
-    variants.find(v => v.condition === "Near Mint" && v.printing === "Normal"   && v.language === "English") ??
+    variants.find(v => v.condition === "Near Mint" && v.printing === "Normal" && v.language === "English") ??
     variants.find(v => v.condition === "Near Mint" && v.printing === "Holofoil" && v.language === "English") ??
     variants.find(v => v.condition === "Near Mint") ??
     variants[0];
@@ -170,95 +161,67 @@ function extractTrendAndHistory(data) {
 
   const trend = {
     "7d": nmVariant.priceChange7d != null ? {
-      changePercent: nmVariant.priceChange7d,         // already a % value e.g. -3.86
-      avg:           nmVariant.minPrice7d ?? null,
+      changePercent: nmVariant.priceChange7d,
+      avg: nmVariant.minPrice7d ?? null,
     } : null,
     "30d": nmVariant.priceChange30d != null ? {
       changePercent: nmVariant.priceChange30d,
-      avg:           nmVariant.avgPrice30d ?? null,
+      avg: nmVariant.avgPrice30d ?? null,
     } : null,
   };
 
-  // priceHistory: [{p: price, t: unix_timestamp}] → [{price, date}]
   const history = (nmVariant.priceHistory ?? [])
     .filter(h => h.p != null && h.t != null)
     .map(h => ({
       price: h.p,
-      date:  new Date(h.t * 1000).toISOString().split("T")[0],
+      date: new Date(h.t * 1000).toISOString().split("T")[0],
     }))
     .slice(-30);
 
   return { trend, history };
 }
 
-
-// ═══════════════════════════════════════════════════════════════════════════
-// AUTH ROUTES
-// ═══════════════════════════════════════════════════════════════════════════
-
+// ─── Auth Routes ─────────────────────────────────────────────────────────────
 app.post("/auth/register", async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password)
-    return res.status(400).json({ error: "E-Mail und Passwort erforderlich." });
-  if (password.length < 8)
-    return res.status(400).json({ error: "Passwort muss mindestens 8 Zeichen haben." });
+  if (!email || !password) return res.status(400).json({ error: "Felder fehlen." });
 
   try {
     const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
-    if (existing.rows.length > 0)
-      return res.status(409).json({ error: "E-Mail bereits registriert." });
+    if (existing.rows.length > 0) return res.status(400).json({ error: "EMAIL_ALREADY_EXISTS" });
 
-    const password_hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, is_premium, created_at)
-       VALUES ($1, $2, false, NOW()) RETURNING id, email, is_premium`,
-      [email.toLowerCase(), password_hash]
+      `INSERT INTO users (email, password_hash, plan, monthly_requests, requests_reset_at)
+       VALUES ($1, $2, 'bronze', 0, NOW()) RETURNING *`,
+      [email.toLowerCase(), hash]
     );
 
     const user = result.rows[0];
     const token = generateToken(user);
-    res.status(201).json({ token, user: { id: user.id, email: user.email, is_premium: false } });
+    res.json({ token, user: { email: user.email, plan: user.plan } });
   } catch (err) {
-    console.error("[/auth/register]", err.message);
+    console.error(err);
     res.status(500).json({ error: "SERVER_ERROR" });
   }
 });
 
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password)
-    return res.status(400).json({ error: "E-Mail und Passwort erforderlich." });
+  if (!email || !password) return res.status(400).json({ error: "Felder fehlen." });
 
   try {
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
+    if (result.rows.length === 0) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
+
     const user = result.rows[0];
-
-    if (!user) return res.status(401).json({ error: "Ungültige Anmeldedaten." });
-
     const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) return res.status(401).json({ error: "Ungültige Anmeldedaten." });
+    if (!valid) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
 
-    let is_premium = user.is_premium;
-    if (is_premium && user.premium_until && new Date(user.premium_until) < new Date()) {
-      await pool.query("UPDATE users SET is_premium = false WHERE id = $1", [user.id]);
-      is_premium = false;
-    }
-
-    const token = generateToken({ ...user, is_premium });
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        is_premium,
-        premium_until: user.premium_until,
-        cancel_at_period_end: user.cancel_at_period_end,
-      },
-    });
+    const token = generateToken(user);
+    res.json({ token, user: { email: user.email, plan: user.plan } });
   } catch (err) {
-    console.error("[/auth/login]", err.message);
+    console.error(err);
     res.status(500).json({ error: "SERVER_ERROR" });
   }
 });
@@ -266,105 +229,75 @@ app.post("/auth/login", async (req, res) => {
 app.get("/auth/me", requireAuth, async (req, res) => {
   try {
     const user = await getUserById(req.user.id);
-    if (!user) return res.status(404).json({ error: "User nicht gefunden." });
-
-    let is_premium = user.is_premium;
-    if (is_premium && user.premium_until && new Date(user.premium_until) < new Date()) {
-      await pool.query("UPDATE users SET is_premium = false WHERE id = $1", [user.id]);
-      is_premium = false;
-    }
-
-    const userPlan = user.plan || 'bronze';
-    const userLimit = user.custom_request_limit || PLAN_LIMITS[userPlan] || 20;
-
-    // Reset if new month
-    const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date();
-    const now = new Date();
-    if (resetAt.getFullYear() !== now.getFullYear() || resetAt.getMonth() !== now.getMonth()) {
-      await pool.query("UPDATE users SET monthly_requests = 0, requests_reset_at = NOW() WHERE id = $1", [user.id]);
-      user.monthly_requests = 0;
-    }
+    if (!user) return res.status(404).json({ error: "USER_NOT_FOUND" });
 
     res.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        is_premium,
-        premium_until: user.premium_until,
-        cancel_at_period_end: user.cancel_at_period_end,
-        plan: userPlan,
-        used: user.monthly_requests || 0,
-        limit: userLimit,
-      },
+      email: user.email,
+      plan: user.plan,
+      monthly_requests: user.monthly_requests,
+      custom_request_limit: user.custom_request_limit,
+      is_premium: user.is_premium,
     });
   } catch (err) {
-    console.error("[/auth/me]", err.message);
     res.status(500).json({ error: "SERVER_ERROR" });
   }
 });
 
-
-// ═══════════════════════════════════════════════════════════════════════════
-// STRIPE ROUTES
-// ═══════════════════════════════════════════════════════════════════════════
-
+// ─── Stripe Routes ───────────────────────────────────────────────────────────
 app.post("/stripe/checkout", requireAuth, async (req, res) => {
-  try {
-    const { plan } = req.body; // 'silver' | 'gold' | 'platin'
-    const priceId = STRIPE_PLANS[plan] || process.env.STRIPE_PRICE_ID;
-    if (!priceId) return res.status(400).json({ error: "Ungültiger Plan." });
+  const { plan } = req.body;
+  const priceIdMap = {
+    silver: process.env.STRIPE_PRICE_SILVER,
+    gold: process.env.STRIPE_PRICE_GOLD,
+    platin: process.env.STRIPE_PRICE_PLATIN
+  };
+  const priceId = priceIdMap[plan];
+  if (!priceId) return res.status(400).json({ error: "Ungültiger Plan" });
 
+  try {
     const user = await getUserById(req.user.id);
     let customerId = user.stripe_customer_id;
+
     if (!customerId) {
       const customer = await stripe.customers.create({ email: user.email });
       customerId = customer.id;
       await pool.query("UPDATE users SET stripe_customer_id = $1 WHERE id = $2", [customerId, user.id]);
     }
 
-    const baseUrl = process.env.FRONTEND_URL || 'https://www.card-pulse.com';
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
+      payment_method_types: ["card", "paypal"],
       line_items: [{ price: priceId, quantity: 1 }],
-      allow_promotion_codes: true,
-      billing_address_collection: 'auto',
-      locale: 'auto',
-      success_url: `${baseUrl}/dashboard.html?success=true`,
-      cancel_url: `${baseUrl}/dashboard.html?canceled=true`,
-      metadata: { user_id: String(user.id), plan },
-      custom_text: {
-        submit: { message: 'Du kannst dein Abo jederzeit kündigen.' },
-      },
+      success_url: `${process.env.FRONTEND_URL}/dashboard.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/dashboard.html`,
     });
 
     res.json({ url: session.url });
   } catch (err) {
-    console.error("[/stripe/checkout]", err.message);
-    res.status(500).json({ error: "SERVER_ERROR" });
+    console.error(err);
+    res.status(500).json({ error: "STRIPE_ERROR" });
   }
 });
 
 app.post("/stripe/portal", requireAuth, async (req, res) => {
   try {
     const user = await getUserById(req.user.id);
+    if (!user.stripe_customer_id) return res.status(400).json({ error: "Kein Stripe Kunde" });
 
-    if (!user.stripe_customer_id)
-      return res.status(400).json({ error: "Kein aktives Abonnement gefunden." });
-
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await stripe.portal.sessions.create({
       customer: user.stripe_customer_id,
-      return_url: `${process.env.FRONTEND_URL || 'https://www.card-pulse.com'}/dashboard.html`,
+      return_url: `${process.env.FRONTEND_URL}/dashboard.html`,
     });
 
     res.json({ url: session.url });
   } catch (err) {
-    console.error("[/stripe/portal]", err.message);
-    res.status(500).json({ error: "SERVER_ERROR" });
+    console.error(err);
+    res.status(500).json({ error: "PORTAL_ERROR" });
   }
 });
 
-app.post("/webhook", async (req, res) => {
+app.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
 
@@ -388,7 +321,7 @@ app.post("/webhook", async (req, res) => {
 
         const priceId = sub.items?.data?.[0]?.price?.id;
         let planName = 'silver'; 
-        if (priceId === process.env.STRIPE_PRICE_GOLD)   planName = 'gold';
+        if (priceId === process.env.STRIPE_PRICE_GOLD) planName = 'gold';
         if (priceId === process.env.STRIPE_PRICE_PLATIN) planName = 'platin';
         if (priceId === process.env.STRIPE_PRICE_SILVER) planName = 'silver';
 
@@ -422,11 +355,7 @@ app.post("/webhook", async (req, res) => {
   res.json({ received: true });
 });
 
-
-// ═══════════════════════════════════════════════════════════════════════════
-// PREISE ROUTE
-// ═══════════════════════════════════════════════════════════════════════════
-
+// ─── Price / Card Market Routes ──────────────────────────────────────────────
 app.get("/prices", requireAuth, async (req, res) => {
   const { set: setSlug, cardNumber } = req.query;
 
@@ -503,9 +432,115 @@ app.get("/prices", requireAuth, async (req, res) => {
   }
 });
 
+app.get("/prices/sealed", requireAuth, async (req, res) => {
+  const { name, type } = req.query;
+  if (!name) return res.status(400).json({ error: "Missing name parameter" });
 
-// ═══════════════════════════════════════════════════════════════════════════
+  try {
+    const userRow = await getUserById(req.user.id);
+    if (!userRow) return res.status(404).json({ error: "USER_NOT_FOUND" });
 
+    const plan = userRow.plan || "bronze";
+    const limit = userRow.custom_request_limit ?? PLAN_LIMITS[plan] ?? 20;
+
+    const now = new Date();
+    const resetAt = userRow.requests_reset_at ? new Date(userRow.requests_reset_at) : new Date(0);
+    let used = userRow.monthly_requests || 0;
+
+    if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
+      used = 0;
+      await pool.query("UPDATE users SET monthly_requests=0, requests_reset_at=NOW() WHERE id=$1", [userRow.id]);
+    }
+
+    if (used >= limit) {
+      return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
+    }
+
+    const cached = await pool.query(
+      "SELECT tcg_player_id FROM sealed_mapping WHERE product_name_normalized=$1 LIMIT 1",
+      [name.toLowerCase().trim()]
+    );
+
+    let tcgPlayerId = cached.rows[0]?.tcg_player_id || null;
+    let justTcgData;
+
+    if (tcgPlayerId) {
+      const url = new URL("https://api.justtcg.com/v1/cards");
+      url.searchParams.set("tcgPlayerId", tcgPlayerId);
+      url.searchParams.set("game", "pokemon");
+      const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
+      justTcgData = await resp.json();
+    } else {
+      const url = new URL("https://api.justtcg.com/v1/cards");
+      url.searchParams.set("game", "pokemon");
+      url.searchParams.set("name", name);
+      url.searchParams.set("limit", "5");
+      const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
+      justTcgData = await resp.json();
+
+      const match = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
+      if (match?.tcgplayerId) {
+        tcgPlayerId = parseInt(match.tcgplayerId);
+        await pool.query(
+          `INSERT INTO sealed_mapping (product_name_normalized, product_name, product_type, tcg_player_id)
+           VALUES ($1,$2,$3,$4) ON CONFLICT (product_name_normalized) DO UPDATE SET tcg_player_id=$4`,
+          [name.toLowerCase().trim(), match.name, type || "unknown", tcgPlayerId]
+        );
+      }
+    }
+
+    const product = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
+    if (!product) {
+      return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
+    }
+
+    const variant = product.variants.find(v => v.condition === "Sealed");
+    if (!variant) {
+      return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
+    }
+
+    const rawPrice = variant.marketPrice ?? variant.price ?? 0;
+    const usdPrice = rawPrice / 100;
+
+    let eurRate = 0.92;
+    try {
+      const fx = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR");
+      const fxData = await fx.json();
+      eurRate = fxData.rates?.EUR || 0.92;
+    } catch (_) {}
+
+    const history = (variant.priceHistory || []).map(p => ({
+      date: new Date(p.t * 1000).toISOString().split("T")[0],
+      price: +(p.p / 100).toFixed(2)
+    }));
+
+    await pool.query(
+      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
+      [userRow.id]
+    );
+
+    res.json({
+      name: product.name,
+      set: product.set_name,
+      type: type || "sealed",
+      tcgPlayerId: product.tcgplayerId,
+      price: { usd: +usdPrice.toFixed(2), eur: +(usdPrice * eurRate).toFixed(2) },
+      change7d: variant.priceChange7d,
+      change30d: variant.priceChange30d,
+      trendSlope7d: variant.trendSlope7d,
+      history,
+      plan,
+      used: used + 1,
+      limit
+    });
+
+  } catch (err) {
+    console.error("Sealed price error:", err);
+    res.status(500).json({ error: "SERVER_ERROR", message: err.message });
+  }
+});
+
+// ─── Contact and Suggestion Routes ───────────────────────────────────────────
 app.post("/enterprise-contact", async (req, res) => {
   const { firstname, lastname, email, requests, note } = req.body;
   if (!firstname || !lastname || !email || !requests) {
@@ -574,75 +609,106 @@ app.post("/suggest", async (req, res) => {
   res.json({ success: true });
 });
 
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SEALED PRICES (FIXED & TIMEOUT PROTECTION)
-// ═══════════════════════════════════════════════════════════════════════════
-
-app.get("/prices/sealed", requireAuth, async (req, res) => {
-  const { name, type } = req.query;
-  if (!name) return res.status(400).json({ error: "Missing name parameter" });
+// ─── Password Reset Routes ───────────────────────────────────────────────────
+app.post("/auth/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "E-Mail erforderlich." });
 
   try {
-    // 1. Hole User sauber aus der DB statt aus dem Token, um Endlos-Updates zu stoppen!
-    const userRow = await getUserById(req.user.id);
-    if (!userRow) return res.status(404).json({ error: "USER_NOT_FOUND" });
-
-    const planLimits = { bronze: 20, silver: 400, gold: 1000, platin: 5000, enterprise: 999999 };
-    const plan = userRow.plan || "bronze";
-    const limit = userRow.custom_request_limit ?? planLimits[plan] ?? 20;
-
-    const now = new Date();
-    const resetAt = userRow.requests_reset_at ? new Date(userRow.requests_reset_at) : new Date(0);
-    let used = userRow.monthly_requests || 0;
-
-    if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
-      used = 0;
-      await pool.query("UPDATE users SET monthly_requests=0, requests_reset_at=NOW() WHERE id=$1", [userRow.id]);
+    const result = await pool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
+    if (result.rows.length === 0) {
+      return res.json({ success: true });
     }
 
-    if (used >= limit) {
-      return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
-    }
+    const userId = result.rows[0].id;
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 60 * 60 * 1000);
 
-    // Check cache in sealed_mapping table
-    const cached = await pool.query(
-      "SELECT tcg_player_id FROM sealed_mapping WHERE product_name_normalized=$1 LIMIT 1",
-      [name.toLowerCase().trim()]
+    await pool.query(
+      "UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3",
+      [token, expires, userId]
     );
 
-    let tcgPlayerId = cached.rows[0]?.tcg_player_id || null;
-    let justTcgData;
+    const resetUrl = `${process.env.FRONTEND_URL || 'https://www.card-pulse.com'}/reset-password.html?token=${token}`;
 
-    if (tcgPlayerId) {
-      // Fetch by ID (fast path)
-      const url = new URL("https://api.justtcg.com/v1/cards");
-      url.searchParams.set("tcgPlayerId", tcgPlayerId);
-      url.searchParams.set("game", "pokemon");
-      const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
-      justTcgData = await resp.json();
-    } else {
-      // Search by name
-      const url = new URL("https://api.justtcg.com/v1/cards");
-      url.searchParams.set("game", "pokemon");
-      url.searchParams.set("name", name);
-      url.searchParams.set("limit", "5");
-      const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
-      justTcgData = await resp.json();
-
-      // Cache the best match
-      const match = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
-      if (match?.tcgplayerId) {
-        tcgPlayerId = parseInt(match.tcgplayerId);
-        await pool.query(
-          `INSERT INTO sealed_mapping (product_name_normalized, product_name, product_type, tcg_player_id)
-           VALUES ($1,$2,$3,$4) ON CONFLICT (product_name_normalized) DO UPDATE SET tcg_player_id=$4`,
-          [name.toLowerCase().trim(), match.name, type || "unknown", tcgPlayerId]
-        );
-      }
+    if (process.env.RESEND_API_KEY) {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "CardPulse <info@card-pulse.com>",
+          to: [email.toLowerCase()],
+          subject: "CardPulse – Passwort zurücksetzen",
+          text: `Hallo,\n\ndu hast eine Passwort-Zurücksetzen-Anfrage gestellt.\n\nKlicke auf diesen Link um dein Passwort zurückzusetzen (gültig 1 Stunde):\n${resetUrl}\n\nFalls du das nicht angefordert hast, ignoriere diese E-Mail.\n\nDein CardPulse Team`,
+          html: `<p>Hallo,</p><p>du hast eine Passwort-Zurücksetzen-Anfrage gestellt.</p><p><a href="${resetUrl}" style="background:#6c63ff;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Passwort zurücksetzen</a></p><p style="color:#888;font-size:13px">Link gültig für 1 Stunde. Falls du das nicht angefordert hast, ignoriere diese E-Mail.</p><p>Dein CardPulse Team</p>`,
+        }),
+      });
+      console.log(`[RESET] E-Mail gesendet an ${email}`);
     }
 
-    // Find sealed variant
-    const product = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
-    if (!product) {
-      return res
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[/auth/forgot-password]", err.message);
+    res.status(500).json({ error: "SERVER_ERROR" });
+  }
+});
+
+app.post("/auth/reset-password", async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: "Token und Passwort erforderlich." });
+  if (password.length < 8) return res.status(400).json({ error: "Passwort muss mindestens 8 Zeichen haben." });
+
+  try {
+    const result = await pool.query(
+      "SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()",
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: "INVALID_TOKEN" });
+    }
+
+    const userId = result.rows[0].id;
+    const password_hash = await bcrypt.hash(password, 10);
+
+    await pool.query(
+      "UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2",
+      [password_hash, userId]
+    );
+
+    console.log(`[RESET] Passwort geändert für User ${userId}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[/auth/reset-password]", err.message);
+    res.status(500).json({ error: "SERVER_ERROR" });
+  }
+});
+
+// ─── Meta Routes ─────────────────────────────────────────────────────────────
+app.get("/sets", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT DISTINCT cardmarket_slug FROM card_mapping ORDER BY cardmarket_slug ASC"
+    );
+    res.json({ sets: result.rows.map((r) => r.cardmarket_slug) });
+  } catch (err) {
+    console.error("[/sets]", err.message);
+    res.status(500).json({ error: "SERVER_ERROR" });
+  }
+});
+
+app.get("/", (req, res) => res.send("CardPulse API läuft. ✅"));
+
+// ─── Server Start ────────────────────────────────────────────────────────────
+app.listen(PORT, async () => {
+  console.log(`✅ CardPulse Server läuft auf Port ${PORT}`);
+  try {
+    await pool.query("SELECT NOW()");
+    console.log("✅ Neon DB verbunden.");
+  } catch (err) {
+    console.error("❌ Neon DB Verbindungsfehler:", err.message);
+  }
+});
