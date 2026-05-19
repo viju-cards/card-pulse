@@ -619,68 +619,29 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
       return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
     }
 
-    // ── Mapping lookup ─────────────────────────────────────────────────────
+    // ── Mapping lookup (DB only, no auto-match) ───────────────────────────
     const cached = await pool.query(
       "SELECT tcg_player_id FROM sealed_mapping WHERE product_name_normalized=$1 LIMIT 1",
       [normalizedName]
     );
-    let tcgPlayerId = cached.rows[0]?.tcg_player_id || null;
-    let justTcgData;
+    const tcgPlayerId = cached.rows[0]?.tcg_player_id || null;
 
-    if (tcgPlayerId) {
-      // Fast path: lookup by manually mapped / previously validated TCGPlayer ID
-      const url = new URL("https://api.justtcg.com/v1/cards");
-      url.searchParams.set("tcgplayerId", tcgPlayerId);    // lowercase!
-      const resp = await fetch(url.toString(), {
-        headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY }
-      });
-      justTcgData = await resp.json();
-      console.log(`[SEALED] Cache-Lookup für "${name}" → ID ${tcgPlayerId}, JustTCG status ${resp.status}, data count ${justTcgData.data?.length || 0}`);
-      if (justTcgData.data?.[0]) {
-        console.log(`[SEALED]   Name: "${justTcgData.data[0].name}", Conditions:`,
-          justTcgData.data[0].variants?.map(v => v.condition));
-      }
+    if (!tcgPlayerId) {
+      console.log(`[SEALED] Kein DB-Mapping für "${name}" – User soll Produkt melden`);
+      return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
+    }
 
-    } else {
-      // Slow path: search by name with validation
-      const url = new URL("https://api.justtcg.com/v1/cards");
-      url.searchParams.set("game", "pokemon");
-      url.searchParams.set("name", name);
-      url.searchParams.set("limit", "10");
-      const resp = await fetch(url.toString(), {
-        headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY }
-      });
-      justTcgData = await resp.json();
-      console.log(`[SEALED] Name-Search für "${name}" → JustTCG status ${resp.status}, results ${justTcgData.data?.length || 0}`);
-
-      // Token validation: at least 60% of query tokens (length > 2) must appear in candidate name
-      const queryTokens = normalizedName.split(/\s+/).filter(t => t.length > 2);
-      const candidates = (justTcgData.data || []).filter(p => {
-        if (!p.variants?.some(v => v.condition === "Sealed")) return false;
-        const productName = (p.name || "").toLowerCase();
-        const hits = queryTokens.filter(t => productName.includes(t)).length;
-        return queryTokens.length > 0 && hits / queryTokens.length >= 0.6;
-      });
-
-      if (candidates.length === 0) {
-        console.log(`[SEALED] Kein valider Auto-Match für "${name}" – Kandidatennamen:`,
-          (justTcgData.data || []).map(p => p.name));
-        return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
-      }
-
-      const match = candidates[0];
-      if (match?.tcgplayerId) {
-        tcgPlayerId = parseInt(match.tcgplayerId);
-        justTcgData = { data: [match] };   // keep only validated hit
-        await pool.query(
-          `INSERT INTO sealed_mapping (product_name_normalized, product_name, product_type, tcg_player_id, updated_at)
-           VALUES ($1,$2,$3,$4,NOW())
-           ON CONFLICT (product_name_normalized)
-           DO UPDATE SET tcg_player_id = EXCLUDED.tcg_player_id, updated_at = NOW()`,
-          [normalizedName, match.name, type || "unknown", tcgPlayerId]
-        );
-        console.log(`[SEALED] Auto-Match akzeptiert: "${name}" → ${match.name} (ID ${tcgPlayerId})`);
-      }
+    // ── Fetch from JustTCG by TCGPlayer ID ────────────────────────────────
+    const url = new URL("https://api.justtcg.com/v1/cards");
+    url.searchParams.set("tcgplayerId", tcgPlayerId);
+    const resp = await fetch(url.toString(), {
+      headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY }
+    });
+    const justTcgData = await resp.json();
+    console.log(`[SEALED] Lookup für "${name}" → ID ${tcgPlayerId}, JustTCG status ${resp.status}, data count ${justTcgData.data?.length || 0}`);
+    if (justTcgData.data?.[0]) {
+      console.log(`[SEALED]   Name: "${justTcgData.data[0].name}", Conditions:`,
+        justTcgData.data[0].variants?.map(v => v.condition));
     }
 
     // ── Find sealed variant ────────────────────────────────────────────────
