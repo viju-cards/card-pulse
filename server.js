@@ -588,50 +588,61 @@ app.post("/suggest", async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get("/prices/sealed", requireAuth, async (req, res) => {
-  const user = req.user;
-
-  // Plan limit check (same as /prices/card)
-  const planLimits = { bronze: 20, silver: 400, gold: 1000, platin: 5000 };
-  const plan = user.plan || "bronze";
-  const limit = user.custom_request_limit ?? planLimits[plan] ?? 20;
-
-  const now = new Date();
-  const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date(0);
-  let used = user.monthly_requests || 0;
-  if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
-    used = 0;
-    await pool.query("UPDATE users SET monthly_requests=0, requests_reset_at=NOW() WHERE id=$1", [user.id]);
-  }
-  if (used >= limit) {
-    return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
-  }
-
   const { name, type } = req.query;
   if (!name) return res.status(400).json({ error: "Missing name parameter" });
 
-const normalizedName = name.toLowerCase().trim();
+  const normalizedName = name.toLowerCase().trim();
 
-try {
-    // 1. Mapping-Tabelle prüfen (manuelles oder vorher validiertes Mapping)
+  try {
+    // ── Get full user row from DB (JWT only has id/email/is_premium) ──────
+    const userRow = await getUserById(req.user.id);
+    if (!userRow) return res.status(401).json({ error: "LOGIN_REQUIRED" });
+
+    const plan = userRow.plan || 'bronze';
+    const limit = userRow.custom_request_limit || PLAN_LIMITS[plan] || 20;
+
+    // Reset counter if new month
+    const resetAt = userRow.requests_reset_at ? new Date(userRow.requests_reset_at) : new Date();
+    const now = new Date();
+    const needsReset = resetAt.getFullYear() !== now.getFullYear() ||
+                       resetAt.getMonth() !== now.getMonth();
+    if (needsReset) {
+      await pool.query(
+        "UPDATE users SET monthly_requests = 0, requests_reset_at = NOW() WHERE id = $1",
+        [req.user.id]
+      );
+      userRow.monthly_requests = 0;
+    }
+
+    const used = userRow.monthly_requests || 0;
+    if (used >= limit) {
+      return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
+    }
+
+    // ── Mapping lookup ─────────────────────────────────────────────────────
     const cached = await pool.query(
       "SELECT tcg_player_id FROM sealed_mapping WHERE product_name_normalized=$1 LIMIT 1",
       [normalizedName]
     );
-
     let tcgPlayerId = cached.rows[0]?.tcg_player_id || null;
     let justTcgData;
 
     if (tcgPlayerId) {
-      // Fast path: per ID direkt holen (manuelles Mapping wird vertraut)
+      // Fast path: lookup by manually mapped / previously validated TCGPlayer ID
       const url = new URL("https://api.justtcg.com/v1/cards");
-      url.searchParams.set("tcgplayerId", tcgPlayerId);   // FIX: kleines "p"
+      url.searchParams.set("tcgplayerId", tcgPlayerId);    // lowercase!
       const resp = await fetch(url.toString(), {
         headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY }
       });
       justTcgData = await resp.json();
+      console.log(`[SEALED] Cache-Lookup für "${name}" → ID ${tcgPlayerId}, JustTCG status ${resp.status}, data count ${justTcgData.data?.length || 0}`);
+      if (justTcgData.data?.[0]) {
+        console.log(`[SEALED]   Name: "${justTcgData.data[0].name}", Conditions:`,
+          justTcgData.data[0].variants?.map(v => v.condition));
+      }
 
     } else {
-      // Slow path: per Name suchen – MIT Validierung
+      // Slow path: search by name with validation
       const url = new URL("https://api.justtcg.com/v1/cards");
       url.searchParams.set("game", "pokemon");
       url.searchParams.set("name", name);
@@ -640,9 +651,9 @@ try {
         headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY }
       });
       justTcgData = await resp.json();
+      console.log(`[SEALED] Name-Search für "${name}" → JustTCG status ${resp.status}, results ${justTcgData.data?.length || 0}`);
 
-      // Validierung: mind. 60 % der Such-Tokens müssen im Produktnamen vorkommen.
-      // Damit fliegt "Legendary Treasures Booster Box" bei Anfrage "Destined Rivals Booster" raus.
+      // Token validation: at least 60% of query tokens (length > 2) must appear in candidate name
       const queryTokens = normalizedName.split(/\s+/).filter(t => t.length > 2);
       const candidates = (justTcgData.data || []).filter(p => {
         if (!p.variants?.some(v => v.condition === "Sealed")) return false;
@@ -652,38 +663,78 @@ try {
       });
 
       if (candidates.length === 0) {
-        console.log(`[SEALED] Kein valider Match für "${name}" – Auto-Match abgelehnt`);
+        console.log(`[SEALED] Kein valider Auto-Match für "${name}" – Kandidatennamen:`,
+          (justTcgData.data || []).map(p => p.name));
         return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
       }
 
       const match = candidates[0];
       if (match?.tcgplayerId) {
         tcgPlayerId = parseInt(match.tcgplayerId);
-        justTcgData = { data: [match] };   // nur den validierten Treffer behalten
+        justTcgData = { data: [match] };   // keep only validated hit
         await pool.query(
           `INSERT INTO sealed_mapping (product_name_normalized, product_name, product_type, tcg_player_id, updated_at)
            VALUES ($1,$2,$3,$4,NOW())
            ON CONFLICT (product_name_normalized)
-           DO UPDATE SET tcg_player_id=EXCLUDED.tcg_player_id, updated_at=NOW()`,
+           DO UPDATE SET tcg_player_id = EXCLUDED.tcg_player_id, updated_at = NOW()`,
           [normalizedName, match.name, type || "unknown", tcgPlayerId]
         );
         console.log(`[SEALED] Auto-Match akzeptiert: "${name}" → ${match.name} (ID ${tcgPlayerId})`);
       }
     }
 
-    // Find sealed variant
+    // ── Find sealed variant ────────────────────────────────────────────────
     const product = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
     if (!product) {
+      console.log(`[SEALED] Keine Sealed-Variante in JustTCG-Antwort für "${name}". Available conditions:`,
+        justTcgData.data?.[0]?.variants?.map(v => v.condition));
       return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
     }
 
     const variant = product.variants.find(v => v.condition === "Sealed");
-    const usdPrice = variant.price / 100;
+    // JustTCG returns USD as decimal directly (consistent with /prices route)
+    const usdPrice = variant.marketPrice ?? variant.price ?? 0;
 
-    // ... ab hier bleibt alles wie gehabt (EUR conversion, history, response)
+    // EUR conversion
+    let eurRate = 0.92;
+    try {
+      const fx = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR");
+      const fxData = await fx.json();
+      eurRate = fxData.rates?.EUR || 0.92;
+    } catch (_) {}
+
+    // History – priceHistory entries: {p: price, t: unix_timestamp}
+    const history = (variant.priceHistory || [])
+      .filter(p => p.p != null && p.t != null)
+      .map(p => ({
+        date: new Date(p.t * 1000).toISOString().split("T")[0],
+        price: +Number(p.p).toFixed(2)
+      }))
+      .slice(-30);
+
+    // Increment usage
+    await pool.query(
+      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
+      [req.user.id]
+    );
+
+    res.json({
+      name: product.name,
+      set: product.set_name || product.set,
+      type: type || "sealed",
+      tcgPlayerId: product.tcgplayerId,
+      price: { usd: +Number(usdPrice).toFixed(2), eur: +(usdPrice * eurRate).toFixed(2) },
+      change7d: variant.priceChange7d,
+      change30d: variant.priceChange30d,
+      trendSlope7d: variant.trendSlope7d,
+      history,
+      plan,
+      used: used + 1,
+      limit
+    });
 
   } catch (err) {
-    console.error("Sealed price error:", err);
+    console.error("[SEALED] Error:", err);
     res.status(500).json({ error: "SERVER_ERROR", message: err.message });
   }
 });
