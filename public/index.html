@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>CardPulse — Maintenance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--red:#ff4040;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78;--pixel:"Press Start 2P",monospace;--mono:"DM Mono",monospace;--cond:"Barlow Condensed",sans-serif;--sans:"DM Sans",sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;display:flex;flex-direction:column;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px)}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.12) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%)}
+
+nav{position:relative;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.85);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-family:var(--pixel);font-size:11px;color:white;text-decoration:none;letter-spacing:1px;line-height:1.6}
+.logo em{color:var(--accent);font-style:normal}
+.nav-right{display:flex;gap:10px;align-items:center}
+
+main{flex:1;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;padding:80px 24px}
+.maint-wrap{max-width:780px;width:100%;text-align:center}
+
+.maint-badge{display:inline-flex;align-items:center;gap:10px;font-family:var(--pixel);font-size:8px;letter-spacing:1.5px;color:var(--yellow);border:1px solid rgba(255,215,0,0.3);background:rgba(255,215,0,0.06);padding:10px 16px;border-radius:4px;margin-bottom:32px}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 0 rgba(255,215,0,0.6);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,215,0,0.55)}70%{box-shadow:0 0 0 12px rgba(255,215,0,0)}100%{box-shadow:0 0 0 0 rgba(255,215,0,0)}}
+
+h1{font-family:var(--cond);font-size:clamp(56px,8vw,108px);font-weight:900;letter-spacing:-1px;line-height:.95;margin-bottom:32px;text-transform:uppercase}
+h1 .line1{color:var(--text);display:block}
+h1 .line2{color:var(--accent);display:block}
+h1 .line3{color:var(--yellow);display:block}
+
+.maint-sub{font-family:var(--mono);font-size:14px;color:var(--muted);line-height:1.8;margin:0 auto 44px;max-width:540px}
+.maint-sub strong{color:var(--text);font-weight:500}
+
+/* terminal / console panel */
+.console{max-width:520px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-align:left;box-shadow:0 12px 48px rgba(0,0,0,0.35)}
+.console-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-family:var(--pixel);font-size:7px;color:var(--muted);letter-spacing:1.5px;background:rgba(0,0,0,0.25)}
+.console-head .dots{display:flex;gap:5px}
+.console-head .dots span{width:8px;height:8px;border-radius:50%}
+.dots .d-r{background:#ff5f56}.dots .d-y{background:#ffbd2e}.dots .d-g{background:#27c93f}
+.console-body{padding:18px;font-family:var(--mono);font-size:12px;line-height:1.9}
+.cline{display:flex;align-items:center;gap:10px;color:var(--muted)}
+.cline::before{content:">";color:var(--accent);font-weight:700;flex-shrink:0}
+.cline .ck{color:var(--text);white-space:nowrap}
+.cline .dot-fill{flex:1;border-bottom:1px dotted rgba(255,255,255,0.1);transform:translateY(-3px);min-width:20px}
+.cline .cv{font-family:var(--pixel);font-size:7px;letter-spacing:1px;flex-shrink:0}
+.cline.ok .cv{color:var(--teal)}
+.cline.warn .cv{color:var(--yellow)}
+.cline.run .cv{color:var(--accent)}
+
+.cline-prog{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)}
+.prog-row{display:flex;justify-content:space-between;font-family:var(--pixel);font-size:7px;letter-spacing:1px;margin-bottom:8px;color:var(--muted)}
+.prog-row .ck{color:var(--accent)}
+.prog-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;position:relative}
+.prog-bar::before{content:"";position:absolute;top:0;left:0;bottom:0;width:62%;background:linear-gradient(90deg,var(--accent),var(--teal));border-radius:99px;animation:shimmer 2.6s ease-in-out infinite}
+@keyframes shimmer{0%,100%{width:55%}50%{width:72%}}
+
+footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24px 48px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.footer-logo{font-family:var(--pixel);font-size:9px;color:white;text-decoration:none}
+.footer-logo em{color:var(--accent);font-style:normal}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;transition:.2s}
+.footer-links a:hover{color:var(--text)}
+.footer-copy{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+@media (max-width:768px){
+  nav{padding:12px 20px}
+  footer{padding:20px;flex-direction:column;text-align:center}
+  main{padding:48px 20px}
+  h1{font-size:52px}
+  .maint-badge{font-size:7px;padding:9px 12px}
+  .console-body{padding:14px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">card<em>pulse</em></a>
+  <div class="nav-right"></div>
+</nav>
+
+<main>
+  <div class="maint-wrap">
+    <div class="maint-badge">
+      <span class="pulse-dot"></span>
+      <span data-i18n="maint_badge">SYSTEM STATUS &mdash; MAINTENANCE</span>
+    </div>
+
+    <h1>
+      <span class="line1" data-i18n="maint_h1_1">System</span>
+      <span class="line2" data-i18n="maint_h1_2">Upgrade</span>
+      <span class="line3" data-i18n="maint_h1_3">In Progress</span>
+    </h1>
+
+    <p class="maint-sub" data-i18n-html="maint_sub">
+      CardPulse is currently undergoing <strong>scheduled maintenance</strong>. We&rsquo;ll be back online shortly with improvements under the hood. Thanks for your patience.
+    </p>
+
+    <div class="console">
+      <div class="console-head">
+        <div class="dots"><span class="d-r"></span><span class="d-y"></span><span class="d-g"></span></div>
+        <span data-i18n="maint_console_title">// cardpulse_deploy.log</span>
+        <span style="opacity:.6">v2.0</span>
+      </div>
+      <div class="console-body">
+        <div class="cline ok">
+          <span class="ck" data-i18n="maint_step_db">database</span>
+          <span class="dot-fill"></span>
+          <span class="cv" data-i18n="maint_status_ok">OK</span>
+        </div>
+        <div class="cline ok">
+          <span class="ck" data-i18n="maint_step_auth">auth_service</span>
+          <span class="dot-fill"></span>
+          <span class="cv" data-i18n="maint_status_ok">OK</span>
+        </div>
+        <div class="cline run">
+          <span class="ck" data-i18n="maint_step_cache">cache_layer</span>
+          <span class="dot-fill"></span>
+          <span class="cv" data-i18n="maint_status_rebuild">REBUILDING</span>
+        </div>
+        <div class="cline warn">
+          <span class="ck" data-i18n="maint_step_api">price_api</span>
+          <span class="dot-fill"></span>
+          <span class="cv" data-i18n="maint_status_pause">PAUSED</span>
+        </div>
+        <div class="cline run">
+          <span class="ck" data-i18n="maint_step_deploy">deploy_pipeline</span>
+          <span class="dot-fill"></span>
+          <span class="cv" data-i18n="maint_status_run">RUNNING</span>
+        </div>
+        <div class="cline-prog">
+          <div class="prog-row">
+            <span><span class="ck">ETA</span> &mdash; <span data-i18n="maint_eta">SHORTLY</span></span>
+            <span data-i18n="maint_progress">PROGRESS</span>
+          </div>
+          <div class="prog-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <a href="/" class="footer-logo">card<em>pulse</em></a>
+  <div class="footer-links">
+    <a href="/impressum.html" data-i18n="footer_imprint">Imprint</a>
+    <a href="/privacy.html" data-i18n="footer_privacy">Privacy Policy</a>
+  </div>
+  <div class="footer-copy">&copy; 2026 CardPulse</div>
+</footer>
+
+<script src="/i18n.js"></script>
+<script src="/shared.js"></script>
+</body>
+</html>
