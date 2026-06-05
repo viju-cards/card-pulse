@@ -188,8 +188,8 @@ const EXT_ID='gidmncphcliponfkhnamnglljbphdeoe';
 const PLANS={
   bronze:    {label:'Bronze', color:'#cd7f32', limit:20,    price:'Free'},
   silver:    {label:'Silver', color:'#94a3b8', limit:400,   price:'€3.99/mo'},
-  gold:      {label:'Gold',   color:'#f59e0b', limit:1000,  price:'€7.99/mo'},
-  platin:    {label:'Platin', color:'#a78bfa', limit:5000,  price:'€24.99/mo'},
+  gold:      {label:'Gold',   color:'#f59e0b', limit:1000,  price:'€5.99/mo'},
+  platin:    {label:'Platin', color:'#a78bfa', limit:5000,  price:'€19.99/mo'},
   enterprise:{label:'Enterprise', color:'#6c63ff', limit:999999, price:'Custom'},
 };
 
@@ -268,8 +268,8 @@ function renderPlans(currentPlan,isDE){
   const list=[
     {key:'bronze',label:'Bronze',price:isDE?'Kostenlos':'Free',period:'',limit:'20'},
     {key:'silver',label:'Silver',price:'€3.99',period:isDE?'/Monat':'/mo',limit:'400'},
-    {key:'gold',label:'Gold',price:'€7.99',period:isDE?'/Monat':'/mo',limit:'1.000'},
-    {key:'platin',label:'Platin',price:'€24.99',period:isDE?'/Monat':'/mo',limit:'5.000'},
+    {key:'gold',label:'Gold',price:'€5.99',period:isDE?'/Monat':'/mo',limit:'1.000'},
+    {key:'platin',label:'Platin',price:'€19.99',period:isDE?'/Monat':'/mo',limit:'5.000'},
   ];
   document.getElementById('plansGrid').innerHTML=list.map(p=>{
     const c=PLANS[p.key];
