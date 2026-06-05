@@ -763,7 +763,7 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
 
     // ── Mapping lookup (DB only, no auto-match) ───────────────────────────
     const cached = await pool.query(
-      "SELECT tcg_player_id FROM sealed_mapping WHERE product_name_normalized=$1 LIMIT 1",
+      "SELECT tcg_player_id FROM sealed_mapping WHERE cardmarket_name_normalized=$1 LIMIT 1",
       [normalizedName]
     );
     const tcgPlayerId = cached.rows[0]?.tcg_player_id || null;
