@@ -193,6 +193,147 @@ function extractTrendAndHistory(data) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════
+// E-MAIL TEMPLATES
+// ═══════════════════════════════════════════════════════════════════════════
+
+// HTML-Escaping für Werte, die aus User-Input stammen (z. B. Suggest-Notiz/URL)
+function escapeHtml(str) {
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Gemeinsames, e-mail-sicheres Grundgerüst (table-basiert, inline-CSS)
+function emailLayout({ preheader = "", contentHtml = "", footerNote = "" }) {
+  return `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>CardPulse</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    .cp-bg { background:#0f1115 !important; }
+    .cp-card { background:#16181d !important; border-color:rgba(255,255,255,0.08) !important; }
+    .cp-text { color:#e8e8f0 !important; }
+    .cp-muted { color:#9a9ab0 !important; }
+    .cp-wordmark { color:#e8e8f0 !important; }
+  }
+  @media only screen and (max-width:620px) {
+    .cp-card { width:100% !important; border-radius:0 !important; }
+    .cp-pad { padding-left:24px !important; padding-right:24px !important; }
+  }
+</style>
+</head>
+<body class="cp-bg" style="margin:0;padding:0;background:#f4f4f7;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="cp-bg" style="background:#f4f4f7;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="cp-card" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #e4e6ea;border-radius:14px;overflow:hidden;">
+          <tr>
+            <td class="cp-pad" style="padding:28px 40px 8px 40px;">
+              <span class="cp-wordmark" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#1a1a2e;">card<span style="color:#6c63ff;">pulse</span></span>
+            </td>
+          </tr>
+          <tr>
+            <td class="cp-pad cp-text" style="padding:12px 40px 24px 40px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1a1a2e;">
+${contentHtml}
+            </td>
+          </tr>
+        </table>
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+          <tr>
+            <td class="cp-muted" align="center" style="padding:20px 24px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#9a9aae;">
+              CardPulse · <a href="https://www.card-pulse.com" target="_blank" style="color:#9a9aae;text-decoration:underline;">card-pulse.com</a>${footerNote ? "<br>" + footerNote : ""}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+// ── Passwort-Reset ────────────────────────────────────────────────────────────
+function buildResetEmailHtml(resetUrl) {
+  const safeUrl = escapeHtml(resetUrl);
+  const content = `              <h1 style="margin:0 0 12px 0;font-size:20px;font-weight:700;color:inherit;">Passwort zurücksetzen</h1>
+              <p style="margin:12px 0;">Hallo,</p>
+              <p style="margin:12px 0;">du hast angefragt, dein CardPulse-Passwort zurückzusetzen. Klicke auf den Button, um ein neues Passwort zu vergeben:</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 4px 0;">
+                <tr>
+                  <td bgcolor="#6c63ff" style="border-radius:8px;">
+                    <a href="${safeUrl}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Passwort zurücksetzen</a>
+                  </td>
+                </tr>
+              </table>
+              <p class="cp-muted" style="margin:16px 0 8px 0;font-size:13px;color:#6b7280;">Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br><a href="${safeUrl}" target="_blank" style="color:#6c63ff;word-break:break-all;">${safeUrl}</a></p>
+              <p class="cp-muted" style="margin:8px 0;font-size:13px;color:#6b7280;">Der Link ist <strong>1 Stunde</strong> gültig. Falls du das nicht angefordert hast, kannst du diese E-Mail ignorieren – dein Passwort bleibt unverändert.</p>
+              <p style="margin:16px 0 0 0;">Dein CardPulse Team</p>`;
+  return emailLayout({
+    preheader: "Setze dein CardPulse-Passwort zurück – der Link ist 1 Stunde gültig.",
+    contentHtml: content,
+  });
+}
+
+function buildResetEmailText(resetUrl) {
+  return `Hallo,
+
+du hast angefragt, dein CardPulse-Passwort zurückzusetzen.
+
+Öffne diesen Link, um ein neues Passwort zu vergeben (gültig 1 Stunde):
+${resetUrl}
+
+Falls du das nicht angefordert hast, ignoriere diese E-Mail – dein Passwort bleibt unverändert.
+
+Dein CardPulse Team
+card-pulse.com`;
+}
+
+// ── Suggest / Fehlende Karte (interne Benachrichtigung) ─────────────────────────
+function buildSuggestEmailHtml(url, note) {
+  const safeUrl = escapeHtml(url);
+  const safeNote = note ? escapeHtml(note).replace(/\n/g, "<br>") : "(keine)";
+  const content = `              <h1 style="margin:0 0 12px 0;font-size:20px;font-weight:700;color:inherit;">Fehlende Karte gemeldet</h1>
+              <p style="margin:12px 0;">Über das Meldeformular wurde ein fehlendes Produkt gemeldet:</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:10px;">
+                <tr>
+                  <td style="padding:16px 18px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#1a1a2e;">
+                    <strong>Cardmarket-URL</strong><br>
+                    <a href="${safeUrl}" target="_blank" style="color:#6c63ff;word-break:break-all;">${safeUrl}</a>
+                    <br><br>
+                    <strong>Zusätzliche Infos</strong><br>
+                    ${safeNote}
+                  </td>
+                </tr>
+              </table>`;
+  return emailLayout({
+    preheader: "Neue Produkt-Meldung über card-pulse.com/suggest",
+    contentHtml: content,
+    footerNote: "Gesendet über card-pulse.com/suggest",
+  });
+}
+
+function buildSuggestEmailText(url, note) {
+  return `Fehlende Karte gemeldet
+
+Cardmarket-URL: ${url}
+
+Zusätzliche Infos:
+${note || "(keine)"}
+
+Gesendet über card-pulse.com/suggest`;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
 // AUTH ROUTES
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -563,7 +704,8 @@ app.post("/suggest", async (req, res) => {
           from: 'CardPulse <info@card-pulse.com>',
           to: [process.env.SUGGEST_EMAIL || 'info@card-pulse.com'],
           subject: 'CardPulse – Fehlende Karte gemeldet',
-          text: `Cardmarket URL: ${url}\n\nZusätzliche Infos:\n${note || '(keine)'}\n\nGesendet über card-pulse.com/suggest`,
+          text: buildSuggestEmailText(url, note),
+          html: buildSuggestEmailHtml(url, note),
         }),
       });
       const data = await response.json();
@@ -737,17 +879,8 @@ app.post("/auth/forgot-password", async (req, res) => {
           from: "CardPulse <info@card-pulse.com>",
           to: [email.toLowerCase()],
           subject: "CardPulse – Passwort zurücksetzen",
-          text: `Hallo,
-
-du hast eine Passwort-Zurücksetzen-Anfrage gestellt.
-
-Klicke auf diesen Link um dein Passwort zurückzusetzen (gültig 1 Stunde):
-${resetUrl}
-
-Falls du das nicht angefordert hast, ignoriere diese E-Mail.
-
-Dein CardPulse Team`,
-          html: `<p>Hallo,</p><p>du hast eine Passwort-Zurücksetzen-Anfrage gestellt.</p><p><a href="${resetUrl}" style="background:#6c63ff;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Passwort zurücksetzen</a></p><p style="color:#888;font-size:13px">Link gültig für 1 Stunde. Falls du das nicht angefordert hast, ignoriere diese E-Mail.</p><p>Dein CardPulse Team</p>`,
+          text: buildResetEmailText(resetUrl),
+          html: buildResetEmailHtml(resetUrl),
         }),
       });
       console.log(`[RESET] E-Mail gesendet an ${email}`);
