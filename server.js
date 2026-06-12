@@ -523,23 +523,40 @@ app.post("/webhook", async (req, res) => {
     switch (event.type) {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
-        const sub = event.data.object;
+        const sub  = event.data.object;
+        const item = sub.items?.data?.[0];
+
         const isActive = sub.status === "active" || sub.status === "trialing";
-        const premiumUntil = new Date(sub.current_period_end * 1000);
+
+        // Seit Stripe "Basil" (API ≥ 2025-03-31) liegt current_period_end auf dem
+        // Subscription-ITEM, nicht mehr auf der Subscription. Fallback für alte API-Versionen.
+        const periodEndUnix = item?.current_period_end ?? sub.current_period_end ?? null;
+        const premiumUntil  = periodEndUnix ? new Date(periodEndUnix * 1000) : null;
+
         const cancelAtEnd = sub.cancel_at_period_end;
 
-        // Determine plan from price ID
-        const priceId = sub.items?.data?.[0]?.price?.id;
-        let planName = 'silver'; // default paid plan
-        if (priceId === process.env.STRIPE_PRICE_GOLD)   planName = 'gold';
-        if (priceId === process.env.STRIPE_PRICE_PLATIN) planName = 'platin';
-        if (priceId === process.env.STRIPE_PRICE_SILVER) planName = 'silver';
+        // Plan anhand der Price-ID bestimmen
+        const priceId = item?.price?.id;
+        let planName = "silver"; // Default-Bezahlplan
+        let matched  = false;
+        if (priceId === process.env.STRIPE_PRICE_SILVER) { planName = "silver"; matched = true; }
+        if (priceId === process.env.STRIPE_PRICE_GOLD)   { planName = "gold";   matched = true; }
+        if (priceId === process.env.STRIPE_PRICE_PLATIN) { planName = "platin"; matched = true; }
+        if (!matched) {
+          console.warn(`[Webhook] Unbekannte Price-ID "${priceId}" – fällt auf "${planName}" zurück. Prüfe STRIPE_PRICE_* Env-Vars.`);
+        }
 
-        await pool.query(
+        const result = await pool.query(
           `UPDATE users SET is_premium = $1, premium_until = $2, cancel_at_period_end = $3, plan = $4
            WHERE stripe_customer_id = $5`,
-          [isActive, premiumUntil, cancelAtEnd, isActive ? planName : 'bronze', sub.customer]
+          [isActive, premiumUntil, cancelAtEnd, isActive ? planName : "bronze", sub.customer]
         );
+
+        if (result.rowCount === 0) {
+          console.warn(`[Webhook] Kein User mit stripe_customer_id "${sub.customer}" gefunden – nichts aktualisiert.`);
+        } else {
+          console.log(`[Webhook] User (customer ${sub.customer}) → plan=${isActive ? planName : "bronze"}, premium=${isActive}`);
+        }
         break;
       }
       case "customer.subscription.deleted": {
