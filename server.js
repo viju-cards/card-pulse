@@ -151,7 +151,8 @@ function tcggoCacheSet(key, value, ttl) {
   if (TCGGO_CACHE.size > 5000) TCGGO_CACHE.delete(TCGGO_CACHE.keys().next().value);
 }
 
-// Öffentlicher Einstieg: erst Cache, sonst resolveTcgGo().
+// Öffentlicher Einstieg: zweistufiger Cache RAM → Neon → TCGGO.
+// DB-Fehler brechen den /prices-Call nie ab – im Zweifel wird einfach live geholt.
 async function fetchTcgGoCardmarket(args) {
   if (!process.env.RAPIDAPI_KEY) {
     console.warn("[TCGGO] RAPIDAPI_KEY fehlt im Environment – übersprungen.");
@@ -163,14 +164,48 @@ async function fetchTcgGoCardmarket(args) {
     tcgPlayerId  ? "tp:" + tcgPlayerId  :
     "nm:" + String(cardName || "").toLowerCase() + "|" + (cardNumber || "");
 
-  const cached = tcggoCacheGet(cacheKey);
-  if (cached !== undefined) {
-    console.log("[TCGGO] Cache-Hit (" + cacheKey + ") → " + (cached ? "Preis" : "kein Treffer"));
-    return cached;
+  // 1) RAM-Cache (kein Roundtrip)
+  const ram = tcggoCacheGet(cacheKey);
+  if (ram !== undefined) {
+    console.log("[TCGGO] RAM-Hit (" + cacheKey + ") → " + (ram ? "Preis" : "kein Treffer"));
+    return ram;
   }
 
+  // 2) Neon-Cache (lazy: abgelaufene Zeilen werden ignoriert, nicht gelöscht)
+  try {
+    const db = await pool.query(
+      "SELECT payload, expires_at FROM tcggo_cache WHERE cache_key = $1 AND expires_at > NOW()",
+      [cacheKey]
+    );
+    if (db.rows.length) {
+      const value = db.rows[0].payload;   // Objekt oder null (negativ-Cache)
+      const ttlMs = Math.max(1000, new Date(db.rows[0].expires_at).getTime() - Date.now());
+      tcggoCacheSet(cacheKey, value, ttlMs);   // RAM mit Rest-TTL auffüllen
+      console.log("[TCGGO] DB-Hit (" + cacheKey + ") → " + (value ? "Preis" : "kein Treffer"));
+      return value;
+    }
+  } catch (e) {
+    console.warn("[TCGGO] DB-Cache lesen fehlgeschlagen:", e.message);
+  }
+
+  // 3) Live von TCGGO holen
   const result = await resolveTcgGo(args);
-  tcggoCacheSet(cacheKey, result, result ? TCGGO_TTL_OK : TCGGO_TTL_NEG);
+
+  // In beide Caches schreiben (Treffer 12 h, kein Treffer 1 h)
+  const ttlMs = result ? TCGGO_TTL_OK : TCGGO_TTL_NEG;
+  tcggoCacheSet(cacheKey, result, ttlMs);
+  try {
+    await pool.query(
+      `INSERT INTO tcggo_cache (cache_key, payload, expires_at)
+       VALUES ($1, $2::jsonb, $3)
+       ON CONFLICT (cache_key) DO UPDATE
+         SET payload = EXCLUDED.payload, expires_at = EXCLUDED.expires_at`,
+      [cacheKey, JSON.stringify(result), new Date(Date.now() + ttlMs)]
+    );
+  } catch (e) {
+    console.warn("[TCGGO] DB-Cache schreiben fehlgeschlagen:", e.message);
+  }
+
   return result;
 }
 
