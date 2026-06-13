@@ -127,47 +127,89 @@ async function fetchJustTcg(tcgPlayerId) {
 }
 
 // Cardmarket-EU-Preis von der TCGGO RapidAPI (nur bezahlte Pläne).
+// Mehrstufiges Matching, da TCGGO nicht für jede Karte eine tcgplayer_id pflegt:
+//   1) tcgplayer_id (Exact-Match, kostet nichts falls vorhanden)
+//   2) name + card_number  (Hauptweg – TCGGO unterstützt das ausdrücklich)
+//   3) nur card_number     (letzter Versuch)
 // Liefert null statt zu werfen, damit ein TCGGO-Ausfall nie den ganzen /prices-Call killt.
-async function fetchTcgGoCardmarket(tcgPlayerId) {
-  if (!process.env.RAPIDAPI_KEY) return null;   // Feature still aus, wenn Key fehlt
-  try {
-    const url = new URL("https://pokemon-tcg-api.p.rapidapi.com/cards");
-    // ⚠️ Host + Filter-Param ggf. im RapidAPI-Playground gegenprüfen.
-    //    Falls kein tcgplayer_id-Filter existiert: per name/card_number suchen
-    //    und im Ergebnis die Karte mit passender tcgplayer_id rausziehen.
-    url.searchParams.set("tcgplayer_id", tcgPlayerId);
+const TCGGO_HOST = "pokemon-tcg-api.p.rapidapi.com";
 
-    const r = await fetch(url.toString(), {
-      headers: {
-        "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-        "x-rapidapi-host": "pokemon-tcg-api.p.rapidapi.com",
-      },
-    });
-    if (!r.ok) {
-      console.warn(`[TCGGO] ${r.status} (tcgPlayerId ${tcgPlayerId})`);
-      return null;
-    }
-
-    const data = await r.json();
-    const cm = data?.data?.[0]?.prices?.cardmarket;
-    if (!cm) return null;
-
-    return {
-      currency:       cm.currency ?? "EUR",
-      lowestNearMint: cm.lowest_near_mint ?? null,
-      byCountry: {
-        DE: cm.lowest_near_mint_DE ?? null,
-        FR: cm.lowest_near_mint_FR ?? null,
-        ES: cm.lowest_near_mint_ES ?? null,
-        IT: cm.lowest_near_mint_IT ?? null,
-      },
-      avg7d:  cm["7d_average"]  ?? null,
-      avg30d: cm["30d_average"] ?? null,
-    };
-  } catch (err) {
-    console.error("[TCGGO]", err.message);
+async function fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber }) {
+  if (!process.env.RAPIDAPI_KEY) {
+    console.warn("[TCGGO] RAPIDAPI_KEY fehlt im Environment – übersprungen.");
     return null;
   }
+
+  const headers = {
+    "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+    "x-rapidapi-host": TCGGO_HOST,
+  };
+
+  async function query(params, tag) {
+    const url = new URL(`https://${TCGGO_HOST}/cards`);
+    for (const [k, v] of Object.entries(params)) {
+      if (v != null && v !== "") url.searchParams.set(k, v);
+    }
+    try {
+      const r = await fetch(url.toString(), { headers });
+      const text = await r.text();   // als Text, damit wir bei Fehlern den Body sehen
+      if (!r.ok) {
+        console.warn(`[TCGGO] ${tag}: HTTP ${r.status} – ${text.slice(0, 200)}`);
+        return [];
+      }
+      const data = JSON.parse(text);
+      const list = Array.isArray(data?.data) ? data.data : [];
+      console.log(`[TCGGO] ${tag}: ${list.length} Treffer (${url.search})`);
+      return list;
+    } catch (e) {
+      console.warn(`[TCGGO] ${tag}: ${e.message}`);
+      return [];
+    }
+  }
+
+  // DB-Nummern sind auf 3 Stellen gepadded ("003"); TCGGO erwartet "3".
+  const numRaw   = cardNumber != null ? String(cardNumber) : null;
+  const numTcggo = numRaw && /^\d+$/.test(numRaw) ? String(parseInt(numRaw, 10)) : numRaw;
+  const sameNum  = (a, b) => {
+    if (a == null || b == null) return false;
+    return String(a).replace(/^0+/, "").toLowerCase() === String(b).replace(/^0+/, "").toLowerCase();
+  };
+
+  // 1) tcgplayer_id → 2) name + card_number → 3) nur card_number
+  let list = tcgPlayerId ? await query({ tcgplayer_id: tcgPlayerId }, "by tcgplayer_id") : [];
+  if (!list.length && cardName) list = await query({ name: cardName, card_number: numTcggo }, "by name+number");
+  if (!list.length && numTcggo) list = await query({ card_number: numTcggo }, "by number");
+
+  if (!list.length) {
+    console.warn(`[TCGGO] Kein Treffer für "${cardName}" #${numRaw} (tcgPlayerId ${tcgPlayerId}).`);
+    return null;
+  }
+
+  // Besten Treffer wählen: exakte tcgplayer_id > exakte Nummer > erster Treffer
+  const card =
+    list.find(c => tcgPlayerId && String(c.tcgplayer_id) === String(tcgPlayerId)) ||
+    list.find(c => sameNum(c.card_number, numRaw)) ||
+    list[0];
+
+  const cm = card && card.prices && card.prices.cardmarket;
+  if (!cm) {
+    console.warn(`[TCGGO] Treffer ${card && card.id} ohne cardmarket-Block.`);
+    return null;
+  }
+
+  console.log(`[TCGGO] OK – ${card.name} (#${card.card_number}, cm_id ${card.cardmarket_id}) NM=${cm.lowest_near_mint}`);
+  return {
+    currency:       cm.currency ?? "EUR",
+    lowestNearMint: cm.lowest_near_mint ?? null,
+    byCountry: {
+      DE: cm.lowest_near_mint_DE ?? null,
+      FR: cm.lowest_near_mint_FR ?? null,
+      ES: cm.lowest_near_mint_ES ?? null,
+      IT: cm.lowest_near_mint_IT ?? null,
+    },
+    avg7d:  cm["7d_average"]  ?? null,
+    avg30d: cm["30d_average"] ?? null,
+  };
 }
 
 function mapPrices(data) {
@@ -694,15 +736,16 @@ app.get("/prices", requireAuth, async (req, res) => {
     const tcgPlayerId = dbResult.rows[0].tcg_player_id;
     const isPaid = plan !== "bronze";   // Cardmarket-EU-Preis nur für Silber/Gold/Platin
 
-    // JustTCG (TCGPlayer + Konditionen) und TCGGO (Cardmarket EU) parallel holen.
-    const [justTcgData, cardmarket] = await Promise.all([
-      fetchJustTcg(tcgPlayerId),
-      isPaid ? fetchTcgGoCardmarket(tcgPlayerId) : Promise.resolve(null),
-    ]);
-
+    const justTcgData = await fetchJustTcg(tcgPlayerId);
     const prices = mapPrices(justTcgData);
     const cardName = justTcgData.data?.[0]?.name ?? "Unbekannt";
     const { trend, history } = extractTrendAndHistory(justTcgData);
+
+    // TCGGO erst NACH JustTCG: wir brauchen den Kartennamen fürs Matching, da TCGGO
+    // nicht für alle Karten eine tcgplayer_id pflegt (Fallback über name + card_number).
+    const cardmarket = isPaid
+      ? await fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber })
+      : null;
 
     res.json({
       user: { plan, used: used + 1, limit },
