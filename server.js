@@ -126,6 +126,50 @@ async function fetchJustTcg(tcgPlayerId) {
   return response.json();
 }
 
+// Cardmarket-EU-Preis von der TCGGO RapidAPI (nur bezahlte Pläne).
+// Liefert null statt zu werfen, damit ein TCGGO-Ausfall nie den ganzen /prices-Call killt.
+async function fetchTcgGoCardmarket(tcgPlayerId) {
+  if (!process.env.RAPIDAPI_KEY) return null;   // Feature still aus, wenn Key fehlt
+  try {
+    const url = new URL("https://pokemon-tcg-api.p.rapidapi.com/cards");
+    // ⚠️ Host + Filter-Param ggf. im RapidAPI-Playground gegenprüfen.
+    //    Falls kein tcgplayer_id-Filter existiert: per name/card_number suchen
+    //    und im Ergebnis die Karte mit passender tcgplayer_id rausziehen.
+    url.searchParams.set("tcgplayer_id", tcgPlayerId);
+
+    const r = await fetch(url.toString(), {
+      headers: {
+        "x-rapidapi-key": process.env.RAPIDAPI_KEY,
+        "x-rapidapi-host": "pokemon-tcg-api.p.rapidapi.com",
+      },
+    });
+    if (!r.ok) {
+      console.warn(`[TCGGO] ${r.status} (tcgPlayerId ${tcgPlayerId})`);
+      return null;
+    }
+
+    const data = await r.json();
+    const cm = data?.data?.[0]?.prices?.cardmarket;
+    if (!cm) return null;
+
+    return {
+      currency:       cm.currency ?? "EUR",
+      lowestNearMint: cm.lowest_near_mint ?? null,
+      byCountry: {
+        DE: cm.lowest_near_mint_DE ?? null,
+        FR: cm.lowest_near_mint_FR ?? null,
+        ES: cm.lowest_near_mint_ES ?? null,
+        IT: cm.lowest_near_mint_IT ?? null,
+      },
+      avg7d:  cm["7d_average"]  ?? null,
+      avg30d: cm["30d_average"] ?? null,
+    };
+  } catch (err) {
+    console.error("[TCGGO]", err.message);
+    return null;
+  }
+}
+
 function mapPrices(data) {
   const cardData = Array.isArray(data.data) ? data.data[0] : null;
   if (!cardData?.variants) return {};
@@ -648,7 +692,14 @@ app.get("/prices", requireAuth, async (req, res) => {
     }
 
     const tcgPlayerId = dbResult.rows[0].tcg_player_id;
-    const justTcgData = await fetchJustTcg(tcgPlayerId);
+    const isPaid = plan !== "bronze";   // Cardmarket-EU-Preis nur für Silber/Gold/Platin
+
+    // JustTCG (TCGPlayer + Konditionen) und TCGGO (Cardmarket EU) parallel holen.
+    const [justTcgData, cardmarket] = await Promise.all([
+      fetchJustTcg(tcgPlayerId),
+      isPaid ? fetchTcgGoCardmarket(tcgPlayerId) : Promise.resolve(null),
+    ]);
+
     const prices = mapPrices(justTcgData);
     const cardName = justTcgData.data?.[0]?.name ?? "Unbekannt";
     const { trend, history } = extractTrendAndHistory(justTcgData);
@@ -659,6 +710,7 @@ app.get("/prices", requireAuth, async (req, res) => {
       prices,
       trend,
       history,
+      cardmarket,   // null bei Bronze oder wenn TCGGO nichts liefert
     });
   } catch (err) {
     console.error("[/prices]", err.message);
