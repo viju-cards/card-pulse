@@ -134,7 +134,7 @@ async function fetchJustTcg(tcgPlayerId) {
 // Liefert null statt zu werfen, damit ein TCGGO-Ausfall nie den ganzen /prices-Call killt.
 const TCGGO_HOST = "pokemon-tcg-api.p.rapidapi.com";
 
-async function fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber }) {
+async function fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber, cardmarketId }) {
   if (!process.env.RAPIDAPI_KEY) {
     console.warn("[TCGGO] RAPIDAPI_KEY fehlt im Environment – übersprungen.");
     return null;
@@ -175,10 +175,11 @@ async function fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber }) {
     return String(a).replace(/^0+/, "").toLowerCase() === String(b).replace(/^0+/, "").toLowerCase();
   };
 
-  // 1) tcgplayer_id → 2) name + card_number → 3) nur card_number
-  let list = tcgPlayerId ? await query({ tcgplayer_id: tcgPlayerId }, "by tcgplayer_id") : [];
-  if (!list.length && cardName) list = await query({ name: cardName, card_number: numTcggo }, "by name+number");
-  if (!list.length && numTcggo) list = await query({ card_number: numTcggo }, "by number");
+  // 0) cardmarket_id (eindeutig!) → 1) tcgplayer_id → 2) name + card_number → 3) nur card_number
+  let list = cardmarketId ? await query({ cardmarket_id: cardmarketId }, "by cardmarket_id") : [];
+  if (!list.length && tcgPlayerId) list = await query({ tcgplayer_id: tcgPlayerId }, "by tcgplayer_id");
+  if (!list.length && cardName)    list = await query({ name: cardName, card_number: numTcggo }, "by name+number");
+  if (!list.length && numTcggo)    list = await query({ card_number: numTcggo }, "by number");
 
   if (!list.length) {
     console.warn(`[TCGGO] Kein Treffer für "${cardName}" #${numRaw} (tcgPlayerId ${tcgPlayerId}).`);
@@ -187,6 +188,7 @@ async function fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber }) {
 
   // Besten Treffer wählen: exakte tcgplayer_id > exakte Nummer > erster Treffer
   const card =
+    list.find(c => cardmarketId && String(c.cardmarket_id) === String(cardmarketId)) ||
     list.find(c => tcgPlayerId && String(c.tcgplayer_id) === String(tcgPlayerId)) ||
     list.find(c => sameNum(c.card_number, numRaw)) ||
     list[0];
@@ -674,7 +676,7 @@ app.post("/webhook", async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get("/prices", requireAuth, async (req, res) => {
-  const { set: setSlug, cardNumber } = req.query;
+  const { set: setSlug, cardNumber, cardmarketId } = req.query;
 
   if (!setSlug || !cardNumber)
     return res.status(400).json({ error: "Parameter 'set' und 'cardNumber' erforderlich." });
@@ -744,7 +746,7 @@ app.get("/prices", requireAuth, async (req, res) => {
     // TCGGO erst NACH JustTCG: wir brauchen den Kartennamen fürs Matching, da TCGGO
     // nicht für alle Karten eine tcgplayer_id pflegt (Fallback über name + card_number).
     const cardmarket = isPaid
-      ? await fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber })
+      ? await fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber, cardmarketId })
       : null;
 
     res.json({
