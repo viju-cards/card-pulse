@@ -128,13 +128,53 @@ async function fetchJustTcg(tcgPlayerId) {
 
 // Cardmarket-EU-Preis von der TCGGO RapidAPI (nur bezahlte Pläne).
 // Mehrstufiges Matching, da TCGGO nicht für jede Karte eine tcgplayer_id pflegt:
-//   1) tcgplayer_id (Exact-Match, kostet nichts falls vorhanden)
+//   0) cardmarket_id (eindeutig, bevorzugt)
+//   1) tcgplayer_id  (Exact-Match)
 //   2) name + card_number  (Hauptweg – TCGGO unterstützt das ausdrücklich)
 //   3) nur card_number     (letzter Versuch)
 // Liefert null statt zu werfen, damit ein TCGGO-Ausfall nie den ganzen /prices-Call killt.
 const TCGGO_HOST = "pokemon-tcg-api.p.rapidapi.com";
 
-async function fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber, cardmarketId }) {
+// ─── In-Memory-Cache (spart RapidAPI-Kontingent; Referenzpreise ändern sich langsam) ──
+const TCGGO_CACHE   = new Map();                  // key → { value, expires }
+const TCGGO_TTL_OK  = 12 * 60 * 60 * 1000;        // Treffer: 12 h
+const TCGGO_TTL_NEG =  1 * 60 * 60 * 1000;        // kein Treffer: 1 h (Karte evtl. bald drin)
+
+function tcggoCacheGet(key) {
+  const hit = TCGGO_CACHE.get(key);
+  if (!hit) return undefined;
+  if (Date.now() > hit.expires) { TCGGO_CACHE.delete(key); return undefined; }
+  return hit.value;   // kann auch null sein (negativ-Cache)
+}
+function tcggoCacheSet(key, value, ttl) {
+  TCGGO_CACHE.set(key, { value, expires: Date.now() + ttl });
+  if (TCGGO_CACHE.size > 5000) TCGGO_CACHE.delete(TCGGO_CACHE.keys().next().value);
+}
+
+// Öffentlicher Einstieg: erst Cache, sonst resolveTcgGo().
+async function fetchTcgGoCardmarket(args) {
+  if (!process.env.RAPIDAPI_KEY) {
+    console.warn("[TCGGO] RAPIDAPI_KEY fehlt im Environment – übersprungen.");
+    return null;
+  }
+  const { tcgPlayerId, cardName, cardNumber, cardmarketId } = args;
+  const cacheKey =
+    cardmarketId ? "cm:" + cardmarketId :
+    tcgPlayerId  ? "tp:" + tcgPlayerId  :
+    "nm:" + String(cardName || "").toLowerCase() + "|" + (cardNumber || "");
+
+  const cached = tcggoCacheGet(cacheKey);
+  if (cached !== undefined) {
+    console.log("[TCGGO] Cache-Hit (" + cacheKey + ") → " + (cached ? "Preis" : "kein Treffer"));
+    return cached;
+  }
+
+  const result = await resolveTcgGo(args);
+  tcggoCacheSet(cacheKey, result, result ? TCGGO_TTL_OK : TCGGO_TTL_NEG);
+  return result;
+}
+
+async function resolveTcgGo({ tcgPlayerId, cardName, cardNumber, cardmarketId }) {
   if (!process.env.RAPIDAPI_KEY) {
     console.warn("[TCGGO] RAPIDAPI_KEY fehlt im Environment – übersprungen.");
     return null;
