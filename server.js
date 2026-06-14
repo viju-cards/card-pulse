@@ -126,169 +126,6 @@ async function fetchJustTcg(tcgPlayerId) {
   return response.json();
 }
 
-// Cardmarket-EU-Preis von der TCGGO RapidAPI (nur bezahlte Pläne).
-// Mehrstufiges Matching, da TCGGO nicht für jede Karte eine tcgplayer_id pflegt:
-//   0) cardmarket_id (eindeutig, bevorzugt)
-//   1) tcgplayer_id  (Exact-Match)
-//   2) name + card_number  (Hauptweg – TCGGO unterstützt das ausdrücklich)
-//   3) nur card_number     (letzter Versuch)
-// Liefert null statt zu werfen, damit ein TCGGO-Ausfall nie den ganzen /prices-Call killt.
-const TCGGO_HOST = "pokemon-tcg-api.p.rapidapi.com";
-
-// ─── In-Memory-Cache (spart RapidAPI-Kontingent; Referenzpreise ändern sich langsam) ──
-const TCGGO_CACHE   = new Map();                  // key → { value, expires }
-const TCGGO_TTL_OK  = 12 * 60 * 60 * 1000;        // Treffer: 12 h
-const TCGGO_TTL_NEG =  1 * 60 * 60 * 1000;        // kein Treffer: 1 h (Karte evtl. bald drin)
-
-function tcggoCacheGet(key) {
-  const hit = TCGGO_CACHE.get(key);
-  if (!hit) return undefined;
-  if (Date.now() > hit.expires) { TCGGO_CACHE.delete(key); return undefined; }
-  return hit.value;   // kann auch null sein (negativ-Cache)
-}
-function tcggoCacheSet(key, value, ttl) {
-  TCGGO_CACHE.set(key, { value, expires: Date.now() + ttl });
-  if (TCGGO_CACHE.size > 5000) TCGGO_CACHE.delete(TCGGO_CACHE.keys().next().value);
-}
-
-// Öffentlicher Einstieg: zweistufiger Cache RAM → Neon → TCGGO.
-// DB-Fehler brechen den /prices-Call nie ab – im Zweifel wird einfach live geholt.
-async function fetchTcgGoCardmarket(args) {
-  if (!process.env.RAPIDAPI_KEY) {
-    console.warn("[TCGGO] RAPIDAPI_KEY fehlt im Environment – übersprungen.");
-    return null;
-  }
-  const { tcgPlayerId, cardName, cardNumber, cardmarketId } = args;
-  const cacheKey =
-    cardmarketId ? "cm:" + cardmarketId :
-    tcgPlayerId  ? "tp:" + tcgPlayerId  :
-    "nm:" + String(cardName || "").toLowerCase() + "|" + (cardNumber || "");
-
-  // 1) RAM-Cache (kein Roundtrip)
-  const ram = tcggoCacheGet(cacheKey);
-  if (ram !== undefined) {
-    console.log("[TCGGO] RAM-Hit (" + cacheKey + ") → " + (ram ? "Preis" : "kein Treffer"));
-    return ram;
-  }
-
-  // 2) Neon-Cache (lazy: abgelaufene Zeilen werden ignoriert, nicht gelöscht)
-  try {
-    const db = await pool.query(
-      "SELECT payload, expires_at FROM tcggo_cache WHERE cache_key = $1 AND expires_at > NOW()",
-      [cacheKey]
-    );
-    if (db.rows.length) {
-      const value = db.rows[0].payload;   // Objekt oder null (negativ-Cache)
-      const ttlMs = Math.max(1000, new Date(db.rows[0].expires_at).getTime() - Date.now());
-      tcggoCacheSet(cacheKey, value, ttlMs);   // RAM mit Rest-TTL auffüllen
-      console.log("[TCGGO] DB-Hit (" + cacheKey + ") → " + (value ? "Preis" : "kein Treffer"));
-      return value;
-    }
-  } catch (e) {
-    console.warn("[TCGGO] DB-Cache lesen fehlgeschlagen:", e.message);
-  }
-
-  // 3) Live von TCGGO holen
-  const result = await resolveTcgGo(args);
-
-  // In beide Caches schreiben (Treffer 12 h, kein Treffer 1 h)
-  const ttlMs = result ? TCGGO_TTL_OK : TCGGO_TTL_NEG;
-  tcggoCacheSet(cacheKey, result, ttlMs);
-  try {
-    await pool.query(
-      `INSERT INTO tcggo_cache (cache_key, payload, expires_at)
-       VALUES ($1, $2::jsonb, $3)
-       ON CONFLICT (cache_key) DO UPDATE
-         SET payload = EXCLUDED.payload, expires_at = EXCLUDED.expires_at`,
-      [cacheKey, JSON.stringify(result), new Date(Date.now() + ttlMs)]
-    );
-  } catch (e) {
-    console.warn("[TCGGO] DB-Cache schreiben fehlgeschlagen:", e.message);
-  }
-
-  return result;
-}
-
-async function resolveTcgGo({ tcgPlayerId, cardName, cardNumber, cardmarketId }) {
-  if (!process.env.RAPIDAPI_KEY) {
-    console.warn("[TCGGO] RAPIDAPI_KEY fehlt im Environment – übersprungen.");
-    return null;
-  }
-
-  const headers = {
-    "x-rapidapi-key": process.env.RAPIDAPI_KEY,
-    "x-rapidapi-host": TCGGO_HOST,
-  };
-
-  async function query(params, tag) {
-    const url = new URL(`https://${TCGGO_HOST}/cards`);
-    for (const [k, v] of Object.entries(params)) {
-      if (v != null && v !== "") url.searchParams.set(k, v);
-    }
-    try {
-      const r = await fetch(url.toString(), { headers });
-      const text = await r.text();   // als Text, damit wir bei Fehlern den Body sehen
-      if (!r.ok) {
-        console.warn(`[TCGGO] ${tag}: HTTP ${r.status} – ${text.slice(0, 200)}`);
-        return [];
-      }
-      const data = JSON.parse(text);
-      const list = Array.isArray(data?.data) ? data.data : [];
-      console.log(`[TCGGO] ${tag}: ${list.length} Treffer (${url.search})`);
-      return list;
-    } catch (e) {
-      console.warn(`[TCGGO] ${tag}: ${e.message}`);
-      return [];
-    }
-  }
-
-  // DB-Nummern sind auf 3 Stellen gepadded ("003"); TCGGO erwartet "3".
-  const numRaw   = cardNumber != null ? String(cardNumber) : null;
-  const numTcggo = numRaw && /^\d+$/.test(numRaw) ? String(parseInt(numRaw, 10)) : numRaw;
-  const sameNum  = (a, b) => {
-    if (a == null || b == null) return false;
-    return String(a).replace(/^0+/, "").toLowerCase() === String(b).replace(/^0+/, "").toLowerCase();
-  };
-
-  // 0) cardmarket_id (eindeutig!) → 1) tcgplayer_id → 2) name + card_number → 3) nur card_number
-  let list = cardmarketId ? await query({ cardmarket_id: cardmarketId }, "by cardmarket_id") : [];
-  if (!list.length && tcgPlayerId) list = await query({ tcgplayer_id: tcgPlayerId }, "by tcgplayer_id");
-  if (!list.length && cardName)    list = await query({ name: cardName, card_number: numTcggo }, "by name+number");
-  if (!list.length && numTcggo)    list = await query({ card_number: numTcggo }, "by number");
-
-  if (!list.length) {
-    console.warn(`[TCGGO] Kein Treffer für "${cardName}" #${numRaw} (tcgPlayerId ${tcgPlayerId}).`);
-    return null;
-  }
-
-  // Besten Treffer wählen: exakte tcgplayer_id > exakte Nummer > erster Treffer
-  const card =
-    list.find(c => cardmarketId && String(c.cardmarket_id) === String(cardmarketId)) ||
-    list.find(c => tcgPlayerId && String(c.tcgplayer_id) === String(tcgPlayerId)) ||
-    list.find(c => sameNum(c.card_number, numRaw)) ||
-    list[0];
-
-  const cm = card && card.prices && card.prices.cardmarket;
-  if (!cm) {
-    console.warn(`[TCGGO] Treffer ${card && card.id} ohne cardmarket-Block.`);
-    return null;
-  }
-
-  console.log(`[TCGGO] OK – ${card.name} (#${card.card_number}, cm_id ${card.cardmarket_id}) NM=${cm.lowest_near_mint}`);
-  return {
-    currency:       cm.currency ?? "EUR",
-    lowestNearMint: cm.lowest_near_mint ?? null,
-    byCountry: {
-      DE: cm.lowest_near_mint_DE ?? null,
-      FR: cm.lowest_near_mint_FR ?? null,
-      ES: cm.lowest_near_mint_ES ?? null,
-      IT: cm.lowest_near_mint_IT ?? null,
-    },
-    avg7d:  cm["7d_average"]  ?? null,
-    avg30d: cm["30d_average"] ?? null,
-  };
-}
-
 function mapPrices(data) {
   const cardData = Array.isArray(data.data) ? data.data[0] : null;
   if (!cardData?.variants) return {};
@@ -751,7 +588,7 @@ app.post("/webhook", async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get("/prices", requireAuth, async (req, res) => {
-  const { set: setSlug, cardNumber, cardmarketId } = req.query;
+  const { set: setSlug, cardNumber } = req.query;
 
   if (!setSlug || !cardNumber)
     return res.status(400).json({ error: "Parameter 'set' und 'cardNumber' erforderlich." });
@@ -811,18 +648,10 @@ app.get("/prices", requireAuth, async (req, res) => {
     }
 
     const tcgPlayerId = dbResult.rows[0].tcg_player_id;
-    const isPaid = plan !== "bronze";   // Cardmarket-EU-Preis nur für Silber/Gold/Platin
-
     const justTcgData = await fetchJustTcg(tcgPlayerId);
     const prices = mapPrices(justTcgData);
     const cardName = justTcgData.data?.[0]?.name ?? "Unbekannt";
     const { trend, history } = extractTrendAndHistory(justTcgData);
-
-    // TCGGO erst NACH JustTCG: wir brauchen den Kartennamen fürs Matching, da TCGGO
-    // nicht für alle Karten eine tcgplayer_id pflegt (Fallback über name + card_number).
-    const cardmarket = isPaid
-      ? await fetchTcgGoCardmarket({ tcgPlayerId, cardName, cardNumber, cardmarketId })
-      : null;
 
     res.json({
       user: { plan, used: used + 1, limit },
@@ -830,7 +659,6 @@ app.get("/prices", requireAuth, async (req, res) => {
       prices,
       trend,
       history,
-      cardmarket,   // null bei Bronze oder wenn TCGGO nichts liefert
     });
   } catch (err) {
     console.error("[/prices]", err.message);
