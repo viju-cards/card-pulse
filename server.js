@@ -624,12 +624,6 @@ app.get("/prices", requireAuth, async (req, res) => {
       });
     }
 
-    // Increment counter
-    await pool.query(
-      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
-      [req.user.id]
-    );
-
     const dbCardNumber =
       /^\d+$/.test(cardNumber) && cardNumber.length < 3
         ? cardNumber.padStart(3, "0")
@@ -641,11 +635,20 @@ app.get("/prices", requireAuth, async (req, res) => {
     );
 
     if (dbResult.rows.length === 0) {
+      // Karte (noch) nicht gemappt → zählt NICHT aufs Limit. Plan trotzdem mitgeben,
+      // damit das Overlay den Cardmarket-Block (Paid-Feature) clientseitig anzeigen kann.
       return res.status(404).json({
         error: "CARD_NOT_FOUND",
         message: `Keine TCGPlayer-ID für ${setSlug} #${dbCardNumber} gefunden.`,
+        user: { plan, used, limit },
       });
     }
+
+    // Ab hier wird wirklich TCGPlayer-Data geliefert → Request jetzt erst zählen.
+    await pool.query(
+      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
+      [req.user.id]
+    );
 
     const tcgPlayerId = dbResult.rows[0].tcg_player_id;
     const justTcgData = await fetchJustTcg(tcgPlayerId);
