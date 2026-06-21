@@ -66,7 +66,12 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 .plan-tier{font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:1px;margin-bottom:12px}
 .plan-price{font-family:"Barlow Condensed",sans-serif;font-size:32px;font-weight:900;margin-bottom:2px}
 .plan-period{font-size:13px;font-weight:400;color:var(--muted)}
-.plan-requests{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);margin-bottom:16px}
+.plan-requests{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);margin-bottom:12px}
+.plan-feats{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.plan-feat{display:flex;align-items:center;gap:7px;font-family:"DM Mono",monospace;font-size:10.5px;color:var(--text);line-height:1.25}
+.plan-feat.locked{color:var(--muted)}
+.plan-feat .pf-ck{color:var(--green);font-weight:700;flex-shrink:0}
+.plan-feat svg{opacity:.65}
 .plan-btn{width:100%;padding:10px;border-radius:7px;font-family:"DM Mono",monospace;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;border:1px solid var(--border);background:transparent;color:var(--text)}
 .plan-btn:hover{border-color:var(--accent);color:var(--accent)}
 .plan-btn.current{border:none;color:#fff;cursor:default}
@@ -271,15 +276,25 @@ function renderPlans(currentPlan,isDE){
     {key:'gold',label:'Gold',price:'€5.99',period:isDE?'/Monat':'/mo',limit:'1.000'},
     {key:'platin',label:'Platin',price:'€19.99',period:isDE?'/Monat':'/mo',limit:'5.000'},
   ];
+  const langFeat=isDE?'Preise nach Kartensprache':'Prices by card language';
+  const locFeat=isDE?'Verkäufer-Standort-Filter':'Seller-location filter';
+  const lock='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>';
   document.getElementById('plansGrid').innerHTML=list.map(p=>{
     const c=PLANS[p.key];
     const cur=p.key===currentPlan;
+    const isPaidPlan=p.key!=='bronze';
+    const mark=isPaidPlan?'<span class="pf-ck">&#10003;</span>':lock;
+    const feats=`<div class="plan-feats">
+        <div class="plan-feat${isPaidPlan?'':' locked'}">${mark}<span>${langFeat}</span></div>
+        <div class="plan-feat${isPaidPlan?'':' locked'}">${mark}<span>${locFeat}</span></div>
+      </div>`;
     const btn=cur?(isDE?'Aktueller Plan':'Current plan'):p.key==='bronze'?(isDE?'Downgrade':'Downgrade'):(isDE?'Upgraden':'Upgrade');
     const click=cur?'':p.key==='bronze'?'openPortal()':`startCheckout('${p.key}')`;
     return `<div class="plan-card${cur?' active':''}" style="${cur?`border-color:${c.color}`:''}">
       <div class="plan-tier" style="color:${c.color}">${p.label}</div>
       <div class="plan-price">${p.price}<span class="plan-period">${p.period}</span></div>
       <div class="plan-requests">${p.limit} ${isDE?'Anfragen/Monat':'req/mo'}</div>
+      ${feats}
       <button onclick="${click}" class="plan-btn${cur?' current':''}" style="${cur?`background:${c.color};border-color:${c.color}`:''}" ${cur?'disabled':''}>${btn}</button>
     </div>`;
   }).join('');
