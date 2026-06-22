@@ -17,6 +17,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 .logo{font-family:var(--pixel);font-size:11px;color:white;text-decoration:none;letter-spacing:1px;line-height:1.6}
 .logo em{color:var(--accent);font-style:normal}
 .nav-right{display:flex;gap:10px;align-items:center}
+.nav-toggle{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:42px;height:42px;background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:0}
+.nav-toggle span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:.25s}
+nav.open .nav-toggle span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+nav.open .nav-toggle span:nth-child(2){opacity:0}
+nav.open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 .btn-ghost-sm{padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;text-decoration:none;transition:.2s}
 .btn-ghost-sm:hover{border-color:var(--accent);color:var(--text)}
 .btn-start{padding:8px 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:var(--mono);font-size:12px;cursor:pointer;text-decoration:none}
@@ -124,6 +129,12 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
 @media(max-width:900px){.hero{grid-template-columns:1fr;gap:40px;padding:60px 24px}.overlays-row{flex-direction:column}.how-grid{grid-template-columns:1fr}.rarity-grid{grid-template-columns:repeat(2,1fr)}.features-wrap{grid-template-columns:1fr}nav{padding:12px 20px}section{padding:60px 24px}footer{flex-direction:column;gap:16px;padding:24px}}
 
 @media (max-width: 768px) {
+  nav { flex-wrap: wrap; }
+  .nav-toggle { display: flex; }
+  .nav-right { display: none; width: 100%; flex-flow: row wrap; justify-content: center; gap: 10px; padding-top: 14px; }
+  nav.open .nav-right { display: flex; }
+  .nav-right .btn-ghost-sm, .nav-right .btn-start { flex: 1 1 100%; text-align: center; padding: 12px; }
+  .nav-right .lang-flag-btn { flex: 0 0 auto; }
   .hero { grid-template-columns: 1fr; padding: 60px 20px 40px; gap: 40px; }
   .overlays-row > div:first-child { display: none; } /* hide light on mobile */
   .overlay-pair-labels span:first-child { display: none; }
@@ -150,6 +161,9 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
 
 <nav>
   <a href="/" class="logo">card<em>pulse</em></a>
+  <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="var n=this.closest('nav');var o=n.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+    <span></span><span></span><span></span>
+  </button>
   <div class="nav-right">
     <a href="/sets.html" class="btn-ghost-sm" data-i18n="nav_sets">Sets</a>
     <a href="/login.html" class="btn-ghost-sm" data-i18n="nav_login">Sign in</a>
