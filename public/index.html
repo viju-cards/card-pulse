@@ -32,6 +32,7 @@ h1 .line1{color:var(--text);display:block}h1 .line2{color:var(--accent);display:
 .hero-sub{font-family:var(--mono);font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:36px;max-width:400px}
 .hero-sub strong{color:var(--teal);font-weight:500}
 .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero-trust{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:16px;letter-spacing:.2px}
 .btn-primary-lg{padding:14px 28px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:var(--pixel);font-size:9px;line-height:1.6;cursor:pointer;text-decoration:none;box-shadow:0 0 24px rgba(108,99,255,0.4);transition:.2s}
 .btn-primary-lg:hover{box-shadow:0 0 40px rgba(108,99,255,0.6)}
 .btn-outline-lg{padding:14px 28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;text-decoration:none;transition:.2s}
@@ -99,6 +100,21 @@ section{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:80px 
 .rarity-requests{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:20px}
 .rarity-btn{display:block;width:100%;padding:10px;border-radius:6px;text-align:center;font-family:var(--pixel);font-size:8px;text-decoration:none;cursor:pointer;border:none;transition:.2s;line-height:1.8}
 .enterprise-bar{margin-top:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding:24px 28px;border-radius:12px;border:1px dashed rgba(108,99,255,0.3);background:linear-gradient(135deg,rgba(108,99,255,0.05),transparent)}
+.pricing-split{font-family:var(--mono);font-size:13px;color:var(--muted);line-height:1.7;max-width:680px;margin:14px 0 32px}
+.pricing-note{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin-top:18px;letter-spacing:.2px}
+.rarity-feats{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px}
+.rarity-feat{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.3}
+.rarity-feat.locked{color:var(--muted)}
+.rarity-feat .ck{flex-shrink:0;color:var(--teal);font-weight:700;font-size:12px;width:10px;text-align:center}
+.rarity-feat.locked svg{opacity:.7}
+.rarity-plus{font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+.popular-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);background:#f59e0b;color:#1a1a1a;font-family:var(--pixel);font-size:6px;letter-spacing:1px;padding:5px 14px;border-radius:0 0 7px 7px;line-height:1.6}
+.final-cta{position:relative;z-index:1;text-align:center;padding:90px 24px}
+.final-cta-inner{max-width:680px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.final-cta .section-label::before{content:"> "}
+.final-cta-h2{font-family:var(--cond);font-size:clamp(34px,5vw,60px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px;line-height:.95;margin:14px 0 18px}
+.final-cta-sub{font-family:var(--mono);font-size:14px;color:var(--muted);line-height:1.8;max-width:480px;margin-bottom:32px}
+.final-cta-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:4px}
 footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32px 48px;display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto}
 .footer-logo{font-family:var(--pixel);font-size:9px;color:white;text-decoration:none}
 .footer-logo em{color:var(--accent);font-style:normal}
@@ -109,7 +125,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
 
 @media (max-width: 768px) {
   .hero { grid-template-columns: 1fr; padding: 60px 20px 40px; gap: 40px; }
-  .overlays-row .cp-ov:first-child { display: none; } /* hide light on mobile */
+  .overlays-row > div:first-child { display: none; } /* hide light on mobile */
   .overlay-pair-labels span:first-child { display: none; }
   .overlays-row { flex-direction: column; }
   .how-grid { grid-template-columns: 1fr; }
@@ -178,6 +194,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
       <a href="/register.html" class="btn-primary-lg" data-i18n="index_install">INSTALL FREE</a>
       <a href="/sets.html" class="btn-outline-lg" data-i18n="index_sets_link">View supported sets →</a>
     </div>
+    <p class="hero-trust" data-i18n="index_hero_trust">Free forever plan · No credit card · Works on every Cardmarket card page</p>
   </div>
 
   <!-- RIGHT: side-by-side overlays -->
@@ -188,183 +205,105 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
     </div>
     <div class="overlays-row">
 <div style="flex:1;border-radius:14px;overflow:hidden;font-family:var(--mono);font-size:11px;background:#ffffff;color:#1a1a2e;box-shadow:0 8px 40px rgba(0,0,0,0.25);border:1px solid rgba(0,0,0,0.1)">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px 9px;border-bottom:1px solid rgba(0,0,0,0.08)">
-          <div style="font-family:var(--pixel);font-size:8px;letter-spacing:-.3px;color:#1a1a2e">card<span style="color:#1a4b8c">pulse</span></div>
-          <div style="font-size:15px;opacity:.3">&#8722;</div>
-        </div>
-        <div style="padding:11px 13px">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:8px">Latias ex &middot; 076/191</div>
-          <div style="background:#f0f4fa;border:1.5px solid #1a4b8c;border-radius:8px;padding:10px;text-align:center;margin-bottom:8px">
-            <div style="font-family:var(--pixel);font-size:6px;color:#1a4b8c;letter-spacing:1px;margin-bottom:3px">MARKET PRICE</div>
-            <div style="font-family:var(--cond);font-size:26px;font-weight:800;line-height:1;color:#1a1a2e">$5.01</div>
-            <div style="font-size:12px;color:#1a4b8c;margin-top:2px;font-weight:600">&euro;4.61</div>
-          </div>
-          <div style="display:flex;gap:5px;margin-bottom:8px">
-            <div style="flex:1;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:6px;padding:5px;text-align:center">
-              <div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-bottom:2px">7D</div>
-              <div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#dc2626">-2.1%</div>
-            </div>
-            <div style="flex:1;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:6px;padding:5px;text-align:center">
-              <div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-bottom:2px">30D</div>
-              <div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#dc2626">-5.4%</div>
-            </div>
-            <div style="flex:1;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:6px;padding:5px;text-align:center">
-              <div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-bottom:2px">30D &Oslash;</div>
-              <div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#6b7280">$5.28</div>
-            </div>
-          </div>
-          <div style="background:#f7f8fa;border:1px solid #e4e6ea;border-radius:6px;padding:7px 8px 5px;margin-bottom:8px">
-            <div style="display:flex;justify-content:space-between;font-size:8px;color:#6b7280;margin-bottom:4px">
-              <span style="font-family:var(--pixel);font-size:5px;letter-spacing:.5px">PRICE HISTORY</span><span>$5.60&rarr;$5.01</span>
-            </div>
-            <svg width="100%" height="28" viewBox="0 0 190 28" preserveAspectRatio="none">
-              <defs><linearGradient id="sglight" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#dc2626" stop-opacity="0.18"/><stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
-              </linearGradient></defs>
-              <polygon points="4,6 22,4 40,8 58,5 76,10 94,7 112,12 130,14 148,17 166,21 186,24 186,28 4,28" fill="url(#sglight)"/>
-              <polyline points="4,6 22,4 40,8 58,5 76,10 94,7 112,12 130,14 148,17 166,21 186,24" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="186" cy="24" r="2.5" fill="#dc2626"/>
-            </svg>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:#DFF6DD;color:#107C10;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">NM</span>
-                <span style="font-size:10px;color:#6b7280">Near Mint</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#1a1a2e">$5.01</div>
-                <div style="font-size:9px;color:#1a4b8c">€4.61</div>
-              </div>
-            </div><div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:#E6F4E0;color:#2D7D1F;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">LP</span>
-                <span style="font-size:10px;color:#6b7280">Lightly Played</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#1a1a2e">$4.45</div>
-                <div style="font-size:9px;color:#1a4b8c">€4.09</div>
-              </div>
-            </div><div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:#FFF4CE;color:#8A6914;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">MP</span>
-                <span style="font-size:10px;color:#6b7280">Mod. Played</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#1a1a2e">$3.78</div>
-                <div style="font-size:9px;color:#1a4b8c">€3.48</div>
-              </div>
-            </div><div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:#FDEDE3;color:#C05000;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">HP</span>
-                <span style="font-size:10px;color:#6b7280">Heavily Played</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#1a1a2e">$3.04</div>
-                <div style="font-size:9px;color:#1a4b8c">€2.80</div>
-              </div>
-            </div><div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:#FDE7E9;color:#A4262C;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">D</span>
-                <span style="font-size:10px;color:#6b7280">Damaged</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#1a1a2e">$2.99</div>
-                <div style="font-size:9px;color:#1a4b8c">€2.75</div>
-              </div>
-            </div></div>
-          <div style="text-align:center;padding:8px;border-radius:6px;border:1px solid #e4e6ea;font-family:var(--pixel);font-size:6px;color:#6b7280;letter-spacing:.5px;margin-bottom:6px">DASHBOARD &amp; SUBSCRIPTION</div>
-          <div style="text-align:center;font-family:var(--pixel);font-size:5px;color:rgba(128,128,128,0.12);letter-spacing:2px">CARDPULSE</div>
-        </div>
-      </div>
-<div style="flex:1;border-radius:14px;overflow:hidden;font-family:var(--mono);font-size:11px;background:#16181d;color:#e8e8f0;box-shadow:0 8px 40px rgba(108,99,255,0.12);border:1px solid rgba(108,99,255,0.2)">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px 9px;border-bottom:1px solid rgba(255,255,255,0.07)">
-          <div style="font-family:var(--pixel);font-size:8px;letter-spacing:-.3px;color:#e8e8f0">card<span style="color:#7b6fff">pulse</span></div>
-          <div style="font-size:15px;opacity:.3">&#8722;</div>
-        </div>
-        <div style="padding:11px 13px">
-          <div style="font-size:10px;color:#6b6b90;margin-bottom:8px">Latias ex &middot; 076/191</div>
-          <div style="background:rgba(123,111,255,0.08);border:1.5px solid #7b6fff;border-radius:8px;padding:10px;text-align:center;margin-bottom:8px">
-            <div style="font-family:var(--pixel);font-size:6px;color:#7b6fff;letter-spacing:1px;margin-bottom:3px">MARKET PRICE</div>
-            <div style="font-family:var(--cond);font-size:26px;font-weight:800;line-height:1;color:#e8e8f0">$5.01</div>
-            <div style="font-size:12px;color:#7b6fff;margin-top:2px;font-weight:600">&euro;4.61</div>
-          </div>
-          <div style="display:flex;gap:5px;margin-bottom:8px">
-            <div style="flex:1;background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px;text-align:center">
-              <div style="font-family:var(--pixel);font-size:5px;color:#6b6b90;letter-spacing:.8px;margin-bottom:2px">7D</div>
-              <div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#dc2626">-2.1%</div>
-            </div>
-            <div style="flex:1;background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px;text-align:center">
-              <div style="font-family:var(--pixel);font-size:5px;color:#6b6b90;letter-spacing:.8px;margin-bottom:2px">30D</div>
-              <div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#dc2626">-5.4%</div>
-            </div>
-            <div style="flex:1;background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px;text-align:center">
-              <div style="font-family:var(--pixel);font-size:5px;color:#6b6b90;letter-spacing:.8px;margin-bottom:2px">30D &Oslash;</div>
-              <div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#6b6b90">$5.28</div>
-            </div>
-          </div>
-          <div style="background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:7px 8px 5px;margin-bottom:8px">
-            <div style="display:flex;justify-content:space-between;font-size:8px;color:#6b6b90;margin-bottom:4px">
-              <span style="font-family:var(--pixel);font-size:5px;letter-spacing:.5px">PRICE HISTORY</span><span>$5.60&rarr;$5.01</span>
-            </div>
-            <svg width="100%" height="28" viewBox="0 0 190 28" preserveAspectRatio="none">
-              <defs><linearGradient id="sgdark" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#dc2626" stop-opacity="0.18"/><stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
-              </linearGradient></defs>
-              <polygon points="4,6 22,4 40,8 58,5 76,10 94,7 112,12 130,14 148,17 166,21 186,24 186,28 4,28" fill="url(#sgdark)"/>
-              <polyline points="4,6 22,4 40,8 58,5 76,10 94,7 112,12 130,14 148,17 166,21 186,24" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="186" cy="24" r="2.5" fill="#dc2626"/>
-            </svg>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:rgba(16,124,16,0.2);color:#107C10;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">NM</span>
-                <span style="font-size:10px;color:#6b6b90">Near Mint</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#e8e8f0">$5.01</div>
-                <div style="font-size:9px;color:#7b6fff">€4.61</div>
-              </div>
-            </div><div style="display:flex;justify-content:space-between;align-items:center;background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:rgba(45,125,31,0.2);color:#2D7D1F;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">LP</span>
-                <span style="font-size:10px;color:#6b6b90">Lightly Played</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#e8e8f0">$4.45</div>
-                <div style="font-size:9px;color:#7b6fff">€4.09</div>
-              </div>
-            </div><div style="display:flex;justify-content:space-between;align-items:center;background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:rgba(138,105,20,0.2);color:#8A6914;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">MP</span>
-                <span style="font-size:10px;color:#6b6b90">Mod. Played</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#e8e8f0">$3.78</div>
-                <div style="font-size:9px;color:#7b6fff">€3.48</div>
-              </div>
-            </div><div style="display:flex;justify-content:space-between;align-items:center;background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:rgba(192,80,0,0.2);color:#C05000;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">HP</span>
-                <span style="font-size:10px;color:#6b6b90">Heavily Played</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#e8e8f0">$3.04</div>
-                <div style="font-size:9px;color:#7b6fff">€2.80</div>
-              </div>
-            </div><div style="display:flex;justify-content:space-between;align-items:center;background:#1e2028;border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:4px 7px">
-              <div style="display:flex;align-items:center;gap:5px">
-                <span style="background:rgba(164,38,44,0.2);color:#A4262C;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">D</span>
-                <span style="font-size:10px;color:#6b6b90">Damaged</span>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:var(--cond);font-size:13px;font-weight:700;color:#e8e8f0">$2.99</div>
-                <div style="font-size:9px;color:#7b6fff">€2.75</div>
-              </div>
-            </div></div>
-          <div style="text-align:center;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);font-family:var(--pixel);font-size:6px;color:#6b6b90;letter-spacing:.5px;margin-bottom:6px">DASHBOARD &amp; SUBSCRIPTION</div>
-          <div style="text-align:center;font-family:var(--pixel);font-size:5px;color:rgba(128,128,128,0.1);letter-spacing:2px">CARDPULSE</div>
-        </div>
-      </div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px 9px;border-bottom:1px solid rgba(0,0,0,0.08)">
+<div style="font-family:var(--pixel);font-size:8px;letter-spacing:-.3px;color:#1a1a2e">card<span style="color:#0fa07a">pulse</span></div>
+<div style="font-size:15px;opacity:.3">&#8722;</div>
+</div>
+<div style="padding:11px 13px">
+<div style="border:1px solid #0d9b76;border-radius:10px;padding:9px;margin-bottom:9px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+<span style="font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:#0d9b76">CARDMARKET</span>
+<span style="display:inline-flex;align-items:center;gap:5px;background:#f7f8fa;border:1px solid #d8dbe1;border-radius:5px;padding:3px 7px;font-size:9px;color:#374151">All countries <span style="font-size:7px;opacity:.7">&#9662;</span></span>
+</div>
+<div style="background:#ecfdf6;border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
+<div style="font-family:var(--pixel);font-size:5px;color:#0d9b76;letter-spacing:1px;margin-bottom:3px">MARKET PRICE &middot; ENGLISH</div>
+<div style="font-family:var(--cond);font-size:23px;font-weight:800;line-height:1;color:#1a1a2e">&euro;599,99</div>
+<div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-top:3px">NEAR MINT</div>
+</div>
+<div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.5px;margin-bottom:5px">LOWEST NM PRICE BY CARD LANGUAGE</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+<div style="display:flex;align-items:center;gap:6px;background:#f7f8fa;border:1px solid #e8eaee;border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 3 2" style="border-radius:2px;flex-shrink:0;display:block"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#ce2b37"/></svg><span style="font-family:var(--pixel);font-size:6px;color:#6b7280;letter-spacing:.5px">IT</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#1a1a2e;margin-left:auto;line-height:1">&euro;255,00</span></div>
+<div style="display:flex;align-items:center;gap:6px;background:#f7f8fa;border:1px solid #e8eaee;border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 3 2" style="border-radius:2px;flex-shrink:0;display:block"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg><span style="font-family:var(--pixel);font-size:6px;color:#6b7280;letter-spacing:.5px">FR</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#1a1a2e;margin-left:auto;line-height:1">&euro;340,00</span></div>
+<div style="display:flex;align-items:center;gap:6px;background:#ecfdf6;border:1px solid #0d9b76;border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 60 30" style="border-radius:2px;flex-shrink:0;display:block"><clipPath id="uk-l"><rect width="60" height="30"/></clipPath><g clip-path="url(#uk-l)"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30" stroke="#C8102E" stroke-width="4"/><path d="M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></g></svg><span style="font-family:var(--pixel);font-size:6px;color:#0d9b76;letter-spacing:.5px">EN</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#1a1a2e;margin-left:auto;line-height:1">&euro;599,99</span></div>
+</div>
+</div>
+<div style="border:1px solid #6c5cff;border-radius:10px;padding:9px;margin-bottom:9px">
+<div style="font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:#6c5cff;margin-bottom:8px">TCGPLAYER</div>
+<div style="background:#f3f1ff;border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
+<div style="font-family:var(--pixel);font-size:5px;color:#0d9b76;letter-spacing:1px;margin-bottom:3px">MARKET PRICE &middot; ENGLISH</div>
+<div style="font-family:var(--cond);font-size:23px;font-weight:800;line-height:1;color:#1a1a2e">&euro;940,05</div>
+<div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-top:3px">NEAR MINT</div>
+</div>
+<div style="display:flex;gap:5px;margin-bottom:8px">
+<div style="flex:1;background:#f2f3f6;border:1px solid #e8eaee;border-radius:6px;padding:5px;text-align:center"><div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-bottom:2px">7D</div><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#16a34a">+1.2%</div></div>
+<div style="flex:1;background:#f2f3f6;border:1px solid #e8eaee;border-radius:6px;padding:5px;text-align:center"><div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-bottom:2px">30D</div><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#16a34a">+14.5%</div></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+<span style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.5px">30D PRICE HISTORY (NM)</span>
+<span style="font-size:9px;color:#6b7280">&euro;821,25 &rarr; &euro;940,05</span>
+</div>
+<svg viewBox="0 0 182 40" preserveAspectRatio="none" style="width:100%;height:34px;display:block"><polygon points="0,38 0,30 14,29 28,27 42,28 56,24 70,25 84,20 98,18 112,14 126,15 140,9 154,7 168,5 182,3 182,38" fill="rgba(22,163,74,0.10)"/><polyline points="0,30 14,29 28,27 42,28 56,24 70,25 84,20 98,18 112,14 126,15 140,9 154,7 168,5 182,3" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div style="display:flex;flex-direction:column;gap:3px;margin-top:8px">
+<div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e8eaee;border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#DFF6DD;color:#107C10;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">LP</span><span style="font-size:10px;color:#6b7280">Lightly Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.05">&euro;620,88</div><div style="font-size:9px;color:#9aa0aa">$674.87</div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e8eaee;border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#FFF4CE;color:#8A6914;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">MP</span><span style="font-size:10px;color:#6b7280">Mod. Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.05">&euro;575,79</div><div style="font-size:9px;color:#9aa0aa">$625.86</div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e8eaee;border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#FDEDE3;color:#C05000;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">HP</span><span style="font-size:10px;color:#6b7280">Heavily Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.05">&euro;322,00</div><div style="font-size:9px;color:#9aa0aa">$350.00</div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e8eaee;border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#FDE7E9;color:#A4262C;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">D</span><span style="font-size:10px;color:#6b7280">Damaged</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.05">&euro;395,60</div><div style="font-size:9px;color:#9aa0aa">$430.00</div></div></div>
+</div>
+</div>
+<div style="text-align:center;padding:8px;border-radius:6px;border:1px solid #d8dbe1;font-family:var(--pixel);font-size:6px;color:#6b7280;letter-spacing:.5px;margin-bottom:7px">DASHBOARD &amp; SUBSCRIPTION</div>
+<div style="text-align:center;font-family:var(--pixel);font-size:5px;color:rgba(0,0,0,0.12);letter-spacing:2px">CARDPULSE</div>
+</div>
+</div>
+<div style="flex:1;border-radius:14px;overflow:hidden;font-family:var(--mono);font-size:11px;background:#101218;color:#e8e8f0;box-shadow:0 8px 40px rgba(0,0,0,0.45);border:1px solid rgba(123,111,255,0.2)">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px 9px;border-bottom:1px solid rgba(255,255,255,0.06)">
+<div style="font-family:var(--pixel);font-size:8px;letter-spacing:-.3px;color:#e8e8f0">card<span style="color:#2ec9a0">pulse</span></div>
+<div style="font-size:15px;opacity:.3">&#8722;</div>
+</div>
+<div style="padding:11px 13px">
+<div style="border:1px solid #1cc99a;border-radius:10px;padding:9px;margin-bottom:9px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+<span style="font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:#1cc99a">CARDMARKET</span>
+<span style="display:inline-flex;align-items:center;gap:5px;background:#1a1c23;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:3px 7px;font-size:9px;color:#c4c4d4">All countries <span style="font-size:7px;opacity:.7">&#9662;</span></span>
+</div>
+<div style="background:rgba(28,201,154,0.07);border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
+<div style="font-family:var(--pixel);font-size:5px;color:#2ec9a0;letter-spacing:1px;margin-bottom:3px">MARKET PRICE &middot; ENGLISH</div>
+<div style="font-family:var(--cond);font-size:23px;font-weight:800;line-height:1;color:#f4f4f8">&euro;599,99</div>
+<div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.8px;margin-top:3px">NEAR MINT</div>
+</div>
+<div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.5px;margin-bottom:5px">LOWEST NM PRICE BY CARD LANGUAGE</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+<div style="display:flex;align-items:center;gap:6px;background:#181a21;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 3 2" style="border-radius:2px;flex-shrink:0;display:block"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#ce2b37"/></svg><span style="font-family:var(--pixel);font-size:6px;color:#8385a0;letter-spacing:.5px">IT</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#e8e8f0;margin-left:auto;line-height:1">&euro;255,00</span></div>
+<div style="display:flex;align-items:center;gap:6px;background:#181a21;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 3 2" style="border-radius:2px;flex-shrink:0;display:block"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg><span style="font-family:var(--pixel);font-size:6px;color:#8385a0;letter-spacing:.5px">FR</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#e8e8f0;margin-left:auto;line-height:1">&euro;340,00</span></div>
+<div style="display:flex;align-items:center;gap:6px;background:rgba(28,201,154,0.10);border:1px solid #1cc99a;border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 60 30" style="border-radius:2px;flex-shrink:0;display:block"><clipPath id="uk-d"><rect width="60" height="30"/></clipPath><g clip-path="url(#uk-d)"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30" stroke="#C8102E" stroke-width="4"/><path d="M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></g></svg><span style="font-family:var(--pixel);font-size:6px;color:#1cc99a;letter-spacing:.5px">EN</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#e8e8f0;margin-left:auto;line-height:1">&euro;599,99</span></div>
+</div>
+</div>
+<div style="border:1px solid #7b6fff;border-radius:10px;padding:9px;margin-bottom:9px">
+<div style="font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:#7b6fff;margin-bottom:8px">TCGPLAYER</div>
+<div style="background:rgba(123,111,255,0.08);border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
+<div style="font-family:var(--pixel);font-size:5px;color:#2ec9a0;letter-spacing:1px;margin-bottom:3px">MARKET PRICE &middot; ENGLISH</div>
+<div style="font-family:var(--cond);font-size:23px;font-weight:800;line-height:1;color:#f4f4f8">&euro;940,05</div>
+<div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.8px;margin-top:3px">NEAR MINT</div>
+</div>
+<div style="display:flex;gap:5px;margin-bottom:8px">
+<div style="flex:1;background:#1a1c23;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px;text-align:center"><div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.8px;margin-bottom:2px">7D</div><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#22c55e">+1.2%</div></div>
+<div style="flex:1;background:#1a1c23;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px;text-align:center"><div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.8px;margin-bottom:2px">30D</div><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#22c55e">+14.5%</div></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+<span style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.5px">30D PRICE HISTORY (NM)</span>
+<span style="font-size:9px;color:#8385a0">&euro;821,25 &rarr; &euro;940,05</span>
+</div>
+<svg viewBox="0 0 182 40" preserveAspectRatio="none" style="width:100%;height:34px;display:block"><polygon points="0,38 0,30 14,29 28,27 42,28 56,24 70,25 84,20 98,18 112,14 126,15 140,9 154,7 168,5 182,3 182,38" fill="rgba(34,197,94,0.12)"/><polyline points="0,30 14,29 28,27 42,28 56,24 70,25 84,20 98,18 112,14 126,15 140,9 154,7 168,5 182,3" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div style="display:flex;flex-direction:column;gap:3px;margin-top:8px">
+<div style="display:flex;justify-content:space-between;align-items:center;background:#181a21;border:1px solid rgba(255,255,255,0.05);border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#16341f;color:#4ade80;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">LP</span><span style="font-size:10px;color:#8385a0">Lightly Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#e8e8f0;line-height:1.05">&euro;620,88</div><div style="font-size:9px;color:#6b6b80">$674.87</div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;background:#181a21;border:1px solid rgba(255,255,255,0.05);border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#34301a;color:#fbbf24;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">MP</span><span style="font-size:10px;color:#8385a0">Mod. Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#e8e8f0;line-height:1.05">&euro;575,79</div><div style="font-size:9px;color:#6b6b80">$625.86</div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;background:#181a21;border:1px solid rgba(255,255,255,0.05);border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#3a2818;color:#fb923c;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">HP</span><span style="font-size:10px;color:#8385a0">Heavily Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#e8e8f0;line-height:1.05">&euro;322,00</div><div style="font-size:9px;color:#6b6b80">$350.00</div></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;background:#181a21;border:1px solid rgba(255,255,255,0.05);border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#3a1c20;color:#f87171;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">D</span><span style="font-size:10px;color:#8385a0">Damaged</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#e8e8f0;line-height:1.05">&euro;395,60</div><div style="font-size:9px;color:#6b6b80">$430.00</div></div></div>
+</div>
+</div>
+<div style="text-align:center;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);font-family:var(--pixel);font-size:6px;color:#9a9aae;letter-spacing:.5px;margin-bottom:7px">DASHBOARD &amp; SUBSCRIPTION</div>
+<div style="text-align:center;font-family:var(--pixel);font-size:5px;color:rgba(255,255,255,0.1);letter-spacing:2px">CARDPULSE</div>
+</div>
+</div>
     </div>
   </div>
 </div>
@@ -375,12 +314,14 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
   <h2 style="font-family:var(--cond);font-size:clamp(32px,4vw,56px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px">
     <span data-i18n="index_pricing_h2_1">CHOOSE YOUR</span> <span style="color:var(--accent)" data-i18n="index_pricing_h2_2">RARITY.</span>
   </h2>
+  <p class="pricing-split" data-i18n="index_pricing_split">All plans include live TCGPlayer prices, EUR conversion, all 5 conditions &amp; 30-day history. Silver and up unlock per-language Cardmarket prices and the seller-location filter.</p>
   <div class="rarity-grid">
     <div class="rarity-card">
       <div class="rarity-badge" style="background:rgba(205,127,50,0.1);color:#cd7f32;border:1px solid rgba(205,127,50,0.3)">&#9670; COMMON</div>
       <div class="rarity-name" style="color:#cd7f32">Bronze</div>
       <div class="rarity-price" style="color:var(--text)">FREE</div>
       <div class="rarity-requests">20 requests / month</div>
+      <ul class="rarity-feats"><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_tcg_prices">Live TCGPlayer prices</span></li><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_cond_hist">5 conditions + 30-day trend</span></li><li class="rarity-feat locked"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg><span data-i18n="feat_lang_prices">Prices by card language</span></li><li class="rarity-feat locked"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg><span data-i18n="feat_loc_filter">Seller-location filter</span></li></ul>
       <a href="/register.html" class="rarity-btn" style="background:rgba(205,127,50,0.1);color:#cd7f32;border:1px solid rgba(205,127,50,0.2)">START FREE</a>
     </div>
     <div class="rarity-card">
@@ -388,13 +329,18 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
       <div class="rarity-name" style="color:#94a3b8">Silver</div>
       <div class="rarity-price" style="color:var(--text)">&euro;3.99</div>
       <div class="rarity-requests">400 requests / month</div>
+      <div class="rarity-plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
+      <ul class="rarity-feats"><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_lang_prices">Prices by card language</span></li><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li></ul>
       <a href="/register.html" class="rarity-btn" style="background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)">UPGRADE</a>
     </div>
-    <div class="rarity-card rare">
+    <div class="rarity-card rare" style="padding-top:30px">
+      <div class="popular-tag" data-i18n="index_popular">MOST POPULAR</div>
       <div class="rarity-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.4)">&#9733; RARE HOLO</div>
       <div class="rarity-name" style="color:#f59e0b">Gold</div>
       <div class="rarity-price" style="color:#f59e0b">&euro;5.99</div>
       <div class="rarity-requests">1.000 requests / month</div>
+      <div class="rarity-plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
+      <ul class="rarity-feats"><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_lang_prices">Prices by card language</span></li><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li></ul>
       <a href="/register.html" class="rarity-btn" style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">UPGRADE &#9733;</a>
     </div>
     <div class="rarity-card">
@@ -402,9 +348,12 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
       <div class="rarity-name" style="color:#a78bfa">Platin</div>
       <div class="rarity-price" style="color:var(--text)">&euro;19.99</div>
       <div class="rarity-requests">5.000 requests / month</div>
+      <div class="rarity-plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
+      <ul class="rarity-feats"><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_lang_prices">Prices by card language</span></li><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li></ul>
       <a href="/register.html" class="rarity-btn" style="background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.2)">UPGRADE</a>
     </div>
   </div>
+    <p class="pricing-note" data-i18n="index_pricing_note">Cancel anytime &middot; 1 request = 1 card looked up &middot; No credit card needed for Bronze</p>
   <div class="enterprise-bar">
     <div>
       <div style="font-family:var(--pixel);font-size:8px;color:var(--accent);margin-bottom:6px;letter-spacing:1px" data-i18n="index_enterprise_secret">✦✦ SECRET RARE</div>
@@ -494,6 +443,23 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32
         <div><div class="feature-title" data-i18n="feat_title4">30-Day Price History</div><div class="feature-desc" data-i18n="index_feat4_desc">Sparkline chart + trend percentage. Know before you buy.</div></div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- CLOSING CTA -->
+<section class="final-cta">
+  <div class="final-cta-inner">
+    <div class="section-label" data-i18n="index_finalcta_label">Stop guessing</div>
+    <h2 class="final-cta-h2">
+      <span data-i18n="index_finalcta_h1">Know the real price</span><br>
+      <span style="color:var(--accent)" data-i18n="index_finalcta_h2">before you buy.</span>
+    </h2>
+    <p class="final-cta-sub" data-i18n="index_finalcta_sub">Install CardPulse and see in one glance whether a Cardmarket listing is a deal or a rip-off. Free to start, no account juggling.</p>
+    <div class="final-cta-btns">
+      <a href="/register.html" class="btn-primary-lg" data-i18n="index_install">INSTALL FREE</a>
+      <a href="/sets.html" class="btn-outline-lg" data-i18n="index_sets_link">View supported sets →</a>
+    </div>
+    <p class="hero-trust" style="text-align:center" data-i18n="index_hero_trust">Free forever plan · No credit card · Works on every Cardmarket card page</p>
   </div>
 </section>
 
