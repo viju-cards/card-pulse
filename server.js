@@ -193,147 +193,6 @@ function extractTrendAndHistory(data) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════
-// E-MAIL TEMPLATES
-// ═══════════════════════════════════════════════════════════════════════════
-
-// HTML-Escaping für Werte, die aus User-Input stammen (z. B. Suggest-Notiz/URL)
-function escapeHtml(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-// Gemeinsames, e-mail-sicheres Grundgerüst (table-basiert, inline-CSS)
-function emailLayout({ preheader = "", contentHtml = "", footerNote = "" }) {
-  return `<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
-<title>CardPulse</title>
-<style>
-  @media (prefers-color-scheme: dark) {
-    .cp-bg { background:#0f1115 !important; }
-    .cp-card { background:#16181d !important; border-color:rgba(255,255,255,0.08) !important; }
-    .cp-text { color:#e8e8f0 !important; }
-    .cp-muted { color:#9a9ab0 !important; }
-    .cp-wordmark { color:#e8e8f0 !important; }
-  }
-  @media only screen and (max-width:620px) {
-    .cp-card { width:100% !important; border-radius:0 !important; }
-    .cp-pad { padding-left:24px !important; padding-right:24px !important; }
-  }
-</style>
-</head>
-<body class="cp-bg" style="margin:0;padding:0;background:#f4f4f7;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="cp-bg" style="background:#f4f4f7;">
-    <tr>
-      <td align="center" style="padding:32px 16px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="cp-card" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #e4e6ea;border-radius:14px;overflow:hidden;">
-          <tr>
-            <td class="cp-pad" style="padding:28px 40px 8px 40px;">
-              <span class="cp-wordmark" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#1a1a2e;">card<span style="color:#6c63ff;">pulse</span></span>
-            </td>
-          </tr>
-          <tr>
-            <td class="cp-pad cp-text" style="padding:12px 40px 24px 40px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1a1a2e;">
-${contentHtml}
-            </td>
-          </tr>
-        </table>
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
-          <tr>
-            <td class="cp-muted" align="center" style="padding:20px 24px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#9a9aae;">
-              CardPulse · <a href="https://www.card-pulse.com" target="_blank" style="color:#9a9aae;text-decoration:underline;">card-pulse.com</a>${footerNote ? "<br>" + footerNote : ""}
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-}
-
-// ── Passwort-Reset ────────────────────────────────────────────────────────────
-function buildResetEmailHtml(resetUrl) {
-  const safeUrl = escapeHtml(resetUrl);
-  const content = `              <h1 style="margin:0 0 12px 0;font-size:20px;font-weight:700;color:inherit;">Passwort zurücksetzen</h1>
-              <p style="margin:12px 0;">Hallo,</p>
-              <p style="margin:12px 0;">du hast angefragt, dein CardPulse-Passwort zurückzusetzen. Klicke auf den Button, um ein neues Passwort zu vergeben:</p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 4px 0;">
-                <tr>
-                  <td bgcolor="#6c63ff" style="border-radius:8px;">
-                    <a href="${safeUrl}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Passwort zurücksetzen</a>
-                  </td>
-                </tr>
-              </table>
-              <p class="cp-muted" style="margin:16px 0 8px 0;font-size:13px;color:#6b7280;">Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br><a href="${safeUrl}" target="_blank" style="color:#6c63ff;word-break:break-all;">${safeUrl}</a></p>
-              <p class="cp-muted" style="margin:8px 0;font-size:13px;color:#6b7280;">Der Link ist <strong>1 Stunde</strong> gültig. Falls du das nicht angefordert hast, kannst du diese E-Mail ignorieren – dein Passwort bleibt unverändert.</p>
-              <p style="margin:16px 0 0 0;">Dein CardPulse Team</p>`;
-  return emailLayout({
-    preheader: "Setze dein CardPulse-Passwort zurück – der Link ist 1 Stunde gültig.",
-    contentHtml: content,
-  });
-}
-
-function buildResetEmailText(resetUrl) {
-  return `Hallo,
-
-du hast angefragt, dein CardPulse-Passwort zurückzusetzen.
-
-Öffne diesen Link, um ein neues Passwort zu vergeben (gültig 1 Stunde):
-${resetUrl}
-
-Falls du das nicht angefordert hast, ignoriere diese E-Mail – dein Passwort bleibt unverändert.
-
-Dein CardPulse Team
-card-pulse.com`;
-}
-
-// ── Suggest / Fehlende Karte (interne Benachrichtigung) ─────────────────────────
-function buildSuggestEmailHtml(url, note) {
-  const safeUrl = escapeHtml(url);
-  const safeNote = note ? escapeHtml(note).replace(/\n/g, "<br>") : "(keine)";
-  const content = `              <h1 style="margin:0 0 12px 0;font-size:20px;font-weight:700;color:inherit;">Fehlende Karte gemeldet</h1>
-              <p style="margin:12px 0;">Über das Meldeformular wurde ein fehlendes Produkt gemeldet:</p>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0;background:#f7f8fa;border:1px solid #e4e6ea;border-radius:10px;">
-                <tr>
-                  <td style="padding:16px 18px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#1a1a2e;">
-                    <strong>Cardmarket-URL</strong><br>
-                    <a href="${safeUrl}" target="_blank" style="color:#6c63ff;word-break:break-all;">${safeUrl}</a>
-                    <br><br>
-                    <strong>Zusätzliche Infos</strong><br>
-                    ${safeNote}
-                  </td>
-                </tr>
-              </table>`;
-  return emailLayout({
-    preheader: "Neue Produkt-Meldung über card-pulse.com/suggest",
-    contentHtml: content,
-    footerNote: "Gesendet über card-pulse.com/suggest",
-  });
-}
-
-function buildSuggestEmailText(url, note) {
-  return `Fehlende Karte gemeldet
-
-Cardmarket-URL: ${url}
-
-Zusätzliche Infos:
-${note || "(keine)"}
-
-Gesendet über card-pulse.com/suggest`;
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════
 // AUTH ROUTES
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -445,6 +304,43 @@ app.get("/auth/me", requireAuth, async (req, res) => {
 });
 
 
+// ─── Account löschen (DSGVO / Recht auf Löschung) ────────────────────────────
+// Bewusst POST (nicht DELETE): die CORS-Middleware erlaubt nur GET/POST/OPTIONS.
+app.post("/auth/delete", requireAuth, async (req, res) => {
+  const { password } = req.body;
+
+  if (!password)
+    return res.status(400).json({ error: "PASSWORD_REQUIRED" });
+
+  try {
+    const user = await getUserById(req.user.id);
+    if (!user) return res.status(404).json({ error: "USER_NOT_FOUND" });
+
+    // Passwort bestaetigen (Schutz vor versehentlicher/missbraeuchlicher Loeschung)
+    const ok = await bcrypt.compare(password, user.password_hash);
+    if (!ok) return res.status(403).json({ error: "INVALID_PASSWORD" });
+
+    // Stripe-Kunde loeschen -> kuendigt automatisch aktive Abos.
+    // Fehler hier duerfen die Konto-Loeschung NICHT blockieren.
+    if (user.stripe_customer_id) {
+      try {
+        await stripe.customers.del(user.stripe_customer_id);
+      } catch (e) {
+        console.warn("[/auth/delete] Stripe-Kunde nicht loeschbar:", e.message);
+      }
+    }
+
+    // users ist die einzige per-User-Tabelle (card_mapping/sealed_mapping sind global).
+    await pool.query("DELETE FROM users WHERE id = $1", [user.id]);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[/auth/delete]", err.message);
+    res.status(500).json({ error: "SERVER_ERROR" });
+  }
+});
+
+
 // ═══════════════════════════════════════════════════════════════════════════
 // STRIPE ROUTES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -523,40 +419,23 @@ app.post("/webhook", async (req, res) => {
     switch (event.type) {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
-        const sub  = event.data.object;
-        const item = sub.items?.data?.[0];
-
+        const sub = event.data.object;
         const isActive = sub.status === "active" || sub.status === "trialing";
-
-        // Seit Stripe "Basil" (API ≥ 2025-03-31) liegt current_period_end auf dem
-        // Subscription-ITEM, nicht mehr auf der Subscription. Fallback für alte API-Versionen.
-        const periodEndUnix = item?.current_period_end ?? sub.current_period_end ?? null;
-        const premiumUntil  = periodEndUnix ? new Date(periodEndUnix * 1000) : null;
-
+        const premiumUntil = new Date(sub.current_period_end * 1000);
         const cancelAtEnd = sub.cancel_at_period_end;
 
-        // Plan anhand der Price-ID bestimmen
-        const priceId = item?.price?.id;
-        let planName = "silver"; // Default-Bezahlplan
-        let matched  = false;
-        if (priceId === process.env.STRIPE_PRICE_SILVER) { planName = "silver"; matched = true; }
-        if (priceId === process.env.STRIPE_PRICE_GOLD)   { planName = "gold";   matched = true; }
-        if (priceId === process.env.STRIPE_PRICE_PLATIN) { planName = "platin"; matched = true; }
-        if (!matched) {
-          console.warn(`[Webhook] Unbekannte Price-ID "${priceId}" – fällt auf "${planName}" zurück. Prüfe STRIPE_PRICE_* Env-Vars.`);
-        }
+        // Determine plan from price ID
+        const priceId = sub.items?.data?.[0]?.price?.id;
+        let planName = 'silver'; // default paid plan
+        if (priceId === process.env.STRIPE_PRICE_GOLD)   planName = 'gold';
+        if (priceId === process.env.STRIPE_PRICE_PLATIN) planName = 'platin';
+        if (priceId === process.env.STRIPE_PRICE_SILVER) planName = 'silver';
 
-        const result = await pool.query(
+        await pool.query(
           `UPDATE users SET is_premium = $1, premium_until = $2, cancel_at_period_end = $3, plan = $4
            WHERE stripe_customer_id = $5`,
-          [isActive, premiumUntil, cancelAtEnd, isActive ? planName : "bronze", sub.customer]
+          [isActive, premiumUntil, cancelAtEnd, isActive ? planName : 'bronze', sub.customer]
         );
-
-        if (result.rowCount === 0) {
-          console.warn(`[Webhook] Kein User mit stripe_customer_id "${sub.customer}" gefunden – nichts aktualisiert.`);
-        } else {
-          console.log(`[Webhook] User (customer ${sub.customer}) → plan=${isActive ? planName : "bronze"}, premium=${isActive}`);
-        }
         break;
       }
       case "customer.subscription.deleted": {
@@ -624,6 +503,12 @@ app.get("/prices", requireAuth, async (req, res) => {
       });
     }
 
+    // Increment counter
+    await pool.query(
+      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
+      [req.user.id]
+    );
+
     const dbCardNumber =
       /^\d+$/.test(cardNumber) && cardNumber.length < 3
         ? cardNumber.padStart(3, "0")
@@ -635,20 +520,11 @@ app.get("/prices", requireAuth, async (req, res) => {
     );
 
     if (dbResult.rows.length === 0) {
-      // Karte (noch) nicht gemappt → zählt NICHT aufs Limit. Plan trotzdem mitgeben,
-      // damit das Overlay den Cardmarket-Block (Paid-Feature) clientseitig anzeigen kann.
       return res.status(404).json({
         error: "CARD_NOT_FOUND",
         message: `Keine TCGPlayer-ID für ${setSlug} #${dbCardNumber} gefunden.`,
-        user: { plan, used, limit },
       });
     }
-
-    // Ab hier wird wirklich TCGPlayer-Data geliefert → Request jetzt erst zählen.
-    await pool.query(
-      "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
-      [req.user.id]
-    );
 
     const tcgPlayerId = dbResult.rows[0].tcg_player_id;
     const justTcgData = await fetchJustTcg(tcgPlayerId);
@@ -724,8 +600,7 @@ app.post("/suggest", async (req, res) => {
           from: 'CardPulse <info@card-pulse.com>',
           to: [process.env.SUGGEST_EMAIL || 'info@card-pulse.com'],
           subject: 'CardPulse – Fehlende Karte gemeldet',
-          text: buildSuggestEmailText(url, note),
-          html: buildSuggestEmailHtml(url, note),
+          text: `Cardmarket URL: ${url}\n\nZusätzliche Infos:\n${note || '(keine)'}\n\nGesendet über card-pulse.com/suggest`,
         }),
       });
       const data = await response.json();
@@ -750,73 +625,73 @@ app.post("/suggest", async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get("/prices/sealed", requireAuth, async (req, res) => {
+  const user = req.user;
+
+  // Plan limit check (same as /prices/card)
+  const planLimits = { bronze: 20, silver: 400, gold: 1000, platin: 5000 };
+  const plan = user.plan || "bronze";
+  const limit = user.custom_request_limit ?? planLimits[plan] ?? 20;
+
+  const now = new Date();
+  const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date(0);
+  let used = user.monthly_requests || 0;
+  if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
+    used = 0;
+    await pool.query("UPDATE users SET monthly_requests=0, requests_reset_at=NOW() WHERE id=$1", [user.id]);
+  }
+  if (used >= limit) {
+    return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
+  }
+
   const { name, type } = req.query;
   if (!name) return res.status(400).json({ error: "Missing name parameter" });
 
-  const normalizedName = name.toLowerCase().trim();
-
   try {
-    // ── Get full user row from DB (JWT only has id/email/is_premium) ──────
-    const userRow = await getUserById(req.user.id);
-    if (!userRow) return res.status(401).json({ error: "LOGIN_REQUIRED" });
-
-    const plan = userRow.plan || 'bronze';
-    const limit = userRow.custom_request_limit || PLAN_LIMITS[plan] || 20;
-
-    // Reset counter if new month
-    const resetAt = userRow.requests_reset_at ? new Date(userRow.requests_reset_at) : new Date();
-    const now = new Date();
-    const needsReset = resetAt.getFullYear() !== now.getFullYear() ||
-                       resetAt.getMonth() !== now.getMonth();
-    if (needsReset) {
-      await pool.query(
-        "UPDATE users SET monthly_requests = 0, requests_reset_at = NOW() WHERE id = $1",
-        [req.user.id]
-      );
-      userRow.monthly_requests = 0;
-    }
-
-    const used = userRow.monthly_requests || 0;
-    if (used >= limit) {
-      return res.status(429).json({ error: "LIMIT_REACHED", plan, used, limit });
-    }
-
-    // ── Mapping lookup (DB only, no auto-match) ───────────────────────────
+    // Check cache in sealed_mapping table
     const cached = await pool.query(
-      "SELECT tcg_player_id FROM sealed_mapping WHERE cardmarket_name_normalized=$1 LIMIT 1",
-      [normalizedName]
+      "SELECT tcg_player_id FROM sealed_mapping WHERE product_name_normalized=$1 LIMIT 1",
+      [name.toLowerCase().trim()]
     );
-    const tcgPlayerId = cached.rows[0]?.tcg_player_id || null;
 
-    if (!tcgPlayerId) {
-      console.log(`[SEALED] Kein DB-Mapping für "${name}" – User soll Produkt melden`);
-      return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
+    let tcgPlayerId = cached.rows[0]?.tcg_player_id || null;
+    let justTcgData;
+
+    if (tcgPlayerId) {
+      // Fetch by ID (fast path)
+      const url = new URL("https://api.justtcg.com/v1/cards");
+      url.searchParams.set("tcgPlayerId", tcgPlayerId);
+      url.searchParams.set("game", "pokemon");
+      const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
+      justTcgData = await resp.json();
+    } else {
+      // Search by name
+      const url = new URL("https://api.justtcg.com/v1/cards");
+      url.searchParams.set("game", "pokemon");
+      url.searchParams.set("name", name);
+      url.searchParams.set("limit", "5");
+      const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
+      justTcgData = await resp.json();
+
+      // Cache the best match
+      const match = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
+      if (match?.tcgplayerId) {
+        tcgPlayerId = parseInt(match.tcgplayerId);
+        await pool.query(
+          `INSERT INTO sealed_mapping (product_name_normalized, product_name, product_type, tcg_player_id)
+           VALUES ($1,$2,$3,$4) ON CONFLICT (product_name_normalized) DO UPDATE SET tcg_player_id=$4`,
+          [name.toLowerCase().trim(), match.name, type || "unknown", tcgPlayerId]
+        );
+      }
     }
 
-    // ── Fetch from JustTCG by TCGPlayer ID ────────────────────────────────
-    const url = new URL("https://api.justtcg.com/v1/cards");
-    url.searchParams.set("tcgplayerId", tcgPlayerId);
-    const resp = await fetch(url.toString(), {
-      headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY }
-    });
-    const justTcgData = await resp.json();
-    console.log(`[SEALED] Lookup für "${name}" → ID ${tcgPlayerId}, JustTCG status ${resp.status}, data count ${justTcgData.data?.length || 0}`);
-    if (justTcgData.data?.[0]) {
-      console.log(`[SEALED]   Name: "${justTcgData.data[0].name}", Conditions:`,
-        justTcgData.data[0].variants?.map(v => v.condition));
-    }
-
-    // ── Find sealed variant ────────────────────────────────────────────────
+    // Find sealed variant
     const product = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
     if (!product) {
-      console.log(`[SEALED] Keine Sealed-Variante in JustTCG-Antwort für "${name}". Available conditions:`,
-        justTcgData.data?.[0]?.variants?.map(v => v.condition));
       return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
     }
 
     const variant = product.variants.find(v => v.condition === "Sealed");
-    // JustTCG returns USD as decimal directly (consistent with /prices route)
-    const usdPrice = variant.marketPrice ?? variant.price ?? 0;
+    const usdPrice = variant.price / 100;
 
     // EUR conversion
     let eurRate = 0.92;
@@ -826,27 +701,23 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
       eurRate = fxData.rates?.EUR || 0.92;
     } catch (_) {}
 
-    // History – priceHistory entries: {p: price, t: unix_timestamp}
-    const history = (variant.priceHistory || [])
-      .filter(p => p.p != null && p.t != null)
-      .map(p => ({
-        date: new Date(p.t * 1000).toISOString().split("T")[0],
-        price: +Number(p.p).toFixed(2)
-      }))
-      .slice(-30);
+    const history = (variant.priceHistory || []).map(p => ({
+      date: new Date(p.t * 1000).toISOString().split("T")[0],
+      price: +(p.p / 100).toFixed(2)
+    }));
 
     // Increment usage
     await pool.query(
       "UPDATE users SET monthly_requests = monthly_requests + 1 WHERE id = $1",
-      [req.user.id]
+      [user.id]
     );
 
     res.json({
       name: product.name,
-      set: product.set_name || product.set,
+      set: product.set_name,
       type: type || "sealed",
       tcgPlayerId: product.tcgplayerId,
-      price: { usd: +Number(usdPrice).toFixed(2), eur: +(usdPrice * eurRate).toFixed(2) },
+      price: { usd: +usdPrice.toFixed(2), eur: +(usdPrice * eurRate).toFixed(2) },
       change7d: variant.priceChange7d,
       change30d: variant.priceChange30d,
       trendSlope7d: variant.trendSlope7d,
@@ -857,7 +728,7 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("[SEALED] Error:", err);
+    console.error("Sealed price error:", err);
     res.status(500).json({ error: "SERVER_ERROR", message: err.message });
   }
 });
@@ -899,8 +770,17 @@ app.post("/auth/forgot-password", async (req, res) => {
           from: "CardPulse <info@card-pulse.com>",
           to: [email.toLowerCase()],
           subject: "CardPulse – Passwort zurücksetzen",
-          text: buildResetEmailText(resetUrl),
-          html: buildResetEmailHtml(resetUrl),
+          text: `Hallo,
+
+du hast eine Passwort-Zurücksetzen-Anfrage gestellt.
+
+Klicke auf diesen Link um dein Passwort zurückzusetzen (gültig 1 Stunde):
+${resetUrl}
+
+Falls du das nicht angefordert hast, ignoriere diese E-Mail.
+
+Dein CardPulse Team`,
+          html: `<p>Hallo,</p><p>du hast eine Passwort-Zurücksetzen-Anfrage gestellt.</p><p><a href="${resetUrl}" style="background:#6c63ff;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Passwort zurücksetzen</a></p><p style="color:#888;font-size:13px">Link gültig für 1 Stunde. Falls du das nicht angefordert hast, ignoriere diese E-Mail.</p><p>Dein CardPulse Team</p>`,
         }),
       });
       console.log(`[RESET] E-Mail gesendet an ${email}`);
