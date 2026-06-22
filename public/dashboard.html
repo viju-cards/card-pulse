@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" translate="no">
 <head>
@@ -82,6 +83,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 .cm-cta:hover{opacity:.88;transform:translateY(-1px)}
 .cm-cta .cm-arrow{transition:transform .2s}
 .cm-cta:hover .cm-arrow{transform:translateX(3px)}
+.dash-header{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:40px;flex-wrap:wrap}
+.dash-header .page-title{margin-bottom:0}
+.cm-cta-header{margin-top:0;padding:14px 26px;font-size:14px;font-weight:600;box-shadow:0 6px 24px rgba(108,99,255,0.35);white-space:nowrap}
+.cm-cta-header:hover{box-shadow:0 8px 30px rgba(108,99,255,0.5)}
+@media(max-width:640px){.dash-header{align-items:flex-start}.cm-cta-header{width:100%;justify-content:center;margin-top:4px}}
 .ext-title{font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:6px}
 .ext-sub{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);margin-bottom:20px}
 .steps{display:flex;flex-direction:column;gap:12px}
@@ -108,8 +114,15 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
   <div id="loadingState">> LOADING...</div>
 
   <div id="content">
-    <span class="page-eyebrow" data-i18n="dash_eyebrow">Account</span>
-    <h1 class="page-title" data-i18n="dash_title">Dashboard.</h1>
+    <div class="dash-header">
+      <div>
+        <span class="page-eyebrow" data-i18n="dash_eyebrow">Account</span>
+        <h1 class="page-title" data-i18n="dash_title">Dashboard.</h1>
+      </div>
+      <a href="https://www.cardmarket.com/en/Pokemon" target="_blank" rel="noopener" class="cm-cta cm-cta-header">
+        <span data-i18n="dash_open_cm">Open a card on Cardmarket</span> <span class="cm-arrow">&rarr;</span>
+      </a>
+    </div>
 
     <!-- Status card -->
     <div class="status-card" id="statusCard">
@@ -179,9 +192,6 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
           <p data-i18n="dash_ext_step3">You're already signed in — your token is forwarded automatically. Open any card on <a href="https://cardmarket.com" target="_blank">Cardmarket</a>.</p>
         </div>
       </div>
-      <a href="https://www.cardmarket.com/en/Pokemon" target="_blank" rel="noopener" class="cm-cta">
-        <span data-i18n="dash_open_cm">Open a card on Cardmarket</span> <span class="cm-arrow">&rarr;</span>
-      </a>
     </div>
 
     <!-- Cancel subscription -->
