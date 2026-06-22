@@ -130,11 +130,17 @@ const TRANSLATIONS = {
     // Delete account
     dash_delete_acct: "Delete account",
     dash_delete_title: "Delete your account?",
-    dash_delete_warn: "This permanently deletes your account and all associated data, and cancels any active subscription. This action cannot be undone.",
+    dash_delete_warn: "This <strong>permanently</strong> deletes your account and all associated data, and cancels any active subscription. <strong>This action cannot be undone.</strong>",
     dash_delete_pw_label: "Confirm your password",
     dash_delete_pw_ph: "Your password",
     dash_delete_cancel: "Cancel",
     dash_delete_confirm: "Delete permanently",
+    // Account deleted page
+    del_done_eyebrow: "Account",
+    del_done_title: "Account deleted.",
+    del_done_sub: "Your account and all associated data have been permanently deleted. Thanks for giving CardPulse a try — you can create a new account anytime.",
+    del_done_home: "Back to homepage",
+    del_done_register: "Create new account",
     dash_loading: "Loading dashboard...",
 
     // SETS
@@ -485,11 +491,17 @@ const TRANSLATIONS = {
     // Konto löschen
     dash_delete_acct: "Konto löschen",
     dash_delete_title: "Konto wirklich löschen?",
-    dash_delete_warn: "Dies löscht dein Konto und alle zugehörigen Daten dauerhaft und kündigt ein aktives Abo. Dieser Schritt kann nicht rückgängig gemacht werden.",
+    dash_delete_warn: "Dies löscht dein Konto und alle zugehörigen Daten <strong>dauerhaft</strong> und kündigt ein aktives Abo. <strong>Dieser Schritt kann nicht rückgängig gemacht werden.</strong>",
     dash_delete_pw_label: "Passwort bestätigen",
     dash_delete_pw_ph: "Dein Passwort",
     dash_delete_cancel: "Abbrechen",
     dash_delete_confirm: "Endgültig löschen",
+    // Konto-gelöscht-Seite
+    del_done_eyebrow: "Konto",
+    del_done_title: "Konto gelöscht.",
+    del_done_sub: "Dein Konto und alle zugehörigen Daten wurden dauerhaft gelöscht. Danke, dass du CardPulse ausprobiert hast — du kannst jederzeit ein neues Konto erstellen.",
+    del_done_home: "Zur Startseite",
+    del_done_register: "Neues Konto erstellen",
     dash_loading: "Lade Dashboard...",
 
     sets_page_label: "Kompatibilität",
