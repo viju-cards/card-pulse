@@ -156,9 +156,9 @@ const TRANSLATIONS = {
 
     // LANGUAGE SWITCHER
     lang_label: "EN",
-    dash_ext_step1: "Open the Chrome Web Store and search for CardPulse.",
-    dash_ext_step2: "Install and click the CardPulse icon in your toolbar.",
-    dash_ext_step3: "You're already signed in — open any card on Cardmarket.",
+    dash_ext_step1: "Install CardPulse from the Chrome Web Store and click its icon in your browser toolbar.",
+    dash_ext_step2: "Back here on the dashboard, reload the page once while logged in — this links your account to the extension. Without this step the overlay stays empty.",
+    dash_ext_step3: "Open any Pokémon card on Cardmarket — the live prices now appear in the overlay.",
     enterprise_h3_short: "Custom quote.",
     forgot_h1_short: "Reset password.",
     imprint_h1: "Imprint.",
@@ -264,9 +264,6 @@ const TRANSLATIONS = {
     dash_plans_sub: "Upgrade or change your plan anytime.",
     dash_ext_title: "Browser Extension",
     dash_ext_sub: "Connect CardPulse to your browser.",
-    dash_ext_step1: "Open the Chrome Web Store and search for CardPulse.",
-    dash_ext_step2: "Install and click the CardPulse icon in your browser toolbar.",
-    dash_ext_step3: "You\'re already signed in — your token is forwarded automatically.",
     nav_logout: "Sign out",
 
     // Forgot/reset
@@ -505,9 +502,9 @@ const TRANSLATIONS = {
     privacy_updated: "Zuletzt aktualisiert: Mai 2026",
 
     lang_label: "DE",
-    dash_ext_step1: "Öffne den Chrome Web Store und suche nach CardPulse.",
-    dash_ext_step2: "Installiere die Extension und klicke auf das CardPulse-Icon.",
-    dash_ext_step3: "Du bist bereits eingeloggt — öffne eine Karte auf Cardmarket.",
+    dash_ext_step1: "Installiere CardPulse aus dem Chrome Web Store und klicke auf das CardPulse-Icon in der Browserleiste.",
+    dash_ext_step2: "Lade hier im Dashboard die Seite einmal neu, während du eingeloggt bist — dadurch wird dein Account mit der Extension verbunden. Ohne diesen Schritt bleibt das Overlay leer.",
+    dash_ext_step3: "Öffne eine Pokémon-Karte auf Cardmarket — die Live-Preise erscheinen jetzt im Overlay.",
     enterprise_h3_short: "Individuelles Angebot.",
     forgot_h1_short: "Passwort zurücksetzen.",
     imprint_h1: "Impressum.",
@@ -608,9 +605,6 @@ const TRANSLATIONS = {
     dash_plans_sub: "Jederzeit upgraden oder wechseln.",
     dash_ext_title: "Browser Extension",
     dash_ext_sub: "Verbinde CardPulse mit deinem Browser.",
-    dash_ext_step1: "Öffne den Chrome Web Store und suche nach CardPulse.",
-    dash_ext_step2: "Installiere die Extension und klicke auf das CardPulse-Icon.",
-    dash_ext_step3: "Du bist bereits eingeloggt — dein Token wird automatisch weitergegeben.",
     nav_logout: "Abmelden",
 
     // Forgot/reset
