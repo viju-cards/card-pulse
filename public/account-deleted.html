@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<meta http-equiv="Content-Language" content="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account deleted – CardPulse</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090f;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78;--red:#ef4444;--green:#22c55e}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
+a{text-decoration:none}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
+.logo span{color:var(--accent)}
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 20px;position:relative;z-index:1}
+.wrap{width:100%;max-width:440px;text-align:center}
+.check{width:72px;height:72px;margin:0 auto 28px;border-radius:50%;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;color:var(--green)}
+.eyebrow{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:18px}
+.eyebrow::before{content:"> "}
+h1{font-family:"Barlow Condensed",sans-serif;font-size:52px;font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:14px}
+.subtitle{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.7}
+.btn{display:inline-block;width:100%;padding:15px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:"DM Mono",monospace;font-size:13px;font-weight:500;cursor:pointer;transition:.2s}
+.btn:hover{opacity:.9}
+.link{display:inline-block;margin-top:18px;color:var(--accent);font-family:"DM Mono",monospace;font-size:12px;text-decoration:none}
+.link:hover{text-decoration:underline}
+@media(max-width:480px){nav{padding:10px 16px}.main{padding:40px 16px}h1{font-size:40px}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">card<span>pulse</span></a>
+  <div class="nav-links"></div>
+</nav>
+
+<div class="main">
+  <div class="wrap">
+    <div class="check">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="eyebrow" data-i18n="del_done_eyebrow">Account</div>
+    <h1 data-i18n="del_done_title">Account deleted.</h1>
+    <p class="subtitle" data-i18n="del_done_sub">Your account and all associated data have been permanently deleted. Thanks for giving CardPulse a try — you can create a new account anytime.</p>
+    <a href="/" class="btn" data-i18n="del_done_home">Back to homepage</a>
+    <a href="/register.html" class="link" data-i18n="del_done_register">Create new account</a>
+  </div>
+</div>
+
+<script src="/i18n.js"></script>
+<script src="/shared.js"></script>
+</body>
+</html>
