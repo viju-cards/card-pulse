@@ -127,6 +127,14 @@ const TRANSLATIONS = {
     dash_danger_desc: "Sign out on all devices.",
     dash_logout_all: "Sign out everywhere",
     dash_cancel_sub: "Cancel subscription",
+    // Delete account
+    dash_delete_acct: "Delete account",
+    dash_delete_title: "Delete your account?",
+    dash_delete_warn: "This permanently deletes your account and all associated data, and cancels any active subscription. This action cannot be undone.",
+    dash_delete_pw_label: "Confirm your password",
+    dash_delete_pw_ph: "Your password",
+    dash_delete_cancel: "Cancel",
+    dash_delete_confirm: "Delete permanently",
     dash_loading: "Loading dashboard...",
 
     // SETS
@@ -474,6 +482,14 @@ const TRANSLATIONS = {
     dash_danger_desc: "Hier kannst du dich auf allen Geräten abmelden.",
     dash_logout_all: "Überall abmelden",
     dash_cancel_sub: "Abo kündigen",
+    // Konto löschen
+    dash_delete_acct: "Konto löschen",
+    dash_delete_title: "Konto wirklich löschen?",
+    dash_delete_warn: "Dies löscht dein Konto und alle zugehörigen Daten dauerhaft und kündigt ein aktives Abo. Dieser Schritt kann nicht rückgängig gemacht werden.",
+    dash_delete_pw_label: "Passwort bestätigen",
+    dash_delete_pw_ph: "Dein Passwort",
+    dash_delete_cancel: "Abbrechen",
+    dash_delete_confirm: "Endgültig löschen",
     dash_loading: "Lade Dashboard...",
 
     sets_page_label: "Kompatibilität",
