@@ -78,6 +78,10 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 
 /* Extension setup */
 .ext-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:24px}
+.cm-cta{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:12px 22px;border-radius:8px;background:var(--accent);color:#fff;font-family:"DM Mono",monospace;font-size:13px;font-weight:500;text-decoration:none;transition:.2s}
+.cm-cta:hover{opacity:.88;transform:translateY(-1px)}
+.cm-cta .cm-arrow{transition:transform .2s}
+.cm-cta:hover .cm-arrow{transform:translateX(3px)}
 .ext-title{font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:6px}
 .ext-sub{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);margin-bottom:20px}
 .steps{display:flex;flex-direction:column;gap:12px}
@@ -175,6 +179,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
           <p data-i18n="dash_ext_step3">You're already signed in — your token is forwarded automatically. Open any card on <a href="https://cardmarket.com" target="_blank">Cardmarket</a>.</p>
         </div>
       </div>
+      <a href="https://www.cardmarket.com/en/Pokemon" target="_blank" rel="noopener" class="cm-cta">
+        <span data-i18n="dash_open_cm">Open a card on Cardmarket</span> <span class="cm-arrow">&rarr;</span>
+      </a>
     </div>
 
     <!-- Cancel subscription -->
