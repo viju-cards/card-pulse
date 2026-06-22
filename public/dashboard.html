@@ -100,9 +100,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
 .modal-overlay.open{display:flex}
 .modal-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;max-width:430px;width:100%}
-.modal-title{font-family:"Barlow Condensed",sans-serif;font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:12px;color:var(--text)}
-.modal-warn{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:20px}
-.modal-warn-paid{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.28);border-radius:8px;padding:12px 14px;color:#f1a9a9;font-size:12.5px;line-height:1.55;margin-bottom:20px}
+.modal-title{display:flex;align-items:center;gap:10px;font-family:"Barlow Condensed",sans-serif;font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:14px;color:var(--red)}
+.modal-title svg{flex-shrink:0}
+.modal-warn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);border-radius:8px;padding:13px 15px;font-size:13px;color:#f3a5a5;line-height:1.55;margin-bottom:14px}
+.modal-warn strong{color:#ff7a7a;font-weight:700}
+.modal-warn-paid{background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.4);border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;color:#ffb1b1;font-size:12.5px;font-weight:500;line-height:1.55;margin-bottom:20px}
 .modal-label{display:block;font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.5px;margin-bottom:6px}
 .modal-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 12px;color:var(--text);font-size:14px;box-sizing:border-box;margin-bottom:14px}
 .modal-input:focus{outline:none;border-color:var(--accent)}
@@ -218,8 +220,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between
 <!-- Delete account confirmation modal -->
 <div id="deleteModal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
   <div class="modal-box">
-    <div class="modal-title" data-i18n="dash_delete_title">Delete your account?</div>
-    <p class="modal-warn" data-i18n="dash_delete_warn">This permanently deletes your account and all associated data, and cancels any active subscription. This action cannot be undone.</p>
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span data-i18n="dash_delete_title">Delete your account?</span>
+    </div>
+    <p class="modal-warn" data-i18n-html="dash_delete_warn">This permanently deletes your account and all associated data, and cancels any active subscription. This action cannot be undone.</p>
     <p id="deletePaidWarn" class="modal-warn-paid" style="display:none"></p>
     <label class="modal-label" for="deletePw" data-i18n="dash_delete_pw_label">Confirm your password</label>
     <input type="password" id="deletePw" class="modal-input" autocomplete="current-password" data-i18n="dash_delete_pw_ph" placeholder="Your password">
@@ -405,7 +410,7 @@ async function confirmDelete(){
     if(res.ok){
       localStorage.removeItem('cp_token');localStorage.removeItem('cp_user');
       try{chrome.runtime.sendMessage(EXT_ID,{type:'LOGOUT'})}catch(e){}
-      window.location.href='/';
+      window.location.href='/account-deleted.html';
       return;
     }
     if(res.status===403){err.textContent=de?'Falsches Passwort.':'Incorrect password.';}
