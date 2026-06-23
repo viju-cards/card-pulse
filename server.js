@@ -421,7 +421,9 @@ app.post("/webhook", async (req, res) => {
       case "customer.subscription.updated": {
         const sub = event.data.object;
         const isActive = sub.status === "active" || sub.status === "trialing";
-        const premiumUntil = new Date(sub.current_period_end * 1000);
+        // Seit Stripe Basil/Clover liegt current_period_end auf Item-Ebene, nicht mehr auf der Subscription
+        const periodEndUnix = sub.items?.data?.[0]?.current_period_end ?? sub.current_period_end;
+        const premiumUntil = periodEndUnix ? new Date(periodEndUnix * 1000) : null;
         const cancelAtEnd = sub.cancel_at_period_end;
 
         // Determine plan from price ID
