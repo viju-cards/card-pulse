@@ -149,10 +149,28 @@ select option{background:var(--card)}
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
 .reveal.in{opacity:1;transform:none}
 
+/* ---------- Mobile nav (hamburger) ---------- */
+.nav-toggle{display:none;width:42px;height:42px;flex-shrink:0;flex-direction:column;justify-content:center;align-items:center;gap:5px;background:none;border:1px solid var(--line);border-radius:9px;cursor:pointer;padding:0}
+.nav-toggle span{display:block;width:19px;height:2px;background:var(--ink);border-radius:2px;transition:.25s}
+nav.menu-open .nav-toggle span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+nav.menu-open .nav-toggle span:nth-child(2){opacity:0}
+nav.menu-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
 /* ---------- Responsive ---------- */
+@media(max-width:900px){
+  .nav-toggle{display:flex}
+  .nav-links,.nav-right{position:absolute;top:100%;left:0;right:0;display:none;flex-direction:column;align-items:stretch;gap:6px;
+    padding:14px 20px 18px;background:rgba(8,8,13,.97);backdrop-filter:blur(18px);border-bottom:1px solid var(--line);
+    box-shadow:0 22px 44px -18px rgba(0,0,0,.6)}
+  nav>.nav-links,nav>.nav-right{margin:0}
+  nav.menu-open .nav-links,nav.menu-open .nav-right{display:flex}
+  .nav-links a,.nav-right a,.nav-links button,.nav-right button{width:100%;text-align:center;padding:13px;font-size:15px}
+  #langSwitcher{align-self:center;width:auto}
+  .user-email{text-align:center;padding:6px 0}
+}
 @media(max-width:768px){
   .cp-nav-in{padding:14px 20px}
-  nav>.logo{margin-left:20px}nav>.nav-links,nav>.nav-right{margin-right:20px}
+  nav>.logo{margin-left:20px}
   .wrap{padding:0 20px}.cp-narrow{padding:48px 20px}
 }
 @media(prefers-reduced-motion:reduce){
