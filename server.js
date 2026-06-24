@@ -771,18 +771,18 @@ app.post("/auth/forgot-password", async (req, res) => {
         body: JSON.stringify({
           from: "CardPulse <info@card-pulse.com>",
           to: [email.toLowerCase()],
-          subject: "CardPulse – Passwort zurücksetzen",
-          text: `Hallo,
+          subject: "CardPulse – Reset your password",
+          text: `Hi,
 
-du hast eine Passwort-Zurücksetzen-Anfrage gestellt.
+You requested to reset your password.
 
-Klicke auf diesen Link um dein Passwort zurückzusetzen (gültig 1 Stunde):
+Click this link to set a new password (valid for 1 hour):
 ${resetUrl}
 
-Falls du das nicht angefordert hast, ignoriere diese E-Mail.
+If you didn't request this, you can safely ignore this email.
 
-Dein CardPulse Team`,
-          html: `<p>Hallo,</p><p>du hast eine Passwort-Zurücksetzen-Anfrage gestellt.</p><p><a href="${resetUrl}" style="background:#6c63ff;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Passwort zurücksetzen</a></p><p style="color:#888;font-size:13px">Link gültig für 1 Stunde. Falls du das nicht angefordert hast, ignoriere diese E-Mail.</p><p>Dein CardPulse Team</p>`,
+The CardPulse Team`,
+          html: `<p>Hi,</p><p>You requested to reset your password.</p><p><a href="${resetUrl}" style="background:#6c63ff;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Reset password</a></p><p style="color:#888;font-size:13px">This link is valid for 1 hour. If you didn't request this, you can safely ignore this email.</p><p>The CardPulse Team</p>`,
         }),
       });
       console.log(`[RESET] E-Mail gesendet an ${email}`);
