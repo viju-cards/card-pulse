@@ -6,50 +6,42 @@
 <title>Supported Sets – CardPulse</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/cardpulse-ui.css">
 <style>
-:root{--bg:#09090f;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--text:#e8e8f0;--muted:#5a5a78}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;display:flex;flex-direction:column}
-body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.1) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)}
-nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
-.logo{font-family:"Press Start 2P",monospace;font-size:11px;color:var(--text);text-decoration:none;letter-spacing:1px;line-height:1.6}
-.logo span{color:var(--accent)}
-.nav-links{display:flex;gap:8px;align-items:center}
-.main{flex:1;position:relative;z-index:1;max-width:1100px;margin:0 auto;width:100%;padding:60px 48px}
-.section-label{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:20px;display:block}
-.section-label::before{content:"> "}
-h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;line-height:.95;margin-bottom:12px}
-.subtitle{font-family:"DM Mono",monospace;font-size:13px;color:var(--muted);margin-bottom:28px}
-
-/* Lang toggle */
-.lang-toggle{display:flex;gap:0;margin-bottom:28px;border:1px solid var(--border);border-radius:8px;overflow:hidden;width:fit-content}
-.lang-btn{padding:9px 24px;background:transparent;border:none;color:var(--muted);font-family:"DM Mono",monospace;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;letter-spacing:1px}
-.lang-btn:first-child{border-right:1px solid var(--border)}
-.lang-btn.active{background:rgba(108,99,255,0.15);color:var(--text)}
-.lang-btn:hover:not(.active){background:rgba(255,255,255,0.04)}
-
+/* sets-specific skin — shared chrome/tokens from /cardpulse-ui.css */
+.main{flex:1;position:relative;z-index:1;max-width:1100px;margin:0 auto;width:100%;padding:60px 32px}
+.section-label{margin-bottom:14px}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(38px,5vw,60px);letter-spacing:-1.5px;line-height:1.02;margin-bottom:12px}
+.subtitle{font-family:var(--mono);font-size:13px;color:var(--mut);margin-bottom:28px}
+.subtitle strong{color:var(--accent)}
+.lang-toggle{display:inline-flex;margin-bottom:28px;border:1px solid var(--line);border-radius:10px;overflow:hidden;width:fit-content}
+.lang-btn{padding:9px 22px;background:transparent;border:none;color:var(--mut);font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;letter-spacing:.5px}
+.lang-btn:first-child{border-right:1px solid var(--line)}
+.lang-btn.active{background:#22222e;color:var(--ink)}
+.lang-btn:hover:not(.active){background:rgba(255,255,255,.04)}
 .search-wrap{position:relative;margin-bottom:16px;max-width:480px}
-#search{width:100%;padding:13px 14px;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:"DM Mono",monospace;font-size:13px;outline:none;transition:.2s}
-#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
-#search::placeholder{color:var(--muted)}
+#search{width:100%;padding:13px 16px;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:11px;color:var(--ink);font-family:var(--mono);font-size:13px;outline:none;transition:.18s}
+#search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,108,255,.14)}
+#search::placeholder{color:var(--mut)}
 .era-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:24px}
-.era-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:"DM Mono",monospace;font-size:10px;cursor:pointer;transition:.2s;white-space:nowrap}
+.era-btn{padding:7px 13px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--mut);font-family:var(--mono);font-size:11px;cursor:pointer;transition:.15s;white-space:nowrap}
+.era-btn:hover{color:var(--ink);border-color:var(--mut)}
 .all-btn{border-color:var(--accent);color:var(--accent)}
-.all-btn.active{background:rgba(108,99,255,0.15)}
-.stats-bar{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);margin-bottom:24px}
+.all-btn.active{background:rgba(124,108,255,.15)}
+.stats-bar{font-family:var(--mono);font-size:12px;color:var(--mut);margin-bottom:24px}
 .stats-bar strong{color:var(--accent)}
 .era-section{margin-bottom:32px}
-.era-heading{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.era-title{font-family:"Barlow Condensed",sans-serif;font-size:22px;font-weight:800;text-transform:uppercase}
-.era-count{font-family:"Press Start 2P",monospace;font-size:7px;color:var(--muted);letter-spacing:1px}
-.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
-.set-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:10px;transition:.15s;text-decoration:none;color:inherit}
-.set-card:hover{border-color:rgba(108,99,255,0.3);background:rgba(108,99,255,0.04);transform:translateY(-1px)}
-.set-code{font-family:"Press Start 2P",monospace;font-size:6px;letter-spacing:.3px;padding:5px 6px;border-radius:4px;min-width:40px;text-align:center;flex-shrink:0;line-height:1.8;white-space:nowrap}
-.set-name{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);line-height:1.4}
-#no-results{display:none;font-family:"Press Start 2P",monospace;font-size:8px;color:var(--muted);letter-spacing:1px;padding:60px 0;text-align:center}
-@media(max-width:768px){nav{padding:10px 16px}.main{padding:40px 20px}h1{font-size:40px}.sets-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.era-filters{gap:5px}}
+.era-heading{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.era-title{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.4px}
+.era-count{font-family:var(--mono);font-size:10px;color:var(--mut);letter-spacing:.5px}
+.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.set-card{background:var(--surf);border:1px solid var(--line);border-radius:11px;padding:10px 13px;display:flex;align-items:center;gap:11px;transition:.15s;text-decoration:none;color:inherit}
+.set-card:hover{border-color:rgba(124,108,255,.4);background:rgba(124,108,255,.05);transform:translateY(-1px)}
+.set-code{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.3px;padding:5px 7px;border-radius:6px;min-width:42px;text-align:center;flex-shrink:0;line-height:1.4;white-space:nowrap}
+.set-name{font-family:var(--mono);font-size:12px;color:var(--mut);line-height:1.4}
+#no-results{display:none;font-family:var(--mono);font-size:13px;color:var(--mut);letter-spacing:1px;padding:60px 0;text-align:center}
+@media(max-width:768px){.main{padding:40px 20px}h1{font-size:38px}.sets-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.era-filters{gap:5px}}
 </style>
 </head>
 <body>
@@ -69,7 +61,7 @@ h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(40px,5vw,72px);font
   </div>
 
   <div class="search-wrap">
-    <input type="text" id="search" placeholder="Search sets or codes..." oninput="doSearch(this.value)" id="search">
+    <input type="text" id="search" placeholder="Search sets or codes..." oninput="doSearch(this.value)">
   </div>
 
   <div class="era-filters" id="era-filters">
