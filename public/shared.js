@@ -40,6 +40,33 @@
     if (container) container.appendChild(wrap);
   }
 
+  function injectNavToggle() {
+    var nav = document.querySelector('nav');
+    if (!nav || nav.querySelector('.nav-toggle')) return;
+    var menu = nav.querySelector('.nav-links, .nav-right');
+    if (!menu) return;
+    var bar = menu.parentElement;
+
+    var btn = document.createElement('button');
+    btn.className = 'nav-toggle';
+    btn.setAttribute('aria-label', 'Menu');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<span></span><span></span><span></span>';
+    btn.addEventListener('click', function () {
+      var open = nav.classList.toggle('menu-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    bar.appendChild(btn);
+
+    // Tapping a link closes the menu again
+    menu.addEventListener('click', function (e) {
+      if (e.target.closest('a')) {
+        nav.classList.remove('menu-open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   function injectFooter() {
     const existing = document.querySelector('footer, .cp-footer-wrap');
     if (existing) return;
@@ -60,6 +87,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     injectLangToggle();
+    injectNavToggle();
     injectFooter();
     if (window.i18n) {
       const lang = localStorage.getItem('cp_lang') || 'en';
