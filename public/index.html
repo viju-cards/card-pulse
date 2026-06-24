@@ -4,493 +4,434 @@
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CardPulse</title>
+<title>CardPulse – TCGPlayer prices on Cardmarket</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/cardpulse-ui.css">
 <style>
-:root{--bg:#09090f;--surface:#0f0f1c;--card:#13131f;--border:rgba(255,255,255,0.06);--accent:#6c63ff;--yellow:#ffd700;--red:#ff4040;--teal:#00d4aa;--text:#e8e8f0;--muted:#5a5a78;--pixel:"Press Start 2P",monospace;--mono:"DM Mono",monospace;--cond:"Barlow Condensed",sans-serif;--sans:"DM Sans",sans-serif}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px)}
-body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(rgba(108,99,255,0.12) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%)}
-nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:14px 48px;background:rgba(9,9,15,0.85);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
-.logo{font-family:var(--pixel);font-size:11px;color:white;text-decoration:none;letter-spacing:1px;line-height:1.6}
-.logo em{color:var(--accent);font-style:normal}
-.nav-right{display:flex;gap:10px;align-items:center}
-.nav-toggle{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:42px;height:42px;background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:0}
-.nav-toggle span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:.25s}
-nav.open .nav-toggle span:nth-child(1){transform:translateY(7px) rotate(45deg)}
-nav.open .nav-toggle span:nth-child(2){opacity:0}
-nav.open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-.btn-ghost-sm{padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;text-decoration:none;transition:.2s}
-.btn-ghost-sm:hover{border-color:var(--accent);color:var(--text)}
-.btn-start{padding:8px 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:var(--mono);font-size:12px;cursor:pointer;text-decoration:none}
-.ticker-wrap{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 0;background:rgba(0,0,0,0.2);position:relative;z-index:1}
-.ticker-inner{display:flex;gap:48px;animation:ticker 20s linear infinite;white-space:nowrap}
-.ticker-item{font-family:var(--pixel);font-size:8px;color:var(--muted);letter-spacing:1px}
-.ticker-item.up{color:var(--teal)}.ticker-item.down{color:var(--red)}
-@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.hero{position:relative;z-index:1;padding:80px 48px 60px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;max-width:1200px;margin:0 auto}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--pixel);font-size:7px;letter-spacing:1px;color:var(--yellow);border:1px solid rgba(255,215,0,0.3);background:rgba(255,215,0,0.05);padding:8px 14px;border-radius:4px;margin-bottom:24px}
-h1{font-family:var(--cond);font-size:clamp(52px,6vw,88px);font-weight:900;letter-spacing:-1px;line-height:.95;margin-bottom:24px;text-transform:uppercase}
-h1 .line1{color:var(--text);display:block}h1 .line2{color:var(--accent);display:block}h1 .line3{color:var(--yellow);display:block}
-.hero-sub{font-family:var(--mono);font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:36px;max-width:400px}
-.hero-sub strong{color:var(--teal);font-weight:500}
-.hero-cta{display:flex;gap:12px;flex-wrap:wrap}
-.hero-trust{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:16px;letter-spacing:.2px}
-.btn-primary-lg{padding:14px 28px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:var(--pixel);font-size:9px;line-height:1.6;cursor:pointer;text-decoration:none;box-shadow:0 0 24px rgba(108,99,255,0.4);transition:.2s}
-.btn-primary-lg:hover{box-shadow:0 0 40px rgba(108,99,255,0.6)}
-.btn-outline-lg{padding:14px 28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;text-decoration:none;transition:.2s}
-.btn-outline-lg:hover{border-color:var(--muted);color:var(--text)}
-.overlay-pair{display:flex;flex-direction:column;gap:14px}
-.overlay-pair-labels{display:flex;gap:16px}
-.overlay-pair-labels span{font-family:var(--pixel);font-size:7px;color:var(--muted);letter-spacing:1px;text-align:center;flex:1}
-.overlays-row{display:flex;gap:14px;align-items:flex-start}
-.cp-ov{flex:1;border-radius:14px;overflow:hidden;font-family:var(--mono);font-size:11px}
-.cp-ov.light{background:#fff;color:#1a1a2e;border:1px solid rgba(0,0,0,0.1);box-shadow:0 8px 40px rgba(0,0,0,0.25)}
-.cp-ov.dark{background:#16181d;color:#e8e8f0;border:1px solid rgba(108,99,255,0.2);box-shadow:0 8px 40px rgba(108,99,255,0.12)}
-.ov-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 9px}
-.ov-logo{font-family:var(--pixel);font-size:8px;letter-spacing:-.3px}
-.ov-body{padding:11px 13px}
-.ov-cardname{font-size:10px;margin-bottom:8px}
-.ov-mktbox{border-radius:8px;padding:10px;text-align:center;margin-bottom:8px;border-width:1.5px;border-style:solid}
-.ov-mktlabel{font-family:var(--pixel);font-size:6px;letter-spacing:1px;margin-bottom:3px}
-.ov-mktprice{font-family:var(--cond);font-size:26px;font-weight:800;line-height:1}
-.ov-mkteur{font-size:12px;margin-top:2px;font-weight:600}
-.ov-pills{display:flex;gap:5px;margin-bottom:8px}
-.ov-pill{flex:1;border-radius:6px;padding:5px;text-align:center;border-width:1px;border-style:solid}
-.ov-pill-label{font-family:var(--pixel);font-size:5px;letter-spacing:.8px;margin-bottom:2px}
-.ov-pill-val{font-family:var(--cond);font-size:13px;font-weight:800}
-.ov-spark{border-radius:6px;padding:7px 8px 5px;margin-bottom:8px;border-width:1px;border-style:solid}
-.ov-spark-header{display:flex;justify-content:space-between;font-size:8px;margin-bottom:4px}
-.ov-spark-label{font-family:var(--pixel);font-size:5px;letter-spacing:.5px}
-.ov-conds{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
-.ov-cond{display:flex;justify-content:space-between;align-items:center;border-radius:5px;padding:4px 7px;border-width:1px;border-style:solid}
-.ov-cond-left{display:flex;align-items:center;gap:5px}
-.ov-badge{font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)}
-.ov-cond-name{font-size:10px}
-.ov-cond-right{text-align:right}
-.ov-usd{font-family:var(--cond);font-size:13px;font-weight:700}
-.ov-eur{font-size:9px}
-.ov-dashbtn{text-align:center;padding:8px;border-radius:6px;font-family:var(--pixel);font-size:7px;letter-spacing:.5px;border-width:1px;border-style:solid;margin-bottom:8px}
-.ov-footer{text-align:center;font-family:var(--pixel);font-size:5px;letter-spacing:2px}
-section{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:80px 48px}
-.section-label{font-family:var(--pixel);font-size:8px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
-.section-label::before{content:"> ";color:var(--yellow)}
-.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
-.how-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden}
-.how-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--teal))}
-.how-num{font-family:var(--pixel);font-size:9px;color:var(--accent);margin-bottom:16px;letter-spacing:1px}
-.how-title{font-family:var(--cond);font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
-.how-desc{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.8}
-.features-wrap{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-top:40px}
-.stat-block{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;font-family:var(--mono)}
-.stat-header{font-family:var(--pixel);font-size:8px;color:var(--yellow);letter-spacing:1px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.stat-name{font-size:12px;color:var(--muted)}
-.stat-bar-wrap{flex:1;margin:0 12px;height:6px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden}
-.stat-bar{height:100%;border-radius:99px}
-.stat-val{font-size:12px;font-weight:500;color:var(--text);min-width:32px;text-align:right}
-.feature-list{display:flex;flex-direction:column;gap:12px}
-.feature-item{display:flex;gap:16px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
-.feature-icon{width:36px;height:36px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--pixel);font-size:10px}
-.feature-title{font-family:var(--cond);font-size:16px;font-weight:700;text-transform:uppercase;margin-bottom:2px}
-.feature-desc{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6}
-.rarity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:40px}
-.rarity-card{border-radius:12px;padding:24px;border:1px solid var(--border);background:var(--card);position:relative;overflow:hidden}
-.rarity-card.rare{border-color:rgba(245,158,11,0.4);background:linear-gradient(135deg,rgba(245,158,11,0.05),var(--card))}
-.rarity-badge{font-family:var(--pixel);font-size:7px;letter-spacing:1px;padding:5px 10px;border-radius:3px;display:inline-block;margin-bottom:16px}
-.rarity-name{font-family:var(--cond);font-size:26px;font-weight:800;text-transform:uppercase;margin-bottom:4px}
-.rarity-price{font-family:var(--pixel);font-size:16px;margin-bottom:4px;line-height:1.8}
-.rarity-requests{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:20px}
-.rarity-btn{display:block;width:100%;padding:10px;border-radius:6px;text-align:center;font-family:var(--pixel);font-size:8px;text-decoration:none;cursor:pointer;border:none;transition:.2s;line-height:1.8}
-.enterprise-bar{margin-top:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding:24px 28px;border-radius:12px;border:1px dashed rgba(108,99,255,0.3);background:linear-gradient(135deg,rgba(108,99,255,0.05),transparent)}
-.pricing-split{font-family:var(--mono);font-size:13px;color:var(--muted);line-height:1.7;max-width:680px;margin:14px 0 32px}
-.pricing-note{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin-top:18px;letter-spacing:.2px}
-.rarity-feats{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px}
-.rarity-feat{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.3}
-.rarity-feat.locked{color:var(--muted)}
-.rarity-feat .ck{flex-shrink:0;color:var(--teal);font-weight:700;font-size:12px;width:10px;text-align:center}
-.rarity-feat.locked svg{opacity:.7}
-.rarity-plus{font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
-.popular-tag{position:absolute;top:0;left:50%;transform:translateX(-50%);background:#f59e0b;color:#1a1a1a;font-family:var(--pixel);font-size:6px;letter-spacing:1px;padding:5px 14px;border-radius:0 0 7px 7px;line-height:1.6}
-.final-cta{position:relative;z-index:1;text-align:center;padding:90px 24px}
-.final-cta-inner{max-width:680px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
-.final-cta .section-label::before{content:"> "}
-.final-cta-h2{font-family:var(--cond);font-size:clamp(34px,5vw,60px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px;line-height:.95;margin:14px 0 18px}
-.final-cta-sub{font-family:var(--mono);font-size:14px;color:var(--muted);line-height:1.8;max-width:480px;margin-bottom:32px}
-.final-cta-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:4px}
-footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:32px 48px;display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto}
-.footer-logo{font-family:var(--pixel);font-size:9px;color:white;text-decoration:none}
-.footer-logo em{color:var(--accent);font-style:normal}
-.footer-links{display:flex;gap:24px}
-.footer-links a{font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none}
-.footer-links a:hover{color:var(--text)}
-@media(max-width:900px){.hero{grid-template-columns:1fr;gap:40px;padding:60px 24px}.overlays-row{flex-direction:column;align-items:center}.overlays-row>div{width:100%;max-width:360px}.how-grid{grid-template-columns:1fr}.rarity-grid{grid-template-columns:repeat(2,1fr)}.features-wrap{grid-template-columns:1fr}nav{padding:12px 20px}section{padding:60px 24px}footer{flex-direction:column;gap:16px;padding:24px}}
+/* ---- index-only components (chrome lives in cardpulse-ui.css) ---- */
+.hero{position:relative;overflow:hidden;padding:72px 0 48px;z-index:1}
+.hero-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.hero-bg .glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5}
+.hero-bg .g1{width:560px;height:560px;left:-120px;top:-180px;background:radial-gradient(circle,rgba(124,108,255,.45),transparent 70%);animation:drift1 16s ease-in-out infinite alternate}
+.hero-bg .g2{width:520px;height:520px;right:-140px;top:40px;background:radial-gradient(circle,rgba(45,212,191,.32),transparent 70%);animation:drift2 18s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(40px,50px)}}@keyframes drift2{to{transform:translate(-50px,40px)}}
+.hero-bg .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(ellipse 75% 60% at 50% 35%,#000 30%,transparent 80%)}
+.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.02fr .98fr;gap:40px;align-items:center}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;letter-spacing:.5px;color:var(--mut);background:var(--surf);border:1px solid var(--line);padding:7px 14px;border-radius:30px;margin-bottom:24px;text-transform:none}
+.hero .eyebrow::before{content:""}
+.hero .eyebrow .live{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(45,212,191,.5);animation:hpulse 2s infinite}
+@keyframes hpulse{0%{box-shadow:0 0 0 0 rgba(45,212,191,.5)}70%{box-shadow:0 0 0 9px rgba(45,212,191,0)}100%{box-shadow:0 0 0 0 rgba(45,212,191,0)}}
+.hero h1{font-size:clamp(40px,5.4vw,64px);line-height:1.0;letter-spacing:-2px;margin-bottom:22px}
+.hero .lead{font-size:17.5px;color:#b6b6c8;max-width:480px;margin-bottom:30px}
+.hero .lead strong{color:var(--ink);font-weight:600}
+.cta-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.trust{margin-top:22px;font-family:var(--mono);font-size:12px;color:var(--mut);line-height:1.8}
+.store-chip{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-size:13px;color:var(--mut)}
+.store-chip svg{width:16px;height:16px}
 
-@media (max-width: 768px) {
-  nav { flex-wrap: wrap; }
-  .nav-toggle { display: flex; }
-  .nav-right { display: none; width: 100%; flex-flow: row wrap; justify-content: center; gap: 10px; padding-top: 14px; }
-  nav.open .nav-right { display: flex; }
-  .nav-right .btn-ghost-sm, .nav-right .btn-start { flex: 1 1 100%; text-align: center; padding: 12px; }
-  .nav-right .lang-flag-btn { flex: 0 0 auto; }
-  .hero { grid-template-columns: 1fr; padding: 60px 20px 40px; gap: 40px; }
-  .overlays-row > div:first-child { display: none; } /* hide light on mobile */
-  .overlay-pair-labels span:first-child { display: none; }
-  .overlays-row { flex-direction: column; align-items: center; }
-  .how-grid { grid-template-columns: 1fr; }
-  .rarity-grid { grid-template-columns: repeat(2,1fr); gap: 10px; }
-  .features-wrap { grid-template-columns: 1fr; }
-  .hero-cta { flex-direction: column; }
-  .btn-primary-lg, .btn-outline-lg { text-align: center; width: 100%; padding: 14px; }
-  .enterprise-bar { flex-direction: column; }
-  .ticker-item { font-size: 7px; }
-  h1 { font-size: 48px; }
-  .rarity-name { font-size: 22px; }
-  .rarity-price { font-size: 14px; }
+/* demo */
+.demo{position:relative;perspective:1400px}
+.theme-tog{display:inline-flex;gap:3px;background:var(--surf);border:1px solid var(--line);border-radius:9px;padding:3px;margin:0 auto 12px;width:fit-content}
+.theme-tog button{font-family:var(--mono);font-size:11px;color:var(--mut);background:none;border:none;padding:6px 12px;border-radius:7px;cursor:pointer}
+.theme-tog button.on{background:#22222e;color:var(--ink)}
+.demo-stage{position:relative;transform-style:preserve-3d;transition:transform .2s ease-out}
+.demo-float{animation:floaty 6s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.silhouette{position:absolute;width:62%;height:88%;right:-4%;top:6%;border-radius:18px;transform:rotate(7deg) translateZ(-60px);background:linear-gradient(140deg,#7c6cff,#2dd4bf,#ff6bd6,#f5b942);background-size:200% 200%;animation:holoShift 7s linear infinite;opacity:.26;filter:blur(2px)}
+.silhouette::after{content:"";position:absolute;inset:0;border-radius:18px;background:repeating-linear-gradient(115deg,transparent,transparent 7px,rgba(255,255,255,.18) 7px,rgba(255,255,255,.18) 9px)}
+.delta-badge{position:absolute;z-index:5;left:-26px;top:30px;background:rgba(8,8,13,.85);backdrop-filter:blur(10px);border:1px solid rgba(52,211,153,.4);border-radius:14px;padding:13px 16px;box-shadow:0 18px 50px -12px rgba(0,0,0,.7);transform:translateZ(70px);animation:badgeIn .8s .9s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes badgeIn{from{opacity:0;transform:translateZ(70px) translateY(14px) scale(.9)}to{opacity:1;transform:translateZ(70px) translateY(0) scale(1)}}
+.delta-badge .dl{font-family:var(--mono);font-size:10px;letter-spacing:.6px;color:var(--mut);text-transform:uppercase;margin-bottom:4px}
+.delta-badge .dv{font-family:var(--disp);font-weight:700;font-size:26px;color:var(--pos);letter-spacing:-.5px;line-height:1}
+.delta-badge .ds{font-size:12px;color:var(--ink);margin-top:3px}
+
+/* overlay component */
+.ov{position:relative;z-index:2;width:340px;max-width:100%;margin-left:auto;border-radius:16px;overflow:hidden;font-family:var(--mono);font-size:11px;background:var(--o-bg);color:var(--o-text);box-shadow:0 30px 70px -20px rgba(0,0,0,.65);border:1px solid var(--o-edge);transition:background .3s,color .3s,border-color .3s}
+.ov.dark{--o-bg:#101218;--o-text:#e8e8f0;--o-mut:#8385a0;--o-line:rgba(255,255,255,.07);--o-row:#181a21;--o-box:#1a1c23;--o-edge:rgba(124,108,255,.22);--o-cm:#1cc99a;--o-cmt:rgba(28,201,154,.08);--o-tcg:#7b6fff;--o-tcgt:rgba(123,111,255,.09);--o-pos:#22c55e;--o-l2:#2ec9a0}
+.ov.light{--o-bg:#fff;--o-text:#1a1a2e;--o-mut:#6b7280;--o-line:rgba(0,0,0,.08);--o-row:#f7f8fa;--o-box:#f2f3f6;--o-edge:rgba(0,0,0,.1);--o-cm:#0d9b76;--o-cmt:#ecfdf6;--o-tcg:#6c5cff;--o-tcgt:#f3f1ff;--o-pos:#16a34a;--o-l2:#0fa07a}
+.ov-head{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:1px solid var(--o-line)}
+.ov-logo{font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:-.3px}.ov-logo i{color:var(--o-l2);font-style:normal}
+.ov-min{opacity:.3;font-size:15px}
+.ov-body{padding:12px 13px}
+.ov-block{border:1px solid;border-radius:11px;padding:10px;margin-bottom:10px}
+.ov-block.cm{border-color:var(--o-cm)}.ov-block.tcg{border-color:var(--o-tcg)}
+.ov-block-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.ov-tag{font-size:9px;letter-spacing:.6px;font-weight:600}.ov-tag.cm{color:var(--o-cm)}.ov-tag.tcg{color:var(--o-tcg)}
+.ov-country{display:inline-flex;align-items:center;gap:5px;background:var(--o-box);border:1px solid var(--o-line);border-radius:6px;padding:3px 7px;font-size:9px;color:var(--o-mut)}
+.ov-price{border-radius:9px;padding:9px;text-align:center;margin-bottom:9px}.ov-price.cm{background:var(--o-cmt)}.ov-price.tcg{background:var(--o-tcgt)}
+.ov-price .pl{font-size:8px;letter-spacing:.8px;color:var(--o-l2);margin-bottom:3px}
+.ov-price .pv{font-family:var(--disp);font-weight:700;font-size:25px;line-height:1;letter-spacing:-.5px}
+.ov-price .pc{font-size:8px;letter-spacing:.6px;color:var(--o-mut);margin-top:4px}
+.ov-langlbl{font-size:8px;letter-spacing:.5px;color:var(--o-mut);margin-bottom:6px}
+.ov-langs{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.ov-lang{display:flex;align-items:center;gap:6px;background:var(--o-box);border:1px solid var(--o-line);border-radius:7px;padding:5px 7px}
+.ov-lang.hi{background:var(--o-cmt);border-color:var(--o-cm)}
+.ov-lang .fl{width:15px;height:10px;border-radius:2px;flex-shrink:0;display:block}
+.ov-lang .lc{font-size:9px;color:var(--o-mut)}.ov-lang.hi .lc{color:var(--o-cm)}
+.ov-lang .lp{font-family:var(--disp);font-weight:700;font-size:13px;margin-left:auto;line-height:1}
+.ov-trends{display:flex;gap:6px;margin-bottom:9px}
+.ov-trend{flex:1;background:var(--o-box);border:1px solid var(--o-line);border-radius:7px;padding:6px;text-align:center}
+.ov-trend .tl{font-size:8px;letter-spacing:.6px;color:var(--o-mut);margin-bottom:2px}
+.ov-trend .tv{font-family:var(--disp);font-weight:700;font-size:14px;color:var(--o-pos)}
+.ov-spark{margin-bottom:9px}
+.ov-spark-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;font-size:9px;color:var(--o-mut)}
+.ov-spark-head .sl{font-size:8px;letter-spacing:.5px}
+.ov-conds{display:flex;flex-direction:column;gap:4px}
+.ov-cond{display:flex;justify-content:space-between;align-items:center;background:var(--o-box);border:1px solid var(--o-line);border-radius:6px;padding:5px 8px}
+.ov-cond-l{display:flex;align-items:center;gap:6px}
+.cbadge{font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;font-family:var(--disp);letter-spacing:.3px}
+.cbadge.lp{background:rgba(26,163,90,.16);color:#1aa35a}.cbadge.mp{background:rgba(192,138,0,.16);color:#c08a00}
+.cbadge.hp{background:rgba(210,105,30,.18);color:#d2691e}.cbadge.d{background:rgba(214,69,80,.16);color:#d64550}
+.ov-cond-name{font-size:10px;color:var(--o-mut)}
+.ov-cond-r{text-align:right}.ov-cond-r .ce{font-family:var(--disp);font-weight:700;font-size:13px;line-height:1.05}.ov-cond-r .cu2{font-size:8px;color:var(--o-mut)}
+.ov-dash{text-align:center;padding:8px;border:1px solid var(--o-line);border-radius:7px;font-size:9px;letter-spacing:.4px;color:var(--o-mut);margin-top:10px}
+
+/* radar */
+.radar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2);overflow:hidden;display:flex;align-items:center;position:relative;z-index:1}
+.radar-label{flex-shrink:0;font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--mut);padding:0 18px;border-right:1px solid var(--line);display:flex;align-items:center;gap:8px;height:46px}
+.radar-label .live{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+.radar-track{overflow:hidden;position:relative;flex:1}
+.radar-track::before,.radar-track::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.radar-track::before{left:0;background:linear-gradient(90deg,var(--bg2),transparent)}
+.radar-track::after{right:0;background:linear-gradient(270deg,var(--bg2),transparent)}
+.radar-inner{display:flex;gap:36px;white-space:nowrap;animation:roll 38s linear infinite;padding:0 18px}
+.radar-inner span{font-family:var(--mono);font-size:11px;color:var(--mut)}
+.radar-inner .up{color:var(--pos)}.radar-inner .down{color:var(--neg)}
+@keyframes roll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* sections */
+.sec-pad{padding:84px 0;position:relative;z-index:1}
+.center{text-align:center}.center .sec-eye::before{content:""}.center .sec-sub{margin:0 auto}
+
+/* pricing */
+.split-note{font-size:15px;color:var(--mut);max-width:680px;line-height:1.7;margin:16px 0 36px}
+.tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.tier{background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:26px 22px;position:relative;display:flex;flex-direction:column}
+.tier.pop{border-color:transparent;background:linear-gradient(var(--surf),var(--surf)) padding-box,linear-gradient(135deg,#9a8dff,#2dd4bf,#ff8fe0,#f5b942) border-box;border:1.5px solid transparent;box-shadow:0 20px 50px -20px rgba(124,108,255,.4)}
+.pop-tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10px;letter-spacing:.6px;font-weight:600;color:#0a0a12;padding:4px 13px;border-radius:20px;white-space:nowrap;background:linear-gradient(115deg,#9a8dff,#2dd4bf,#ff8fe0,#f5b942);background-size:240% 240%;animation:holoShift 7s linear infinite}
+.tier .tn{font-family:var(--disp);font-weight:600;font-size:18px;display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.tier .td{width:10px;height:10px;border-radius:50%}
+.tier .tp{font-family:var(--disp);font-weight:700;font-size:32px;letter-spacing:-1px;margin:10px 0 2px}
+.tier .tp small{font-size:14px;color:var(--mut);font-weight:400}
+.tier .tr{font-family:var(--mono);font-size:12px;color:var(--mut);margin-bottom:16px}
+.tier .plus{font-family:var(--mono);font-size:10px;letter-spacing:.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px}
+.tfeats{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.tfeats li{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.35}
+.tfeats li .ck{color:var(--teal);font-weight:700;flex-shrink:0}
+.tfeats li.lock{color:var(--mut)}.tfeats li.lock .ck{color:var(--mut)}
+.tbtn{margin-top:auto;text-align:center;font-weight:600;font-size:14px;text-decoration:none;border-radius:11px;padding:12px;border:1px solid var(--line);color:var(--ink);transition:.15s}
+.tbtn:hover{border-color:var(--mut)}
+.tier.pop .tbtn{background:var(--accent);border-color:var(--accent);color:#fff}.tier.pop .tbtn:hover{background:var(--accent2)}
+.tnote{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:center;margin-top:20px}
+.ent{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;background:var(--surf);border:1px dashed rgba(124,108,255,.3);border-radius:16px;padding:22px 26px}
+.ent .et{font-family:var(--disp);font-weight:600;font-size:19px}
+.ent .es{font-size:13px;color:var(--mut);margin-top:4px}
+
+/* video */
+.video-frame{margin-top:38px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--surf);box-shadow:0 40px 90px -30px rgba(124,108,255,.35)}
+.video-frame .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.video-frame .bar i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.14);display:block}
+.video-frame .bar .url{margin-left:10px;font-family:var(--mono);font-size:11px;color:var(--mut);background:var(--bg2);padding:4px 12px;border-radius:6px}
+.video-asp{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+.video-asp iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* how + features */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:42px}
+.step{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:26px}
+.step .n{font-family:var(--mono);font-size:13px;color:var(--accent);margin-bottom:16px}
+.step h3{margin-bottom:7px}.step p{font-size:14px;color:var(--mut);line-height:1.6}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:42px}
+.feat{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:24px}
+.feat .ic{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:18px}
+.feat h3{font-size:17px;margin-bottom:6px}.feat p{font-size:13.5px;color:var(--mut);line-height:1.6}
+
+/* final cta */
+.final{position:relative;overflow:hidden;text-align:center;padding:100px 0;z-index:1}
+.final .glow{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);width:680px;height:480px;background:radial-gradient(ellipse,rgba(124,108,255,.3),transparent 65%);filter:blur(60px);z-index:0}
+.final-in{position:relative;z-index:1;max-width:660px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.final h2{font-size:clamp(34px,5vw,58px)}
+
+@media(max-width:920px){
+  .hero-grid{grid-template-columns:1fr;gap:48px}
+  .demo{max-width:380px;margin:0 auto}.ov{margin:0 auto}.silhouette{right:0}
+  .steps,.feat-grid{grid-template-columns:1fr}
+  .tiers{grid-template-columns:1fr 1fr}
 }
-@media (max-width: 480px) {
-  .rarity-grid { grid-template-columns: 1fr; }
-  nav { padding: 10px 16px; }
-  section { padding: 48px 20px; }
+@media(max-width:560px){
+  .tiers{grid-template-columns:1fr}
+  .delta-badge{left:8px;top:-18px}
+  .hero h1{font-size:38px;letter-spacing:-1.4px}
+  .ov-langs{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
+<!-- ===== NAV ===== -->
 <nav>
-  <a href="/" class="logo">card<em>pulse</em></a>
-  <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="var n=this.closest('nav');var o=n.classList.toggle('open');this.setAttribute('aria-expanded',o)">
-    <span></span><span></span><span></span>
-  </button>
-  <div class="nav-right">
-    <a href="/sets.html" class="btn-ghost-sm" data-i18n="nav_sets">Sets</a>
-    <a href="/login.html" class="btn-ghost-sm" data-i18n="nav_login">Sign in</a>
-    <a href="/register.html" class="btn-start" data-i18n="btn_start_free">Install Free</a>
+  <div class="cp-nav-in">
+    <a href="/" class="logo">card<span>pulse</span></a>
+    <div class="nav-links">
+      <a href="/sets.html" data-i18n="nav_sets">Sets</a>
+      <a href="#pricing" data-i18n="idx_nav_pricing">Pricing</a>
+      <a href="/login.html" data-i18n="nav_login">Sign in</a>
+      <a href="https://chromewebstore.google.com/detail/cardpulse-%E2%80%93-tcgplayer-pri/gidmncphcliponfkhnamnglljbphdeoe" target="_blank" rel="noopener" class="btn btn-foil" data-i18n="btn_start_free">Install Free</a>
+    </div>
   </div>
 </nav>
 
-<div class="ticker-wrap">
-  <div class="ticker-inner">
-    <span class="ticker-item up">CHARIZARD EX &#9650; $42.10</span>
-    <span class="ticker-item down">LATIAS EX &#9660; $5.01</span>
-    <span class="ticker-item up">UMBREON VMAX &#9650; $28.50</span>
-    <span class="ticker-item down">MEWTWO EX &#9660; $12.30</span>
-    <span class="ticker-item up">PIKACHU ILLUSTRATOR &#9650; $9,999</span>
-    <span class="ticker-item up">EEVEE PROMO &#9650; $7.20</span>
-    <span class="ticker-item down">GARDEVOIR EX &#9660; $15.40</span>
-    <span class="ticker-item">CERULEDGE EX &#8212; $1.64</span>
-    <span class="ticker-item up">CHARIZARD EX &#9650; $42.10</span>
-    <span class="ticker-item down">LATIAS EX &#9660; $5.01</span>
-    <span class="ticker-item up">UMBREON VMAX &#9650; $28.50</span>
-    <span class="ticker-item down">MEWTWO EX &#9660; $12.30</span>
-    <span class="ticker-item up">PIKACHU ILLUSTRATOR &#9650; $9,999</span>
-    <span class="ticker-item up">EEVEE PROMO &#9650; $7.20</span>
-    <span class="ticker-item down">GARDEVOIR EX &#9660; $15.40</span>
-    <span class="ticker-item">CERULEDGE EX &#8212; $1.64</span>
-  </div>
-</div>
-
-<div class="hero">
-  <!-- LEFT: copy -->
-  <div>
-    <div class="hero-badge"><span data-i18n="index_badge">NOW AVAILABLE FOR CHROME</span></div>
-    <h1>
-      <span class="line1" data-i18n="index_h1_1">TCGPlayer</span>
-      <span class="line2" data-i18n="index_h1_2">Prices</span>
-      <span class="line3" data-i18n="index_h1_3">On Cardmarket</span>
-    </h1>
-    <p class="hero-sub">
-      <span data-i18n="index_sub">See <strong>live market prices</strong> from TCGPlayer directly while browsing Cardmarket. All conditions, EUR conversion, 30-day price history. For the serious collector.</span>
-    </p>
-    <div class="hero-cta">
-      <a href="/register.html" class="btn-primary-lg" data-i18n="index_install">INSTALL FREE</a>
-      <a href="/sets.html" class="btn-outline-lg" data-i18n="index_sets_link">View supported sets →</a>
-    </div>
-    <p class="hero-trust" data-i18n="index_hero_trust">Free forever plan · No credit card · Works on every Cardmarket card page</p>
-  </div>
-
-  <!-- RIGHT: side-by-side overlays -->
-  <div class="overlay-pair">
-    <div class="overlay-pair-labels">
-      <span style="white-space:nowrap">&#9728; LIGHT MODE</span>
-      <span style="white-space:nowrap">&#9681; DARK MODE</span>
-    </div>
-    <div class="overlays-row">
-<div style="flex:1;border-radius:14px;overflow:hidden;font-family:var(--mono);font-size:11px;background:#ffffff;color:#1a1a2e;box-shadow:0 8px 40px rgba(0,0,0,0.25);border:1px solid rgba(0,0,0,0.1)">
-<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px 9px;border-bottom:1px solid rgba(0,0,0,0.08)">
-<div style="font-family:var(--pixel);font-size:8px;letter-spacing:-.3px;color:#1a1a2e">card<span style="color:#0fa07a">pulse</span></div>
-<div style="font-size:15px;opacity:.3">&#8722;</div>
-</div>
-<div style="padding:11px 13px">
-<div style="border:1px solid #0d9b76;border-radius:10px;padding:9px;margin-bottom:9px">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-<span style="font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:#0d9b76">CARDMARKET</span>
-<span style="display:inline-flex;align-items:center;gap:5px;background:#f7f8fa;border:1px solid #d8dbe1;border-radius:5px;padding:3px 7px;font-size:9px;color:#374151">All countries <span style="font-size:7px;opacity:.7">&#9662;</span></span>
-</div>
-<div style="background:#ecfdf6;border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
-<div style="font-family:var(--pixel);font-size:5px;color:#0d9b76;letter-spacing:1px;margin-bottom:3px">MARKET PRICE &middot; ENGLISH</div>
-<div style="font-family:var(--cond);font-size:23px;font-weight:800;line-height:1;color:#1a1a2e">&euro;599,99</div>
-<div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-top:3px">NEAR MINT</div>
-</div>
-<div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.5px;margin-bottom:5px">LOWEST NM PRICE BY CARD LANGUAGE</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-<div style="display:flex;align-items:center;gap:6px;background:#f7f8fa;border:1px solid #e8eaee;border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 3 2" style="border-radius:2px;flex-shrink:0;display:block"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#ce2b37"/></svg><span style="font-family:var(--pixel);font-size:6px;color:#6b7280;letter-spacing:.5px">IT</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#1a1a2e;margin-left:auto;line-height:1">&euro;255,00</span></div>
-<div style="display:flex;align-items:center;gap:6px;background:#f7f8fa;border:1px solid #e8eaee;border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 3 2" style="border-radius:2px;flex-shrink:0;display:block"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg><span style="font-family:var(--pixel);font-size:6px;color:#6b7280;letter-spacing:.5px">FR</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#1a1a2e;margin-left:auto;line-height:1">&euro;340,00</span></div>
-<div style="display:flex;align-items:center;gap:6px;background:#ecfdf6;border:1px solid #0d9b76;border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 60 30" style="border-radius:2px;flex-shrink:0;display:block"><clipPath id="uk-l"><rect width="60" height="30"/></clipPath><g clip-path="url(#uk-l)"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30" stroke="#C8102E" stroke-width="4"/><path d="M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></g></svg><span style="font-family:var(--pixel);font-size:6px;color:#0d9b76;letter-spacing:.5px">EN</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#1a1a2e;margin-left:auto;line-height:1">&euro;599,99</span></div>
-</div>
-</div>
-<div style="border:1px solid #6c5cff;border-radius:10px;padding:9px;margin-bottom:9px">
-<div style="font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:#6c5cff;margin-bottom:8px">TCGPLAYER</div>
-<div style="background:#f3f1ff;border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
-<div style="font-family:var(--pixel);font-size:5px;color:#0d9b76;letter-spacing:1px;margin-bottom:3px">MARKET PRICE &middot; ENGLISH</div>
-<div style="font-family:var(--cond);font-size:23px;font-weight:800;line-height:1;color:#1a1a2e">&euro;940,05</div>
-<div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-top:3px">NEAR MINT</div>
-</div>
-<div style="display:flex;gap:5px;margin-bottom:8px">
-<div style="flex:1;background:#f2f3f6;border:1px solid #e8eaee;border-radius:6px;padding:5px;text-align:center"><div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-bottom:2px">7D</div><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#16a34a">+1.2%</div></div>
-<div style="flex:1;background:#f2f3f6;border:1px solid #e8eaee;border-radius:6px;padding:5px;text-align:center"><div style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.8px;margin-bottom:2px">30D</div><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#16a34a">+14.5%</div></div>
-</div>
-<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-<span style="font-family:var(--pixel);font-size:5px;color:#6b7280;letter-spacing:.5px">30D PRICE HISTORY (NM)</span>
-<span style="font-size:9px;color:#6b7280">&euro;821,25 &rarr; &euro;940,05</span>
-</div>
-<svg viewBox="0 0 182 40" preserveAspectRatio="none" style="width:100%;height:34px;display:block"><polygon points="0,38 0,30 14,29 28,27 42,28 56,24 70,25 84,20 98,18 112,14 126,15 140,9 154,7 168,5 182,3 182,38" fill="rgba(22,163,74,0.10)"/><polyline points="0,30 14,29 28,27 42,28 56,24 70,25 84,20 98,18 112,14 126,15 140,9 154,7 168,5 182,3" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-<div style="display:flex;flex-direction:column;gap:3px;margin-top:8px">
-<div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e8eaee;border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#DFF6DD;color:#107C10;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">LP</span><span style="font-size:10px;color:#6b7280">Lightly Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.05">&euro;620,88</div><div style="font-size:9px;color:#9aa0aa">$674.87</div></div></div>
-<div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e8eaee;border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#FFF4CE;color:#8A6914;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">MP</span><span style="font-size:10px;color:#6b7280">Mod. Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.05">&euro;575,79</div><div style="font-size:9px;color:#9aa0aa">$625.86</div></div></div>
-<div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e8eaee;border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#FDEDE3;color:#C05000;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">HP</span><span style="font-size:10px;color:#6b7280">Heavily Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.05">&euro;322,00</div><div style="font-size:9px;color:#9aa0aa">$350.00</div></div></div>
-<div style="display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border:1px solid #e8eaee;border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#FDE7E9;color:#A4262C;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">D</span><span style="font-size:10px;color:#6b7280">Damaged</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.05">&euro;395,60</div><div style="font-size:9px;color:#9aa0aa">$430.00</div></div></div>
-</div>
-</div>
-<div style="text-align:center;padding:8px;border-radius:6px;border:1px solid #d8dbe1;font-family:var(--pixel);font-size:6px;color:#6b7280;letter-spacing:.5px;margin-bottom:7px">DASHBOARD &amp; SUBSCRIPTION</div>
-<div style="text-align:center;font-family:var(--pixel);font-size:5px;color:rgba(0,0,0,0.12);letter-spacing:2px">CARDPULSE</div>
-</div>
-</div>
-<div style="flex:1;border-radius:14px;overflow:hidden;font-family:var(--mono);font-size:11px;background:#101218;color:#e8e8f0;box-shadow:0 8px 40px rgba(0,0,0,0.45);border:1px solid rgba(123,111,255,0.2)">
-<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px 9px;border-bottom:1px solid rgba(255,255,255,0.06)">
-<div style="font-family:var(--pixel);font-size:8px;letter-spacing:-.3px;color:#e8e8f0">card<span style="color:#2ec9a0">pulse</span></div>
-<div style="font-size:15px;opacity:.3">&#8722;</div>
-</div>
-<div style="padding:11px 13px">
-<div style="border:1px solid #1cc99a;border-radius:10px;padding:9px;margin-bottom:9px">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-<span style="font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:#1cc99a">CARDMARKET</span>
-<span style="display:inline-flex;align-items:center;gap:5px;background:#1a1c23;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:3px 7px;font-size:9px;color:#c4c4d4">All countries <span style="font-size:7px;opacity:.7">&#9662;</span></span>
-</div>
-<div style="background:rgba(28,201,154,0.07);border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
-<div style="font-family:var(--pixel);font-size:5px;color:#2ec9a0;letter-spacing:1px;margin-bottom:3px">MARKET PRICE &middot; ENGLISH</div>
-<div style="font-family:var(--cond);font-size:23px;font-weight:800;line-height:1;color:#f4f4f8">&euro;599,99</div>
-<div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.8px;margin-top:3px">NEAR MINT</div>
-</div>
-<div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.5px;margin-bottom:5px">LOWEST NM PRICE BY CARD LANGUAGE</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-<div style="display:flex;align-items:center;gap:6px;background:#181a21;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 3 2" style="border-radius:2px;flex-shrink:0;display:block"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#ce2b37"/></svg><span style="font-family:var(--pixel);font-size:6px;color:#8385a0;letter-spacing:.5px">IT</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#e8e8f0;margin-left:auto;line-height:1">&euro;255,00</span></div>
-<div style="display:flex;align-items:center;gap:6px;background:#181a21;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 3 2" style="border-radius:2px;flex-shrink:0;display:block"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#ffffff"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg><span style="font-family:var(--pixel);font-size:6px;color:#8385a0;letter-spacing:.5px">FR</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#e8e8f0;margin-left:auto;line-height:1">&euro;340,00</span></div>
-<div style="display:flex;align-items:center;gap:6px;background:rgba(28,201,154,0.10);border:1px solid #1cc99a;border-radius:6px;padding:5px 7px"><svg width="15" height="10" viewBox="0 0 60 30" style="border-radius:2px;flex-shrink:0;display:block"><clipPath id="uk-d"><rect width="60" height="30"/></clipPath><g clip-path="url(#uk-d)"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30" stroke="#C8102E" stroke-width="4"/><path d="M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></g></svg><span style="font-family:var(--pixel);font-size:6px;color:#1cc99a;letter-spacing:.5px">EN</span><span style="font-family:var(--cond);font-size:12px;font-weight:800;color:#e8e8f0;margin-left:auto;line-height:1">&euro;599,99</span></div>
-</div>
-</div>
-<div style="border:1px solid #7b6fff;border-radius:10px;padding:9px;margin-bottom:9px">
-<div style="font-family:var(--pixel);font-size:6px;letter-spacing:.6px;color:#7b6fff;margin-bottom:8px">TCGPLAYER</div>
-<div style="background:rgba(123,111,255,0.08);border-radius:8px;padding:8px;text-align:center;margin-bottom:8px">
-<div style="font-family:var(--pixel);font-size:5px;color:#2ec9a0;letter-spacing:1px;margin-bottom:3px">MARKET PRICE &middot; ENGLISH</div>
-<div style="font-family:var(--cond);font-size:23px;font-weight:800;line-height:1;color:#f4f4f8">&euro;940,05</div>
-<div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.8px;margin-top:3px">NEAR MINT</div>
-</div>
-<div style="display:flex;gap:5px;margin-bottom:8px">
-<div style="flex:1;background:#1a1c23;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px;text-align:center"><div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.8px;margin-bottom:2px">7D</div><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#22c55e">+1.2%</div></div>
-<div style="flex:1;background:#1a1c23;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:5px;text-align:center"><div style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.8px;margin-bottom:2px">30D</div><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#22c55e">+14.5%</div></div>
-</div>
-<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-<span style="font-family:var(--pixel);font-size:5px;color:#8385a0;letter-spacing:.5px">30D PRICE HISTORY (NM)</span>
-<span style="font-size:9px;color:#8385a0">&euro;821,25 &rarr; &euro;940,05</span>
-</div>
-<svg viewBox="0 0 182 40" preserveAspectRatio="none" style="width:100%;height:34px;display:block"><polygon points="0,38 0,30 14,29 28,27 42,28 56,24 70,25 84,20 98,18 112,14 126,15 140,9 154,7 168,5 182,3 182,38" fill="rgba(34,197,94,0.12)"/><polyline points="0,30 14,29 28,27 42,28 56,24 70,25 84,20 98,18 112,14 126,15 140,9 154,7 168,5 182,3" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-<div style="display:flex;flex-direction:column;gap:3px;margin-top:8px">
-<div style="display:flex;justify-content:space-between;align-items:center;background:#181a21;border:1px solid rgba(255,255,255,0.05);border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#16341f;color:#4ade80;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">LP</span><span style="font-size:10px;color:#8385a0">Lightly Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#e8e8f0;line-height:1.05">&euro;620,88</div><div style="font-size:9px;color:#6b6b80">$674.87</div></div></div>
-<div style="display:flex;justify-content:space-between;align-items:center;background:#181a21;border:1px solid rgba(255,255,255,0.05);border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#34301a;color:#fbbf24;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">MP</span><span style="font-size:10px;color:#8385a0">Mod. Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#e8e8f0;line-height:1.05">&euro;575,79</div><div style="font-size:9px;color:#6b6b80">$625.86</div></div></div>
-<div style="display:flex;justify-content:space-between;align-items:center;background:#181a21;border:1px solid rgba(255,255,255,0.05);border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#3a2818;color:#fb923c;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">HP</span><span style="font-size:10px;color:#8385a0">Heavily Played</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#e8e8f0;line-height:1.05">&euro;322,00</div><div style="font-size:9px;color:#6b6b80">$350.00</div></div></div>
-<div style="display:flex;justify-content:space-between;align-items:center;background:#181a21;border:1px solid rgba(255,255,255,0.05);border-radius:5px;padding:4px 7px"><div style="display:flex;align-items:center;gap:5px"><span style="background:#3a1c20;color:#f87171;font-size:7px;font-weight:700;padding:2px 4px;border-radius:2px;font-family:var(--pixel)">D</span><span style="font-size:10px;color:#8385a0">Damaged</span></div><div style="text-align:right"><div style="font-family:var(--cond);font-size:13px;font-weight:800;color:#e8e8f0;line-height:1.05">&euro;395,60</div><div style="font-size:9px;color:#6b6b80">$430.00</div></div></div>
-</div>
-</div>
-<div style="text-align:center;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);font-family:var(--pixel);font-size:6px;color:#9a9aae;letter-spacing:.5px;margin-bottom:7px">DASHBOARD &amp; SUBSCRIPTION</div>
-<div style="text-align:center;font-family:var(--pixel);font-size:5px;color:rgba(255,255,255,0.1);letter-spacing:2px">CARDPULSE</div>
-</div>
-</div>
-    </div>
-  </div>
-</div>
-
-<!-- PRICING -->
-<section style="padding-top:0">
-  <div class="section-label" data-i18n="index_pricing_label">Pricing</div>
-  <h2 style="font-family:var(--cond);font-size:clamp(32px,4vw,56px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px">
-    <span data-i18n="index_pricing_h2_1">CHOOSE YOUR</span> <span style="color:var(--accent)" data-i18n="index_pricing_h2_2">RARITY.</span>
-  </h2>
-  <p class="pricing-split" data-i18n="index_pricing_split">All plans include live TCGPlayer prices, EUR conversion, all 5 conditions &amp; 30-day history. Silver and up unlock per-language Cardmarket prices and the seller-location filter.</p>
-  <div class="rarity-grid">
-    <div class="rarity-card">
-      <div class="rarity-badge" style="background:rgba(205,127,50,0.1);color:#cd7f32;border:1px solid rgba(205,127,50,0.3)">&#9670; COMMON</div>
-      <div class="rarity-name" style="color:#cd7f32">Bronze</div>
-      <div class="rarity-price" style="color:var(--text)">FREE</div>
-      <div class="rarity-requests">20 requests / month</div>
-      <ul class="rarity-feats"><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_tcg_prices">Live TCGPlayer prices</span></li><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_cond_hist">5 conditions + 30-day trend</span></li><li class="rarity-feat locked"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg><span data-i18n="feat_lang_prices">Prices by card language</span></li><li class="rarity-feat locked"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg><span data-i18n="feat_loc_filter">Seller-location filter</span></li></ul>
-      <a href="/register.html" class="rarity-btn" style="background:rgba(205,127,50,0.1);color:#cd7f32;border:1px solid rgba(205,127,50,0.2)">START FREE</a>
-    </div>
-    <div class="rarity-card">
-      <div class="rarity-badge" style="background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.3)">&#9670;&#9670; UNCOMMON</div>
-      <div class="rarity-name" style="color:#94a3b8">Silver</div>
-      <div class="rarity-price" style="color:var(--text)">&euro;3.99</div>
-      <div class="rarity-requests">400 requests / month</div>
-      <div class="rarity-plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
-      <ul class="rarity-feats"><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_lang_prices">Prices by card language</span></li><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li></ul>
-      <a href="/register.html" class="rarity-btn" style="background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)">UPGRADE</a>
-    </div>
-    <div class="rarity-card rare" style="padding-top:30px">
-      <div class="popular-tag" data-i18n="index_popular">MOST POPULAR</div>
-      <div class="rarity-badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.4)">&#9733; RARE HOLO</div>
-      <div class="rarity-name" style="color:#f59e0b">Gold</div>
-      <div class="rarity-price" style="color:#f59e0b">&euro;5.99</div>
-      <div class="rarity-requests">1.000 requests / month</div>
-      <div class="rarity-plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
-      <ul class="rarity-feats"><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_lang_prices">Prices by card language</span></li><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li></ul>
-      <a href="/register.html" class="rarity-btn" style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">UPGRADE &#9733;</a>
-    </div>
-    <div class="rarity-card">
-      <div class="rarity-badge" style="background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.3)">&#10022; ULTRA RARE</div>
-      <div class="rarity-name" style="color:#a78bfa">Platin</div>
-      <div class="rarity-price" style="color:var(--text)">&euro;19.99</div>
-      <div class="rarity-requests">5.000 requests / month</div>
-      <div class="rarity-plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
-      <ul class="rarity-feats"><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_lang_prices">Prices by card language</span></li><li class="rarity-feat"><span class="ck">&#10003;</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li></ul>
-      <a href="/register.html" class="rarity-btn" style="background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.2)">UPGRADE</a>
-    </div>
-  </div>
-    <p class="pricing-note" data-i18n="index_pricing_note">Cancel anytime &middot; 1 request = 1 card looked up &middot; No credit card needed for Bronze</p>
-  <div class="enterprise-bar">
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-bg"><div class="glow g1"></div><div class="glow g2"></div><div class="grid"></div></div>
+  <div class="wrap hero-grid">
     <div>
-      <div style="font-family:var(--pixel);font-size:8px;color:var(--accent);margin-bottom:6px;letter-spacing:1px" data-i18n="index_enterprise_secret">✦✦ SECRET RARE</div>
-      <div style="font-family:var(--cond);font-size:22px;font-weight:800;text-transform:uppercase" data-i18n="index_enterprise_h">Platin not enough?</div>
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px" data-i18n="index_enterprise_sub">Custom request volume · Individual pricing · Priority support</div>
+      <div class="eyebrow"><span class="live"></span><span data-i18n="index_badge">NOW AVAILABLE FOR CHROME</span></div>
+      <h1>
+        <span data-i18n="index_h1_1">TCGPlayer</span>
+        <span data-i18n="index_h1_2">Prices</span>
+        <span class="holo" data-i18n="index_h1_3">On Cardmarket</span>
+      </h1>
+      <p class="lead" data-i18n="index_sub">See <strong>live market prices</strong> from TCGPlayer directly while browsing Cardmarket. All conditions, EUR conversion, 30-day price history. For the serious collector.</p>
+      <div class="cta-row">
+        <a href="https://chromewebstore.google.com/detail/cardpulse-%E2%80%93-tcgplayer-pri/gidmncphcliponfkhnamnglljbphdeoe" target="_blank" rel="noopener" class="btn btn-foil btn-lg" data-i18n="index_install">INSTALL FREE</a>
+        <a href="#video" class="btn btn-line btn-lg"><span data-i18n="idx_hero_cta_demo">▶ Watch 60-sec demo</span></a>
+      </div>
+      <p class="trust" data-i18n="index_hero_trust">Free forever plan · No credit card · Works on every Cardmarket card page</p>
+      <div class="store-chip">
+        <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="21" stroke="#7c6cff" stroke-width="3"/><circle cx="24" cy="24" r="8" fill="#2dd4bf"/></svg>
+        <span data-i18n="idx_store_chip">Available in the Chrome Web Store</span>
+      </div>
     </div>
-    <a href="/enterprise.html" style="padding:12px 24px;border-radius:6px;background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.3);color:var(--accent);font-family:var(--pixel);font-size:8px;text-decoration:none;line-height:1.8;white-space:nowrap">GET CUSTOM QUOTE &rarr;</a>
-  </div>
-</section>
 
-
-<!-- HOW IT WORKS -->
-<section>
-  <div class="section-label" data-i18n="index_how_label">How it works</div>
-  <h2 style="font-family:var(--cond);font-size:clamp(32px,4vw,56px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px">
-    <span data-i18n="index_how_h2_1">THREE STEPS.</span><br><span style="color:var(--accent)" data-i18n="index_how_h2_2">ONE EXTENSION.</span>
-  </h2>
-  <div class="how-grid">
-    <div class="how-card">
-      <div class="how-num">// STEP 01</div>
-      <div class="how-title" data-i18n="index_step1_title">Install Extension</div>
-      <p class="how-desc" data-i18n="index_step1_desc">Add CardPulse from the Chrome Web Store. Free. One click. No config needed.</p>
-    </div>
-    <div class="how-card">
-      <div class="how-num">// STEP 02</div>
-      <div class="how-title" data-i18n="index_step2_title">Browse Cardmarket</div>
-      <p class="how-desc" data-i18n="index_step2_desc">Open any Pokemon card page on Cardmarket. The overlay loads automatically.</p>
-    </div>
-    <div class="how-card">
-      <div class="how-num">// STEP 03</div>
-      <div class="how-title" data-i18n="index_step3_title">See The Data</div>
-      <p class="how-desc" data-i18n="index_step3_desc">Live TCGPlayer prices, all 5 conditions, EUR conversion and 30-day history appear instantly.</p>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section style="padding-top:0">
-  <div class="section-label" data-i18n="index_features_label">Features</div>
-  <h2 style="font-family:var(--cond);font-size:clamp(32px,4vw,56px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:0">
-    <span data-i18n="index_feat_pre">EVERYTHING A</span> <span style="color:var(--yellow)" data-i18n="index_feat_mid">COLLECTOR</span> <span data-i18n="index_feat_post">NEEDS.</span>
-  </h2>
-  <div class="features-wrap">
-    <div class="stat-block">
-      <div class="stat-header" data-i18n="feat_stat_header">CardPulse &mdash; FEATURE STATS</div>
-      <div class="stat-row">
-        <span class="stat-name" data-i18n="feat_stat_live">Live Price</span>
-        <div class="stat-bar-wrap"><div class="stat-bar" style="width:100%;background:var(--teal)"></div></div>
-        <span class="stat-val" style="color:var(--teal)">MAX</span>
+    <!-- live demo (= real overlay) -->
+    <div class="demo">
+      <div class="theme-tog" id="themeTog">
+        <button data-th="dark" class="on">☾ Dark</button>
+        <button data-th="light">☀ Light</button>
       </div>
-      <div class="stat-row">
-        <span class="stat-name" data-i18n="feat_stat_speed">Speed</span>
-        <div class="stat-bar-wrap"><div class="stat-bar" style="width:92%;background:var(--accent)"></div></div>
-        <span class="stat-val">92</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-name" data-i18n="feat_stat_accuracy">Accuracy</span>
-        <div class="stat-bar-wrap"><div class="stat-bar" style="width:98%;background:var(--yellow)"></div></div>
-        <span class="stat-val" style="color:var(--yellow)">98</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-name" data-i18n="feat_stat_coverage">Coverage</span>
-        <div class="stat-bar-wrap"><div class="stat-bar" style="width:85%;background:var(--accent)"></div></div>
-        <span class="stat-val">85</span>
-      </div>
-      <div class="stat-row" style="margin-bottom:0">
-        <span class="stat-name" data-i18n="feat_stat_eur">EUR Conv.</span>
-        <div class="stat-bar-wrap"><div class="stat-bar" style="width:100%;background:var(--teal)"></div></div>
-        <span class="stat-val" style="color:var(--teal)">MAX</span>
-      </div>
-    </div>
-    <div class="feature-list">
-      <div class="feature-item">
-        <div class="feature-icon" style="background:rgba(0,212,170,0.1);color:var(--teal)">$</div>
-        <div><div class="feature-title" data-i18n="feat_title1">Live TCGPlayer Prices</div><div class="feature-desc" data-i18n="index_feat1_desc">Market price direct from TCGPlayer &mdash; always up to date.</div></div>
-      </div>
-      <div class="feature-item">
-        <div class="feature-icon" style="background:rgba(108,99,255,0.1);color:var(--accent)">&#9889;</div>
-        <div><div class="feature-title" data-i18n="feat_title2">All 5 Conditions</div><div class="feature-desc" data-i18n="index_feat2_desc">NM &middot; LP &middot; MP &middot; HP &middot; Damaged &mdash; every grade, every time.</div></div>
-      </div>
-      <div class="feature-item">
-        <div class="feature-icon" style="background:rgba(255,215,0,0.1);color:var(--yellow)">&euro;</div>
-        <div><div class="feature-title" data-i18n="feat_title3">EUR Conversion</div><div class="feature-desc" data-i18n="index_feat3_desc">Automatic USD to EUR conversion built into the overlay.</div></div>
-      </div>
-      <div class="feature-item">
-        <div class="feature-icon" style="background:rgba(255,64,64,0.1);color:var(--red)">&#8599;</div>
-        <div><div class="feature-title" data-i18n="feat_title4">30-Day Price History</div><div class="feature-desc" data-i18n="index_feat4_desc">Sparkline chart + trend percentage. Know before you buy.</div></div>
+      <div class="demo-stage" id="stage">
+        <div class="demo-float">
+          <div class="silhouette"></div>
+          <div class="delta-badge">
+            <div class="dl" data-i18n="idx_delta_label">Cardmarket vs. TCGPlayer</div>
+            <div class="dv" data-cu data-to="340" data-suf=" €" data-dec="0">0 €</div>
+            <div class="ds" data-i18n="idx_delta_sub">cheaper in the EU · US market +57%</div>
+          </div>
+          <div class="ov dark" id="ov">
+            <div class="ov-head"><div class="ov-logo">card<i>pulse</i></div><div class="ov-min">&#8722;</div></div>
+            <div class="ov-body">
+              <div class="ov-block cm">
+                <div class="ov-block-head"><span class="ov-tag cm">CARDMARKET</span><span class="ov-country" data-i18n="idx_ov_allcountries">All countries &#9662;</span></div>
+                <div class="ov-price cm"><div class="pl">MARKET PRICE · EN</div><div class="pv" data-cu data-to="599.99" data-pre="€" data-dec="2">€0</div><div class="pc">NEAR MINT</div></div>
+                <div class="ov-langlbl" data-i18n="idx_ov_bylang">LOWEST NM PRICE BY LANGUAGE</div>
+                <div class="ov-langs">
+                  <div class="ov-lang"><svg class="fl" viewBox="0 0 3 2"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ce2b37"/></svg><span class="lc">IT</span><span class="lp">€255</span></div>
+                  <div class="ov-lang"><svg class="fl" viewBox="0 0 3 2"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg><span class="lc">FR</span><span class="lp">€340</span></div>
+                  <div class="ov-lang hi"><svg class="fl" viewBox="0 0 60 30"><clipPath id="ukc"><rect width="60" height="30"/></clipPath><g clip-path="url(#ukc)"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></g></svg><span class="lc">EN</span><span class="lp">€599,99</span></div>
+                </div>
+              </div>
+              <div class="ov-block tcg">
+                <div class="ov-block-head"><span class="ov-tag tcg">TCGPLAYER</span></div>
+                <div class="ov-price tcg"><div class="pl">MARKET PRICE · EN</div><div class="pv" data-cu data-to="940.05" data-pre="€" data-dec="2">€0</div><div class="pc">NEAR MINT</div></div>
+                <div class="ov-trends"><div class="ov-trend"><div class="tl">7D</div><div class="tv">+1,2%</div></div><div class="ov-trend"><div class="tl">30D</div><div class="tv">+14,5%</div></div></div>
+                <div class="ov-spark">
+                  <div class="ov-spark-head"><span class="sl">30D HISTORY (NM)</span><span>€821,25 &rarr; €940,05</span></div>
+                  <svg viewBox="0 0 320 40" preserveAspectRatio="none" style="width:100%;height:36px;display:block">
+                    <polygon points="0,38 0,30 27,29 54,27 80,28 107,24 134,25 160,20 187,18 214,14 240,15 267,9 294,6 320,3 320,38" fill="rgba(34,197,94,.12)"/>
+                    <polyline id="sparkLine" points="0,30 27,29 54,27 80,28 107,24 134,25 160,20 187,18 214,14 240,15 267,9 294,6 320,3" fill="none" stroke="var(--o-pos)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="ov-conds">
+                  <div class="ov-cond"><div class="ov-cond-l"><span class="cbadge lp">LP</span><span class="ov-cond-name">Lightly Played</span></div><div class="ov-cond-r"><div class="ce">€620,88</div><div class="cu2">$674.87</div></div></div>
+                  <div class="ov-cond"><div class="ov-cond-l"><span class="cbadge mp">MP</span><span class="ov-cond-name">Mod. Played</span></div><div class="ov-cond-r"><div class="ce">€575,79</div><div class="cu2">$625.86</div></div></div>
+                  <div class="ov-cond"><div class="ov-cond-l"><span class="cbadge hp">HP</span><span class="ov-cond-name">Heavily Played</span></div><div class="ov-cond-r"><div class="ce">€322,00</div><div class="cu2">$350.00</div></div></div>
+                  <div class="ov-cond"><div class="ov-cond-l"><span class="cbadge d">D</span><span class="ov-cond-name">Damaged</span></div><div class="ov-cond-r"><div class="ce">€395,60</div><div class="cu2">$430.00</div></div></div>
+                </div>
+              </div>
+              <div class="ov-dash" data-i18n="idx_ov_dash">DASHBOARD &amp; SUBSCRIPTION</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CLOSING CTA -->
-<section class="final-cta">
-  <div class="final-cta-inner">
-    <div class="section-label" data-i18n="index_finalcta_label">Stop guessing</div>
-    <h2 class="final-cta-h2">
-      <span data-i18n="index_finalcta_h1">Know the real price</span><br>
-      <span style="color:var(--accent)" data-i18n="index_finalcta_h2">before you buy.</span>
-    </h2>
-    <p class="final-cta-sub" data-i18n="index_finalcta_sub">Install CardPulse and see in one glance whether a Cardmarket listing is a deal or a rip-off. Free to start, no account juggling.</p>
-    <div class="final-cta-btns">
-      <a href="/register.html" class="btn-primary-lg" data-i18n="index_install">INSTALL FREE</a>
-      <a href="/sets.html" class="btn-outline-lg" data-i18n="index_sets_link">View supported sets →</a>
+<!-- ===== RADAR ===== -->
+<div class="radar">
+  <div class="radar-label"><span class="live"></span><span data-i18n="idx_radar_label">PRICE RADAR</span></div>
+  <div class="radar-track">
+    <div class="radar-inner">
+      <span>Charizard ex <span class="up">&#9650; +4,2%</span></span>
+      <span>Umbreon VMAX <span class="up">&#9650; +2,8%</span></span>
+      <span>Latias ex <span class="down">&#9660; −5,4%</span></span>
+      <span>Mewtwo ex <span class="down">&#9660; −1,9%</span></span>
+      <span>Gardevoir ex <span class="up">&#9650; +3,1%</span></span>
+      <span>Eevee Promo <span class="up">&#9650; +0,7%</span></span>
+      <span>Charizard ex <span class="up">&#9650; +4,2%</span></span>
+      <span>Umbreon VMAX <span class="up">&#9650; +2,8%</span></span>
+      <span>Latias ex <span class="down">&#9660; −5,4%</span></span>
+      <span>Mewtwo ex <span class="down">&#9660; −1,9%</span></span>
+      <span>Gardevoir ex <span class="up">&#9650; +3,1%</span></span>
+      <span>Eevee Promo <span class="up">&#9650; +0,7%</span></span>
     </div>
-    <p class="hero-trust" style="text-align:center" data-i18n="index_hero_trust">Free forever plan · No credit card · Works on every Cardmarket card page</p>
   </div>
-</section>
-
-<div style="border-top:1px solid var(--border);position:relative;z-index:1">
-  <footer>
-    <a href="/" class="footer-logo">card<em>pulse</em></a>
-    <div class="footer-links">
-      <a href="/sets.html" data-i18n="footer_sets">Sets</a>
-      <a href="/privacy.html" data-i18n="footer_privacy">Privacy Policy</a>
-      <a href="/impressum.html" data-i18n="footer_imprint">Imprint</a>
-      <a href="/suggest.html" data-i18n="footer_suggest">Report missing card</a>
-    </div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">&copy; 2026 CardPulse</div>
-  </footer>
 </div>
+
+<!-- ===== PRICING (moved up) ===== -->
+<section id="pricing" class="sec-pad">
+  <div class="wrap">
+    <div class="sec-eye reveal" data-i18n="index_pricing_label">Pricing</div>
+    <h2 class="reveal"><span data-i18n="index_pricing_h2_1">CHOOSE YOUR</span> <span class="holo" data-i18n="index_pricing_h2_2">RARITY.</span></h2>
+    <p class="split-note reveal" data-i18n="index_pricing_split">All plans include live TCGPlayer prices, EUR conversion, all 5 conditions &amp; 30-day history. Silver and up unlock per-language Cardmarket prices and the seller-location filter.</p>
+    <div class="tiers">
+      <div class="tier reveal">
+        <div class="tn"><span class="td" style="background:#cd7f32"></span>Bronze</div>
+        <div class="tp" data-i18n="price_free">Free</div>
+        <div class="tr">20 <span data-i18n="req_per_month">requests / month</span></div>
+        <ul class="tfeats">
+          <li><span class="ck">✓</span><span data-i18n="feat_tcg_prices">Live TCGPlayer prices</span></li>
+          <li><span class="ck">✓</span><span data-i18n="feat_cond_hist">5 conditions + 30-day trend</span></li>
+          <li class="lock"><span class="ck">🔒</span><span data-i18n="feat_lang_prices">Prices by card language</span></li>
+          <li class="lock"><span class="ck">🔒</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li>
+        </ul>
+        <a href="/register.html" class="tbtn" data-i18n="btn_start_free_short">Start free</a>
+      </div>
+      <div class="tier reveal">
+        <div class="tn"><span class="td" style="background:#94a3b8"></span>Silver</div>
+        <div class="tp">€3,99<small> /mo</small></div>
+        <div class="tr">400 <span data-i18n="req_per_month">requests / month</span></div>
+        <div class="plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
+        <ul class="tfeats">
+          <li><span class="ck">✓</span><span data-i18n="feat_lang_prices">Prices by card language</span></li>
+          <li><span class="ck">✓</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li>
+        </ul>
+        <a href="/register.html" class="tbtn" data-i18n="btn_upgrade">Upgrade</a>
+      </div>
+      <div class="tier pop reveal">
+        <span class="pop-tag" data-i18n="index_popular">MOST POPULAR</span>
+        <div class="tn"><span class="td" style="background:#f5b942"></span>Gold</div>
+        <div class="tp">€5,99<small> /mo</small></div>
+        <div class="tr">1.000 <span data-i18n="req_per_month">requests / month</span></div>
+        <div class="plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
+        <ul class="tfeats">
+          <li><span class="ck">✓</span><span data-i18n="feat_lang_prices">Prices by card language</span></li>
+          <li><span class="ck">✓</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li>
+        </ul>
+        <a href="/register.html" class="tbtn" data-i18n="btn_upgrade">Upgrade</a>
+      </div>
+      <div class="tier reveal">
+        <div class="tn"><span class="td" style="background:#a78bfa"></span>Platin</div>
+        <div class="tp">€19,99<small> /mo</small></div>
+        <div class="tr">5.000 <span data-i18n="req_per_month">requests / month</span></div>
+        <div class="plus" data-i18n="index_plan_plus">Everything in Bronze, plus:</div>
+        <ul class="tfeats">
+          <li><span class="ck">✓</span><span data-i18n="feat_lang_prices">Prices by card language</span></li>
+          <li><span class="ck">✓</span><span data-i18n="feat_loc_filter">Seller-location filter</span></li>
+        </ul>
+        <a href="/register.html" class="tbtn" data-i18n="btn_upgrade">Upgrade</a>
+      </div>
+    </div>
+    <p class="tnote" data-i18n="index_pricing_note">Cancel anytime · 1 request = 1 card looked up · No credit card needed for Bronze</p>
+    <div class="ent reveal">
+      <div>
+        <div class="et" data-i18n="index_enterprise_h">Platin not enough?</div>
+        <div class="es" data-i18n="index_enterprise_sub">Custom request volume · Individual pricing · Priority support</div>
+      </div>
+      <a href="/enterprise.html" class="btn btn-line"><span data-i18n="index_enterprise_cta">Get custom quote →</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== VIDEO ===== -->
+<section id="video" class="sec-pad" style="padding-top:0">
+  <div class="wrap center">
+    <div class="sec-eye reveal" data-i18n="idx_video_eye">In 60 seconds</div>
+    <h2 class="reveal" data-i18n="idx_video_h2">See CardPulse in action</h2>
+    <p class="sec-sub reveal" data-i18n="idx_video_sub">From install to your first price comparison — how the extension feels in your real Cardmarket workflow.</p>
+    <div class="video-frame reveal">
+      <div class="bar"><i></i><i></i><i></i><span class="url">cardmarket.com/en/Pokemon</span></div>
+      <div class="video-asp">
+        <iframe src="https://www.youtube-nocookie.com/embed/9vHw5Vh26u8?rel=0" title="CardPulse Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW ===== -->
+<section id="how" class="sec-pad" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-eye reveal" data-i18n="index_how_label">How it works</div>
+    <h2 class="reveal"><span data-i18n="index_how_h2_1">THREE STEPS.</span> <span class="holo" data-i18n="index_how_h2_2">ONE EXTENSION.</span></h2>
+    <div class="steps">
+      <div class="step reveal"><div class="n">01</div><h3 data-i18n="index_step1_title">Install Extension</h3><p data-i18n="index_step1_desc">Add CardPulse from the Chrome Web Store. Free. One click. No config needed.</p></div>
+      <div class="step reveal"><div class="n">02</div><h3 data-i18n="index_step2_title">Browse Cardmarket</h3><p data-i18n="index_step2_desc">Open any Pokemon card page on Cardmarket. The overlay loads automatically.</p></div>
+      <div class="step reveal"><div class="n">03</div><h3 data-i18n="index_step3_title">See The Data</h3><p data-i18n="index_step3_desc">Live TCGPlayer prices, all 5 conditions, EUR conversion and 30-day history appear instantly.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="sec-pad" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-eye reveal" data-i18n="index_features_label">Features</div>
+    <h2 class="reveal"><span data-i18n="index_feat_pre">EVERYTHING A</span> <span class="holo" data-i18n="index_feat_mid">COLLECTOR</span> <span data-i18n="index_feat_post">NEEDS.</span></h2>
+    <div class="feat-grid">
+      <div class="feat reveal"><div class="ic" style="background:rgba(45,212,191,.12);color:var(--teal)">⚖️</div><h3 data-i18n="feat_title1">Live TCGPlayer Prices</h3><p data-i18n="index_feat1_desc">Market price direct from TCGPlayer — always up to date.</p></div>
+      <div class="feat reveal"><div class="ic" style="background:rgba(124,108,255,.12);color:var(--accent)">⚡</div><h3 data-i18n="feat_title2">All 5 Conditions</h3><p data-i18n="index_feat2_desc">NM · LP · MP · HP · Damaged — every grade, every time.</p></div>
+      <div class="feat reveal"><div class="ic" style="background:rgba(245,185,66,.14);color:var(--gold)">€</div><h3 data-i18n="feat_title3">EUR Conversion</h3><p data-i18n="index_feat3_desc">Automatic USD to EUR conversion built into the overlay.</p></div>
+      <div class="feat reveal"><div class="ic" style="background:rgba(52,211,153,.12);color:var(--pos)">📈</div><h3 data-i18n="feat_title4">30-Day Price History</h3><p data-i18n="index_feat4_desc">Sparkline chart + trend percentage. Know before you buy.</p></div>
+      <div class="feat reveal"><div class="ic" style="background:rgba(124,108,255,.12);color:var(--accent)">🏳️</div><h3 data-i18n="feat_lang_prices">Prices by card language</h3><p data-i18n="idx_feat_lang_desc">Lowest NM price per card language, with a seller-location filter.</p></div>
+      <div class="feat reveal"><div class="ic" style="background:rgba(45,212,191,.12);color:var(--teal)">◐</div><h3 data-i18n="idx_feat_theme">Light &amp; Dark</h3><p data-i18n="idx_feat_theme_desc">The overlay adapts seamlessly to your Cardmarket theme.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="final">
+  <div class="glow"></div>
+  <div class="wrap final-in">
+    <div class="sec-eye reveal" style="color:var(--teal)" data-i18n="index_finalcta_label">Stop guessing</div>
+    <h2 class="reveal"><span data-i18n="index_finalcta_h1">Know the real price</span><br><span class="holo" data-i18n="index_finalcta_h2">before you buy.</span></h2>
+    <p class="sec-sub reveal" style="margin:14px auto 30px" data-i18n="index_finalcta_sub">Install CardPulse and see in one glance whether a Cardmarket listing is a deal or a rip-off. Free to start, no account juggling.</p>
+    <a href="https://chromewebstore.google.com/detail/cardpulse-%E2%80%93-tcgplayer-pri/gidmncphcliponfkhnamnglljbphdeoe" target="_blank" rel="noopener" class="btn btn-foil btn-lg reveal" data-i18n="index_install">INSTALL FREE</a>
+  </div>
+</section>
+
 <script src="/i18n.js"></script>
 <script src="/shared.js"></script>
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ov = document.getElementById('ov'), tog = document.getElementById('themeTog');
+  tog.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    tog.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on'); ov.classList.remove('dark','light'); ov.classList.add(b.dataset.th);
+  });
+  function fmt(n,dec,pre,suf){return (pre||'')+n.toLocaleString('de-DE',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(suf||'')}
+  function countUp(el){
+    var to=parseFloat(el.dataset.to),dec=parseInt(el.dataset.dec||'0',10),pre=el.dataset.pre||'',suf=el.dataset.suf||'';
+    if(reduce){el.textContent=fmt(to,dec,pre,suf);return}
+    var dur=1100,start=null;
+    function tick(t){if(!start)start=t;var p=Math.min((t-start)/dur,1);var e=1-Math.pow(1-p,3);el.textContent=fmt(to*e,dec,pre,suf);if(p<1)requestAnimationFrame(tick)}
+    requestAnimationFrame(tick);
+  }
+  setTimeout(function(){document.querySelectorAll('[data-cu]').forEach(countUp)},450);
+  var line=document.getElementById('sparkLine');
+  if(line&&!reduce){var len=line.getTotalLength();line.style.strokeDasharray=len;line.style.strokeDashoffset=len;line.style.transition='stroke-dashoffset 1.4s ease .5s';requestAnimationFrame(function(){line.style.strokeDashoffset=0})}
+  var stage=document.getElementById('stage'),demoWrap=stage.closest('.demo');
+  if(!reduce&&window.matchMedia('(pointer:fine)').matches){
+    demoWrap.addEventListener('pointermove',function(ev){var r=demoWrap.getBoundingClientRect();var px=(ev.clientX-r.left)/r.width-.5,py=(ev.clientY-r.top)/r.height-.5;stage.style.transform='rotateY('+(px*7)+'deg) rotateX('+(-py*7)+'deg)'});
+    demoWrap.addEventListener('pointerleave',function(){stage.style.transform='rotateY(0) rotateX(0)'});
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}})},{threshold:.14});
+    document.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});
+  } else { document.querySelectorAll('.reveal').forEach(function(el){el.classList.add('in')}); }
+})();
+</script>
 </body>
 </html>
