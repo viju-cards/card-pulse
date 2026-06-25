@@ -849,7 +849,17 @@ app.get("/sets", async (req, res) => {
 
 app.get("/", (req, res) => res.send("CardPulse API läuft. ✅"));
 
-app.listen(PORT, async () => {
+// ── Preisalarme / Merkliste ──
+require('./watchlist')(app, {
+  pool,
+  requireAuth,
+  resendApiKey: process.env.RESEND_API_KEY,
+  rapidApiKey:  process.env.RAPIDAPI_KEY,
+  rapidApiHost: process.env.RAPIDAPI_HOST || 'cardmarket-api-tcg.p.rapidapi.com',
+  cronSecret:   process.env.CRON_SECRET,
+});
+
+app.listen(PORT, async () => {   // ← deine bestehende Zeile, bleibt wie sie ist
   console.log(`✅ CardPulse Server läuft auf Port ${PORT}`);
   try {
     await pool.query("SELECT NOW()");
