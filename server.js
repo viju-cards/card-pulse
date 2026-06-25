@@ -659,12 +659,9 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
     let justTcgData;
 
     if (tcgPlayerId) {
-      // Fetch by ID (fast path)
-      const url = new URL("https://api.justtcg.com/v1/cards");
-      url.searchParams.set("tcgPlayerId", tcgPlayerId);
-      url.searchParams.set("game", "pokemon");
-      const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
-      justTcgData = await resp.json();
+      // Fetch by ID (fast path) – bewährte fetchJustTcg wiederverwenden:
+      // korrekter Parameter `tcgplayerId` (klein) + Price-History + 7d/30d-Statistik.
+      justTcgData = await fetchJustTcg(tcgPlayerId);
     } else {
       // Kein manuelles Mapping vorhanden → "fehlendes Produkt melden" (manuelle Pflege, kein Auto-Match).
       return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
