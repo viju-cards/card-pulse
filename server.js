@@ -666,24 +666,8 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
       const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
       justTcgData = await resp.json();
     } else {
-      // Search by name
-      const url = new URL("https://api.justtcg.com/v1/cards");
-      url.searchParams.set("game", "pokemon");
-      url.searchParams.set("name", name);
-      url.searchParams.set("limit", "5");
-      const resp = await fetch(url.toString(), { headers: { "X-API-KEY": process.env.JUSTTCG_API_KEY } });
-      justTcgData = await resp.json();
-
-      // Cache the best match
-      const match = justTcgData.data?.find(p => p.variants?.some(v => v.condition === "Sealed"));
-      if (match?.tcgplayerId) {
-        tcgPlayerId = parseInt(match.tcgplayerId);
-        await pool.query(
-          `INSERT INTO sealed_mapping (product_name_normalized, product_name, product_type, tcg_player_id)
-           VALUES ($1,$2,$3,$4) ON CONFLICT (product_name_normalized) DO UPDATE SET tcg_player_id=$4`,
-          [name.toLowerCase().trim(), match.name, type || "unknown", tcgPlayerId]
-        );
-      }
+      // Kein manuelles Mapping vorhanden → "fehlendes Produkt melden" (manuelle Pflege, kein Auto-Match).
+      return res.status(404).json({ error: "PRODUCT_NOT_FOUND" });
     }
 
     // Find sealed variant
