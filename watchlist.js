@@ -4,7 +4,8 @@
 //
 //   require('./watchlist')(app, {
 //     pool,                                   // dein pg-Pool (pool.query(text, params) -> { rows })
-//     requireAuth,                            // deine JWT-Middleware; setzt req.user = { id, plan, email }
+//     requireAuth,                            // deine JWT-Middleware; setzt req.user = { id, ... }
+//     getUserById,                            // deine vorhandene Funktion -> kompletter User-Row (mit plan)
 //     resendApiKey: process.env.RESEND_API_KEY,
 //     rapidApiKey:  process.env.RAPIDAPI_KEY,
 //     rapidApiHost: process.env.RAPIDAPI_HOST || 'cardmarket-api-tcg.p.rapidapi.com',
@@ -19,8 +20,20 @@
 //  - users-Tabelle hat Spalten id + email.
 
 module.exports = function registerWatchlist(app, deps) {
-  const { pool, requireAuth, resendApiKey, rapidApiKey, cronSecret } = deps;
+  const { pool, requireAuth, getUserById, resendApiKey, rapidApiKey, cronSecret } = deps;
   const rapidApiHost = deps.rapidApiHost || 'cardmarket-api-tcg.p.rapidapi.com';
+
+  // Plan IMMER frisch aus der DB (das JWT trägt keinen plan → req.user.plan wäre undefined,
+  // und ein Upgrade soll sofort greifen, ohne Re-Login).
+  async function planOf(userId) {
+    try {
+      const u = await getUserById(userId);
+      return u ? String(u.plan || 'bronze').toLowerCase() : 'bronze';
+    } catch (e) {
+      console.error('[alerts] planOf', e.message);
+      return 'bronze';
+    }
+  }
 
   // Nur diese Pläne dürfen Alarme anlegen, mit Karten-Cap. Bronze/Silver: keine Alarme.
   const CAPS = { gold: 25, platin: 100 };
@@ -149,7 +162,7 @@ module.exports = function registerWatchlist(app, deps) {
   // Alarm anlegen / aktualisieren. Erwartet die TCGGO-Felder vom Overlay (aus /prices).
   app.post('/watchlist', requireAuth, async (req, res) => {
     try {
-      const plan = (req.user.plan || 'bronze').toLowerCase();
+      const plan = await planOf(req.user.id);
       const cap = CAPS[plan];
       if (!cap) return res.status(403).json({ error: 'UPGRADE_REQUIRED', message: 'Price alerts require Gold or Platin.' });
 
