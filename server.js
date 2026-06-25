@@ -627,7 +627,7 @@ app.post("/suggest", async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 app.get("/prices/sealed", requireAuth, async (req, res) => {
-  const user = req.user;
+  const user = await getUserById(req.user.id);
 
   // Plan limit check (same as /prices/card)
   const planLimits = { bronze: 20, silver: 400, gold: 1000, platin: 5000 };
@@ -674,6 +674,7 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
     }
 
     const variant = product.variants.find(v => v.condition === "Sealed");
+    console.log("[sealed] raw variant.price =", variant.price, "| name =", product.name);
     const usdPrice = variant.price / 100;
 
     // EUR conversion
