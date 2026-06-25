@@ -651,7 +651,7 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
   try {
     // Check cache in sealed_mapping table
     const cached = await pool.query(
-      "SELECT tcg_player_id FROM sealed_mapping WHERE product_name_normalized=$1 LIMIT 1",
+     "SELECT tcg_player_id FROM sealed_mapping WHERE cardmarket_name_normalized=$1 LIMIT 1",
       [name.toLowerCase().trim()]
     );
 
