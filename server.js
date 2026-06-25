@@ -674,8 +674,7 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
     }
 
     const variant = product.variants.find(v => v.condition === "Sealed");
-    console.log("[sealed] raw variant.price =", variant.price, "| name =", product.name);
-    const usdPrice = variant.price / 100;
+    const usdPrice = variant.price;
 
     // EUR conversion
     let eurRate = 0.92;
@@ -687,7 +686,7 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
 
     const history = (variant.priceHistory || []).map(p => ({
       date: new Date(p.t * 1000).toISOString().split("T")[0],
-      price: +(p.p / 100).toFixed(2)
+      price: +(p.p).toFixed(2)
     }));
 
     // Increment usage
