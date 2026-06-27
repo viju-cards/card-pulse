@@ -55,6 +55,38 @@ const STRIPE_PLANS = {
   platin: process.env.STRIPE_PRICE_PLATIN,
 };
 
+// ─── Plan-Auflösung (Stripe + Coupon kombiniert) ─────────────────────────────
+const PLAN_RANK = { bronze: 0, silver: 1, gold: 2, platin: 3, enterprise: 4 };
+
+// Höherer aus Stripe- und Coupon-Plan; abgelaufene Zeiträume fallen auf 'bronze'.
+function effectivePlan(user) {
+  const now = Date.now();
+
+  const stripeActive = user.is_premium &&
+    (!user.premium_until || new Date(user.premium_until).getTime() > now);
+  const stripePlan = stripeActive ? (user.plan || 'bronze') : 'bronze';
+
+  const compActive = user.comp_until && new Date(user.comp_until).getTime() > now;
+  const compPlan = compActive ? (user.comp_plan || 'bronze') : 'bronze';
+
+  return (PLAN_RANK[compPlan] ?? 0) > (PLAN_RANK[stripePlan] ?? 0) ? compPlan : stripePlan;
+}
+
+// Quelle des aktiven Plans – fürs Frontend ('stripe' = Portal verfügbar, 'comp' = geschenkt)
+function planSource(user) {
+  const eff = effectivePlan(user);
+  if (eff === 'bronze') return 'free';
+  const now = Date.now();
+  const stripeActive = user.is_premium &&
+    (!user.premium_until || new Date(user.premium_until).getTime() > now) &&
+    (user.plan || 'bronze') === eff;
+  return stripeActive ? 'stripe' : 'comp';
+}
+
+function planValidUntil(user) {
+  return planSource(user) === 'comp' ? user.comp_until : user.premium_until;
+}
+
 // ─── CORS ────────────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -268,14 +300,10 @@ app.get("/auth/me", requireAuth, async (req, res) => {
     const user = await getUserById(req.user.id);
     if (!user) return res.status(404).json({ error: "User nicht gefunden." });
 
-    let is_premium = user.is_premium;
-    if (is_premium && user.premium_until && new Date(user.premium_until) < new Date()) {
-      await pool.query("UPDATE users SET is_premium = false WHERE id = $1", [user.id]);
-      is_premium = false;
-    }
-
-    const userPlan = user.plan || 'bronze';
-    const userLimit = user.custom_request_limit || PLAN_LIMITS[userPlan] || 20;
+    const plan = effectivePlan(user);
+    const source = planSource(user);
+    const validUntil = planValidUntil(user);
+    const userLimit = user.custom_request_limit || PLAN_LIMITS[plan] || 20;
 
     // Reset if new month
     const resetAt = user.requests_reset_at ? new Date(user.requests_reset_at) : new Date();
@@ -289,10 +317,12 @@ app.get("/auth/me", requireAuth, async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        is_premium,
+        is_premium: plan !== 'bronze',
+        plan,
+        plan_source: source,        // 'stripe' | 'comp' | 'free'
+        valid_until: validUntil,    // Ablaufdatum des aktiven Plans
         premium_until: user.premium_until,
         cancel_at_period_end: user.cancel_at_period_end,
-        plan: userPlan,
         used: user.monthly_requests || 0,
         limit: userLimit,
       },
@@ -337,6 +367,69 @@ app.post("/auth/delete", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("[/auth/delete]", err.message);
     res.status(500).json({ error: "SERVER_ERROR" });
+  }
+});
+
+
+// ─── Gutscheincode einlösen → geschenkter Premium-Zugang (kein Stripe) ───────
+app.post("/redeem-coupon", requireAuth, async (req, res) => {
+  const code = (req.body.code || "").trim().toUpperCase();
+  if (!code) return res.status(400).json({ error: "CODE_REQUIRED" });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Coupon sperren (gegen Races bei max_redemptions)
+    const cRes = await client.query(
+      "SELECT * FROM coupons WHERE code = $1 AND active = true FOR UPDATE",
+      [code]
+    );
+    const coupon = cRes.rows[0];
+    if (!coupon) { await client.query("ROLLBACK"); return res.status(404).json({ error: "INVALID_CODE" }); }
+
+    if (coupon.max_redemptions != null && coupon.times_redeemed >= coupon.max_redemptions) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "CODE_EXHAUSTED" });
+    }
+
+    const dup = await client.query(
+      "SELECT 1 FROM coupon_redemptions WHERE code = $1 AND user_id = $2",
+      [code, req.user.id]
+    );
+    if (dup.rows.length > 0) { await client.query("ROLLBACK"); return res.status(409).json({ error: "ALREADY_REDEEMED" }); }
+
+    // Aktuellen comp-Status laden (verlängern statt überschreiben)
+    const uRes = await client.query(
+      "SELECT comp_plan, comp_until FROM users WHERE id = $1 FOR UPDATE",
+      [req.user.id]
+    );
+    const u = uRes.rows[0];
+    const now = new Date();
+    const stillActive = u.comp_until && new Date(u.comp_until) > now;
+
+    const base = stillActive ? new Date(u.comp_until) : now;
+    const newUntil = new Date(base);
+    newUntil.setMonth(newUntil.getMonth() + coupon.duration_months);
+    const curRank = stillActive ? (PLAN_RANK[u.comp_plan] ?? 0) : 0;
+    const newPlan = (PLAN_RANK[coupon.plan] ?? 0) >= curRank ? coupon.plan : u.comp_plan;
+
+    await client.query("UPDATE users SET comp_plan = $1, comp_until = $2 WHERE id = $3",
+      [newPlan, newUntil, req.user.id]);
+    await client.query("INSERT INTO coupon_redemptions (code, user_id) VALUES ($1, $2)",
+      [code, req.user.id]);
+    await client.query("UPDATE coupons SET times_redeemed = times_redeemed + 1 WHERE code = $1",
+      [code]);
+
+    await client.query("COMMIT");
+    console.log(`[REDEEM] User ${req.user.id} → ${code} (${newPlan} bis ${newUntil.toISOString()})`);
+    res.json({ success: true, plan: newPlan, valid_until: newUntil, months: coupon.duration_months });
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    console.error("[/redeem-coupon]", err.message);
+    res.status(500).json({ error: "SERVER_ERROR" });
+  } finally {
+    client.release();
   }
 });
 
@@ -477,7 +570,7 @@ app.get("/prices", requireAuth, async (req, res) => {
   try {
     // ── Check & increment request counter ──────────────────────────────────
     const userRow = await getUserById(req.user.id);
-    const plan = userRow.plan || 'bronze';
+    const plan = effectivePlan(userRow);
     const limit = userRow.custom_request_limit || PLAN_LIMITS[plan] || 20;
 
     // Reset counter if new month
@@ -631,7 +724,7 @@ app.get("/prices/sealed", requireAuth, async (req, res) => {
 
   // Plan limit check (same as /prices/card)
   const planLimits = { bronze: 20, silver: 400, gold: 1000, platin: 5000 };
-  const plan = user.plan || "bronze";
+  const plan = effectivePlan(user);
   const limit = user.custom_request_limit ?? planLimits[plan] ?? 20;
 
   const now = new Date();
