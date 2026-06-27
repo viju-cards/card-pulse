@@ -69,6 +69,18 @@
 .step-num{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);background:rgba(124,108,255,.1);border:1px solid rgba(124,108,255,.25);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
 .step p{font-family:var(--mono);font-size:12px;color:var(--mut);line-height:1.7}
 .step a{color:var(--accent)}
+.redeem-box{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:24px}
+.redeem-title{font-family:var(--disp);font-weight:600;font-size:20px;margin-bottom:6px}
+.redeem-sub{font-family:var(--mono);font-size:12px;color:var(--mut);margin-bottom:18px}
+.redeem-row{display:flex;gap:10px;flex-wrap:wrap}
+.redeem-input{flex:1;min-width:200px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:14px;letter-spacing:1px;text-transform:uppercase}
+.redeem-input:focus{outline:none;border-color:var(--accent)}
+.redeem-btn{padding:12px 24px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:.18s;white-space:nowrap}
+.redeem-btn:hover{background:var(--accent2)}
+.redeem-btn:disabled{opacity:.5;cursor:default}
+.redeem-msg{font-family:var(--mono);font-size:12px;margin-top:12px;display:none;line-height:1.6}
+.redeem-msg.error{color:var(--neg);display:block}
+.redeem-msg.success{color:var(--teal);display:block}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
 .modal-overlay.open{display:flex}
 .modal-box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;max-width:430px;width:100%}
@@ -154,6 +166,17 @@
       <div class="bar-track">
         <div class="bar-fill" id="usageBar" style="width:0%"></div>
       </div>
+    </div>
+
+    <!-- Gutscheincode -->
+    <div class="redeem-box">
+      <div class="redeem-title">🎟️ <span data-i18n="dash_redeem_title">Gutscheincode einlösen</span></div>
+      <p class="redeem-sub" data-i18n="dash_redeem_sub">Code aus einer Einladung erhalten? Hier freischalten.</p>
+      <div class="redeem-row">
+        <input type="text" id="couponInput" class="redeem-input" placeholder="z. B. LEAFEON-GOLD" autocomplete="off" spellcheck="false">
+        <button class="redeem-btn" id="redeemBtn" data-i18n="dash_redeem_btn">Einlösen</button>
+      </div>
+      <div class="redeem-msg" id="redeemMsg"></div>
     </div>
 
     <!-- Plans -->
@@ -255,29 +278,41 @@ function renderDashboard(user){
   const pct=Math.min(100,Math.round((used/limit)*100));
   const isDE=(localStorage.getItem('cp_lang')||i18n?.lang||'en')==='de';
   const isPaid=plan!=='bronze';
+  const source=user.plan_source||(isPaid?'stripe':'free');
+  const isComp=source==='comp';
+  const validUntil=user.valid_until||user.premium_until;
 
   if(isPaid)document.getElementById('statusCard').classList.add('premium');
   else document.getElementById('statusCard').classList.remove('premium');
 
-  document.getElementById('planTitle').textContent=cfg.label+' Plan'+(user.cancel_at_period_end?(isDE?' – läuft aus':' – canceling'):'');
+  const tag=isComp?(isDE?' – Geschenkt':' – Gift'):(user.cancel_at_period_end?(isDE?' – läuft aus':' – canceling'):'');
+  document.getElementById('planTitle').textContent=cfg.label+' Plan'+tag;
   document.getElementById('planDesc').textContent=isDE?`${used} von ${limit} Anfragen diesen Monat.`:`${used} of ${limit} requests this month.`;
   document.getElementById('planBadge').textContent=cfg.label;
   document.getElementById('planBadge').style.cssText=`background:${cfg.color};color:#fff`;
 
-  if(isPaid){
-    document.getElementById('actionBtn').textContent=isDE?'Abo verwalten':'Manage subscription';
-    document.getElementById('actionBtn').onclick=openPortal;
+  const actionBtn=document.getElementById('actionBtn');
+  if(isPaid&&!isComp){
+    actionBtn.textContent=isDE?'Abo verwalten':'Manage subscription';
+    actionBtn.onclick=openPortal;
   }else{
-    document.getElementById('actionBtn').textContent=isDE?'Upgraden':'Upgrade';
-    document.getElementById('actionBtn').onclick=()=>document.getElementById('plansSection').scrollIntoView({behavior:'smooth'});
+    // Bronze ODER geschenkter Zugang → kein Stripe-Portal, sondern Upgrade anbieten
+    actionBtn.textContent=isDE?'Upgraden':'Upgrade';
+    actionBtn.onclick=()=>document.getElementById('plansSection').scrollIntoView({behavior:'smooth'});
   }
 
   document.getElementById('infoPlan').textContent=cfg.label;
   document.getElementById('infoPlan').style.color=cfg.color;
-  document.getElementById('infoStatus').textContent=isDE?'Aktiv':'Active';
-  document.getElementById('infoStatus').style.color='var(--green)';
+  document.getElementById('infoStatus').textContent=isComp?(isDE?'Geschenkt':'Gift'):(isDE?'Aktiv':'Active');
+  document.getElementById('infoStatus').style.color=isComp?cfg.color:'var(--green)';
+  document.getElementById('infoUntil').style.color='';
 
-  if(user.cancel_at_period_end&&user.premium_until){
+  if(isComp&&validUntil){
+    const end=new Date(validUntil).toLocaleDateString(isDE?'de-DE':'en-GB');
+    document.getElementById('planDesc').textContent=isDE?`Geschenkter ${cfg.label}-Zugang bis ${end}. Danach Bronze.`:`Complimentary ${cfg.label} until ${end}. Then Bronze.`;
+  }
+
+  if(user.cancel_at_period_end&&user.premium_until&&!isComp){
     const endDate=new Date(user.premium_until).toLocaleDateString(isDE?'de-DE':'en-GB');
     document.getElementById('infoStatus').textContent=isDE?'Gekündigt':'Canceled';
     document.getElementById('infoStatus').style.color='var(--red)';
@@ -286,7 +321,11 @@ function renderDashboard(user){
     document.getElementById('infoUntil').style.color='var(--red)';
   }
 
-  document.getElementById('infoUntil').textContent=user.premium_until?new Date(user.premium_until).toLocaleDateString(isDE?'de-DE':'en-GB'):'—';
+  document.getElementById('infoUntil').textContent=validUntil?new Date(validUntil).toLocaleDateString(isDE?'de-DE':'en-GB'):'—';
+
+  // Abo-kündigen nur bei echtem Stripe-Abo zeigen
+  const cancelBtn=document.getElementById('cancelSubBtn');
+  if(cancelBtn)cancelBtn.style.display=(isPaid&&!isComp)?'inline-block':'none';
 
   const barColor=pct>=90?'#ef4444':pct>=70?'#f59e0b':'var(--green)';
   document.getElementById('usageBar').style.cssText=`width:${pct}%;background:${barColor}`;
@@ -344,6 +383,40 @@ async function openPortal(){
     const d=await res.json();
     if(d.url)window.location.href=d.url;
   }catch(e){btn.disabled=false}
+}
+
+const COUPON_MSG={
+  INVALID_CODE:{de:'Code ungültig oder nicht mehr aktiv.',en:'Invalid or inactive code.'},
+  CODE_EXHAUSTED:{de:'Dieser Code wurde bereits vollständig eingelöst.',en:'This code has been fully redeemed.'},
+  ALREADY_REDEEMED:{de:'Du hast diesen Code bereits eingelöst.',en:'You already redeemed this code.'},
+  CODE_REQUIRED:{de:'Bitte gib einen Code ein.',en:'Please enter a code.'},
+  SERVER_ERROR:{de:'Fehler. Bitte später erneut versuchen.',en:'Error. Please try again later.'},
+};
+
+async function redeemCoupon(){
+  const input=document.getElementById('couponInput');
+  const btn=document.getElementById('redeemBtn');
+  const msg=document.getElementById('redeemMsg');
+  const isDE=(localStorage.getItem('cp_lang')||i18n?.lang||'en')==='de';
+  const code=input.value.trim();
+  msg.className='redeem-msg';
+  if(!code){msg.textContent=COUPON_MSG.CODE_REQUIRED[isDE?'de':'en'];msg.className='redeem-msg error';return;}
+  const old=btn.textContent;btn.disabled=true;btn.textContent='...';
+  try{
+    const res=await fetch(`${API}/redeem-coupon`,{method:'POST',headers:{'Authorization':`Bearer ${localStorage.getItem('cp_token')}`,'Content-Type':'application/json'},body:JSON.stringify({code})});
+    const d=await res.json();
+    if(!res.ok){const m=COUPON_MSG[d.error]||COUPON_MSG.SERVER_ERROR;msg.textContent=m[isDE?'de':'en'];msg.className='redeem-msg error';return;}
+    const until=new Date(d.valid_until).toLocaleDateString(isDE?'de-DE':'en-GB');
+    const label=(PLANS[d.plan]||{}).label||d.plan;
+    msg.textContent=isDE?`${label} freigeschaltet – gültig bis ${until}.`:`${label} unlocked – valid until ${until}.`;
+    msg.className='redeem-msg success';
+    input.value='';
+    setTimeout(init,900); // Dashboard frisch laden → Status/Plan aktualisieren
+  }catch(e){
+    msg.textContent=COUPON_MSG.SERVER_ERROR[isDE?'de':'en'];msg.className='redeem-msg error';
+  }finally{
+    btn.disabled=false;btn.textContent=old;
+  }
 }
 
 function openDeleteModal(){
@@ -404,6 +477,8 @@ function logout(){
 }
 
 document.getElementById('logoutBtn').onclick=logout;
+document.getElementById('redeemBtn').onclick=redeemCoupon;
+document.getElementById('couponInput').addEventListener('keydown',e=>{if(e.key==='Enter')redeemCoupon();});
 const params=new URLSearchParams(window.location.search);
 if(params.get('success')==='true')history.replaceState({},'','/dashboard.html');
 init();
