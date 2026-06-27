@@ -569,7 +569,7 @@ const TRANSLATIONS = {
     index_badge: "JETZT FÜR CHROME VERFÜGBAR",
     index_h1_1: "TCGPlayer",
     index_h1_2: "Preise",
-    index_h1_3: "Auf Cardmarket",
+    index_h1_3: "auf Cardmarket",
     index_sub: "Sieh live Marktpreise von TCGPlayer direkt beim Surfen auf Cardmarket. Alle Konditionen, EUR-Umrechnung, 30-Tage-Preishistorie. Für alle Sammler.",
     index_install: "KOSTENLOS INSTALLIEREN",
     index_sets_link: "Unterstützte Sets ansehen →",
